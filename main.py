@@ -371,7 +371,7 @@ def LaunchGameAgent():
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
                 elif definedMod is not None and len(definedMod) == 1:
                     logformat(errorLevel.INFO, f"Converted list[str]: {definedMod} to str: {definedMod[0]}")
-                    definedMod = definedMod[0]
+                    definedMod = definedMod[0] # pylint: disable=unsubscriptable-object
                     if os.path.isdir(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq'):
                         diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
                     else:
@@ -521,7 +521,7 @@ def GetEnvironmentValue():
                     modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod} 외 {len(definedMod) - 1}개')
                 elif definedMod is not None and len(definedMod) == 1:
                     logformat(errorLevel.INFO, f"Converted list[str]: {definedMod} to str: {definedMod[0]}")
-                    definedMod = definedMod[0]
+                    definedMod = definedMod[0] # pylint: disable=unsubscriptable-object
                     if os.path.isdir(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq'):
                         modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
                         modMenu.entryconfig(1, state='normal')
@@ -1060,4 +1060,3 @@ if __name__ == '__main__':
 
     mainThread.join()
     updateThread.join()
-
