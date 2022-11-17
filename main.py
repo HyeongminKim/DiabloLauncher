@@ -6,17 +6,17 @@ try:
 
     from enum import Enum
 except Exception as error:
-    print(f'[35m[FATL] The DiabloLauncher stoped due to {error}[0m')
+    print(f'\033[35m[FATL] The DiabloLauncher stoped due to {error}\033[0m')
     exit(1)
 
 class color(Enum):
-    RESET = '[0m'
-    RED = '[31m'
-    GREEN = '[32m'
-    YELLOW = '[33m'
-    BLUE = '[34m'
-    MAGENTA = '[35m'
-    GRAY = '[90m'
+    RESET = '\033[0m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    GRAY = '\033[90m'
 
 class errorLevel(Enum):
     INFO = 0
