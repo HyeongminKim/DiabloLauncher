@@ -60,6 +60,7 @@ try:
     import signal
     import subprocess
     import logging
+    import clipboard
 
     from datetime import datetime
     import time
@@ -964,6 +965,17 @@ def init():
             os.mkdir(f'{gamePath}/Diablo II Resurrected/mods')
         os.startfile(f'"{gamePath}/Diablo II Resurrected/mods"')
 
+    def ModApplyHelp():
+        if definedMod is not None and definedMod != "":
+            msg_box = tkinter.messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
+            if msg_box == True:
+                clipboard.copy(f' -mod {definedMod} -txt')
+                logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt"')
+        else:
+            logformat(errorLevel.INFO, f'Unable to load mods detail. no such file or directory.')
+            tkinter.messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod modName -txt"를 입력해야 합니다.')
+
+
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
     fileMenu.add_command(label='게임폴더 열기', command=OpenGameDir, state='disabled')
@@ -989,6 +1001,8 @@ def init():
     modMenu = Menu(menubar, tearoff=0)
     modMenu.add_command(label='D2R 모드 디렉토리 열기', state='disabled', command=OpenD2RModDir)
     modMenu.add_command(label='현재 모드: 알 수 없음', state='disabled')
+    modMenu.add_separator()
+    modMenu.add_command(label='모드 적용 방법...', command=ModApplyHelp)
     menubar.add_cascade(label='모드', menu=modMenu)
 
     aboutMenu = Menu(menubar, tearoff=0)
