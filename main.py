@@ -373,12 +373,10 @@ def LaunchGameAgent():
             if os.path.isdir(gamePath + '/Diablo II Resurrected/mods'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 GetModDetails()
-                if definedMod is not None and len(definedMod) > 1:
+                if definedMod is not None and isinstance(definedMod, list):
                     logformat(errorLevel.WARN, f"Diablo II Resurrected mods are not cached. Because too many mods detected.")
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
-                elif definedMod is not None and len(definedMod) == 1:
-                    logformat(errorLevel.INFO, f"Converted list[str]: {definedMod} to str: {definedMod[0]}")
-                    definedMod = definedMod[0] # pylint: disable=unsubscriptable-object
+                elif definedMod is not None and isinstance(definedMod, str):
                     if os.path.isdir(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq'):
                         diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
                     else:
@@ -464,14 +462,51 @@ def EmgergencyReboot():
 
 def GetModDetails():
     global definedMod
-    definedMod = os.listdir(f'{gamePath}/Diablo II Resurrected/mods')
-    logformat(errorLevel.INFO, f"Detected mods: {definedMod}")
+    envValue = os.listdir(f'{gamePath}/Diablo II Resurrected/mods')
+    if isinstance(envValue, list):
+        logformat(errorLevel.INFO, f"Detected mods: {envValue}. checking D2R_MOD_SET env value...")
+        envMod = os.environ.get('D2R_MOD_SET')
+        if envMod is not None:
+            for mod in envValue:
+                logformat(errorLevel.INFO, f"checking mods.. listed: {mod}, preferMod: {envMod}")
+                if mod == envMod:
+                    logformat(errorLevel.INFO, f"Prefer mods: {mod}")
+                    envValue = mod
+                    break
+
+            if isinstance(envValue, str):
+                logformat(errorLevel.INFO, f"prefer mod was configured: {envValue}. the list of detected mods was overridden.")
+                definedMod = envValue
+            else:
+                logformat(errorLevel.WARN, f"prefer mod is not configured. {envMod} does not exist in {gamePath}/Diablo II Resurrected/mods.")
+                definedMod = None
+        else:
+            logformat(errorLevel.WARN, f"prefer mod is not configured. Diablo Launcher will mods partially.")
+            definedMod = envValue
+    elif isinstance(definedMod, str):
+        logformat(errorLevel.INFO, f"Detected mods: {envValue}")
+        definedMod = envValue
+    else:
+        logformat(errorLevel.ERR, f"error: The definedMod requirement does not satisfied.")
+        definedMod = None
+
 
 def DownloadModsLink():
     webbrowser.open('https://www.google.com/search?q=Diablo+2+Resurrected+mod')
 
 def SearchModInGitHub():
     webbrowser.open(f'https://github.com/search?q={definedMod}')
+
+def ModsPreferSelector():
+    msg_box = tkinter.messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드를 병합하지 않고 선호하는 모드를 불러오시려면 시스템 환경변수에서 "D2R_MOD_SET" 변수에 선호하는 모드 이름을 작성하시기 바랍니다. 지금 시스템 환경변수를 설정하시겠습니까?')
+    if msg_box == True:
+        msg_box = tkinter.messagebox.askquestion('디아블로 런처', '"고급 시스템 설정"에 접근 시 관리자 권한을 요청하는 프롬프트가 나타날 수 있으며, 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 계속하시겠습니까?', icon='question')
+        if msg_box == 'yes':
+            logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
+            os.system('sysdm.cpl ,3')
+            tkinter.messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
+            logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
+            exit(0)
 
 def GetEnvironmentValue():
     global data
@@ -526,12 +561,12 @@ def GetEnvironmentValue():
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 modMenu.entryconfig(0, state='normal')
                 GetModDetails()
-                if definedMod is not None and len(definedMod) > 1:
+                if definedMod is not None and isinstance(definedMod, list):
                     logformat(errorLevel.WARN, f"Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                    modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod} 외 {len(definedMod) - 1}개')
-                elif definedMod is not None and len(definedMod) == 1:
-                    logformat(errorLevel.INFO, f"Converted list[str]: {definedMod} to str: {definedMod[0]}")
-                    definedMod = definedMod[0] # pylint: disable=unsubscriptable-object
+                    modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
+                    modMenu.entryconfig(1, state='normal')
+                    modMenu.entryconfig(1, command=ModsPreferSelector)
+                elif definedMod is not None and isinstance(definedMod, str):
                     if os.path.isdir(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq'):
                         modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
                         modMenu.entryconfig(1, state='normal')
