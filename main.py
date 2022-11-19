@@ -278,6 +278,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             root.protocol("WM_DELETE_WINDOW", ExitProgram)
             HideWindow()
             UpdateStatusValue()
+            ReloadStatusBar()
             return
         try:
             if int(platform.release()) >= os_min:
@@ -291,6 +292,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             root.protocol("WM_DELETE_WINDOW", ExitProgram)
             HideWindow()
             UpdateStatusValue()
+            ReloadStatusBar()
             return
         if os.system(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR}') != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
@@ -299,6 +301,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             root.protocol("WM_DELETE_WINDOW", ExitProgram)
             HideWindow()
             UpdateStatusValue()
+            ReloadStatusBar()
             return
         switchButton['text'] = '디스플레이 해상도 복구 (게임 종료시 사용)'
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
@@ -309,6 +312,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     gameStart = time.time()
     HideWindow()
     UpdateStatusValue()
+    ReloadStatusBar()
 
 def LaunchGameAgent():
     global diabloExecuted
@@ -348,6 +352,7 @@ def LaunchGameAgent():
             else:
                 tkinter.messagebox.showinfo('디아블로 런처', f'이번 세션에는 {minutes}분 동안 플레이 했습니다. ')
         UpdateStatusValue()
+        ReloadStatusBar()
     else:
         launch.title('디아블로 버전 선택')
 
@@ -488,12 +493,10 @@ def GetEnvironmentValue():
             logformat(errorLevel.INFO, 'QRes detected. parameter count should be 7')
             gamePath, originX, originY, originFR, alteredX, alteredY, alteredFR, temp = data.split(';')
             logformat(errorLevel.INFO, 'parameter conversion succeed')
-            fileMenu.entryconfig(0, state='normal')
         else:
             logformat(errorLevel.INFO, 'QRes not detected. parameter count should be 1')
             gamePath, temp = data.split(';')
             logformat(errorLevel.INFO, 'parameter conversion succeed')
-            fileMenu.entryconfig(0, state='normal')
 
         if resolutionProgram:
             logformat(errorLevel.INFO, f'{gamePath}')
@@ -503,6 +506,11 @@ def GetEnvironmentValue():
             logformat(errorLevel.INFO, f'{int(alteredX)}')
             logformat(errorLevel.INFO, f'{int(alteredY)}')
             logformat(errorLevel.INFO, f'{float(alteredFR)}')
+
+        if os.path.isdir(gamePath):
+            fileMenu.entryconfig(0, state='normal')
+        else:
+            fileMenu.entryconfig(0, state='disabled')
 
         if not os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because launcher is not detected.')
@@ -670,6 +678,7 @@ def SetEnvironmentValue():
                 logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
 
         UpdateStatusValue()
+        ReloadStatusBar()
         if data is not None and not os.path.isdir(gamePath):
             tkinter.messagebox.showwarning('환경변수 편집기', f'{gamePath} 디렉토리가 존재하지 않습니다.')
             logformat(errorLevel.WARN, f'{gamePath} no such directory.')
@@ -755,7 +764,6 @@ def UpdateStatusValue():
             else:
                 status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if data is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if data is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and data is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
         switchButton['state'] = "normal"
-        ReloadStatusBar()
 
 def ReloadStatusBar():
     global statusbar
@@ -956,8 +964,8 @@ def init():
 
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
-    fileMenu.add_command(label='게임폴더 열기', command=OpenGameDir)
-    fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir)
+    fileMenu.add_command(label='게임폴더 열기', command=OpenGameDir, state='disabled')
+    fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir, state='disabled')
     menubar.add_cascade(label='파일', menu=fileMenu)
 
     toolsMenu = Menu(menubar, tearoff=0)
