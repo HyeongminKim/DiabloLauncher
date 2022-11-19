@@ -463,7 +463,7 @@ def EmgergencyReboot():
 def GetModDetails():
     global definedMod
     envValue = os.listdir(f'{gamePath}/Diablo II Resurrected/mods')
-    if isinstance(envValue, list):
+    if isinstance(envValue, list) and len(envValue) > 1:
         logformat(errorLevel.INFO, f"Detected mods: {envValue}. checking D2R_MOD_SET env value...")
         envMod = os.environ.get('D2R_MOD_SET')
         if envMod is not None:
@@ -481,13 +481,13 @@ def GetModDetails():
                 logformat(errorLevel.WARN, f"prefer mod is not configured. {envMod} does not exist in {gamePath}/Diablo II Resurrected/mods.")
                 definedMod = None
         else:
-            logformat(errorLevel.WARN, f"prefer mod is not configured. Diablo Launcher will mods partially.")
+            logformat(errorLevel.WARN, "prefer mod is not configured. Diablo Launcher will mods partially.")
             definedMod = envValue
-    elif isinstance(definedMod, str):
-        logformat(errorLevel.INFO, f"Detected mods: {envValue}")
-        definedMod = envValue
+    elif isinstance(envValue, list) and len(envValue) == 1:
+        logformat(errorLevel.INFO, f"Detected mod: {envValue}")
+        definedMod = envValue[0]
     else:
-        logformat(errorLevel.ERR, f"error: The definedMod requirement does not satisfied.")
+        logformat(errorLevel.ERR, f"error: The definedMod requirement does not satisfied: {envValue}")
         definedMod = None
 
 
