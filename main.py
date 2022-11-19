@@ -67,6 +67,7 @@ try:
     from tkinter import *
     import tkinter.messagebox
     import tkinter.filedialog
+    from idlelib.tooltip import Hovertip
 except Exception as error:
     logformat(errorLevel.FATL, f'The DiabloLauncher stoped due to {error}')
 
@@ -820,6 +821,7 @@ def ReloadStatusBar():
         statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션 통계를 로드할 수 없음"
         statusbar['anchor'] = tkinter.W
         toolsMenu.entryconfig(7, state='disabled')
+    Hovertip(statusbar, text=f"{subprocess.check_output('git rev-parse HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {sumHours}시간 {sumMinutes}분 {sumSeconds}초", hover_delay=500)
 
 def init():
     global root
