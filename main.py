@@ -486,8 +486,11 @@ def GetModDetails():
     elif isinstance(envValue, list) and len(envValue) == 1:
         logformat(errorLevel.INFO, f"Detected mod: {envValue}")
         definedMod = envValue[0]
+    elif isinstance(envValue, list) and len(envValue) == 0:
+        logformat(errorLevel.INFO, f"mods directory is currently exist but it is empty. Therefore GetModDetails function will handling {envValue} value to None")
+        definedMod = None
     else:
-        logformat(errorLevel.ERR, f"error: The definedMod requirement does not satisfied: {envValue}")
+        logformat(errorLevel.ERR, f"Requirements does not satisfied: The provided value {envValue} does not match list[str] type. Therefore GetModDetails function will handling {envValue} value to None")
         definedMod = None
 
 
@@ -557,9 +560,10 @@ def GetEnvironmentValue():
         else:
             logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
             if os.path.isdir(gamePath + '/Diablo II Resurrected/mods'):
-                modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 modMenu.entryconfig(0, state='normal')
+                modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
+                modMenu.entryconfig(1, state='disabled')
+                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 GetModDetails()
                 if definedMod is not None and isinstance(definedMod, list):
                     logformat(errorLevel.WARN, f"Diablo II Resurrected mods are not cached. Because too many mods detected.")
@@ -584,6 +588,7 @@ def GetEnvironmentValue():
                     modMenu.entryconfig(1, command=DownloadModsLink)
             else:
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
+                modMenu.entryconfig(0, state='disabled')
                 modMenu.entryconfig(1, label='새로운 모드 탐색')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=DownloadModsLink)
