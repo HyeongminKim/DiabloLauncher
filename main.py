@@ -406,6 +406,7 @@ def BootAgent(poweroff: str):
     global forceReboot
     global emergencyButton
     global switchButton
+    global statusbar
     global gameEnd
     global toolsMenu
     forceReboot = True
@@ -429,6 +430,9 @@ def BootAgent(poweroff: str):
     elif poweroff == 's':
         os.system(f'shutdown -s -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 종료] 기능으로 인해 종료 됩니다."')
     logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
+    statusbar['text'] = '로드할 수 없음'
+    Hovertip(statusbar, text='', hover_delay=500)
+    statusbar['anchor'] = tkinter.W
     switchButton['state'] = "disabled"
     toolsMenu.entryconfig(3, state='disabled')
 
@@ -437,6 +441,7 @@ def EmgergencyReboot():
     global forceReboot
     global emergencyButton
     global switchButton
+    global statusbar
     global toolsMenu
     if forceReboot:
         forceReboot = False
@@ -446,6 +451,9 @@ def EmgergencyReboot():
         toolsMenu.entryconfig(3, state='normal')
         os.system(f'shutdown -a')
         logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
+        statusbar['anchor'] = tkinter.CENTER
+        UpdateStatusValue()
+        ReloadStatusBar()
     else:
         launch.title('전원')
         if resolutionProgram and diabloExecuted:
