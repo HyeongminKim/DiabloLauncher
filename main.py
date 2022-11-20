@@ -478,8 +478,8 @@ def GetModDetails():
                 logformat(errorLevel.INFO, f"prefer mod was configured: {envValue}. the list of detected mods was overridden.")
                 definedMod = envValue
             else:
-                logformat(errorLevel.WARN, f"prefer mod is not configured. {envMod} does not exist in {gamePath}/Diablo II Resurrected/mods.")
-                definedMod = None
+                logformat(errorLevel.WARN, f"prefer mod is not configured. {envMod} does not exist in {gamePath}/Diablo II Resurrected/mods. Diablo Launcher will mods partially.")
+                definedMod = envValue
         else:
             logformat(errorLevel.WARN, "prefer mod is not configured. Diablo Launcher will mods partially.")
             definedMod = envValue
