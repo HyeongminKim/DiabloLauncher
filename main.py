@@ -1,4 +1,5 @@
 #-*- coding:utf-8 -*-
+f'[FATL] The DiabloLauncher stoped due to unsupported python version. (version_info < 3)'
 
 try:
     import os
