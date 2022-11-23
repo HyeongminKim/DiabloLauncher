@@ -246,6 +246,7 @@ def LoadGameRunningTime():
             fileMenu.entryconfig(1, state='normal')
         else:
             fileMenu.entryconfig(1, state='disabled')
+        return 0, 0, 0, 0
     else:
         if runtimeFile is not None:
             runtimeFile.close()
