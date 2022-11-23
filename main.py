@@ -694,8 +694,11 @@ def SetEnvironmentValue():
                 envWindow.after(1, envWindow.focus_force())
                 return
             else:
-                os.environ['DiabloLauncher'] = f'{envGameDir.replace(";", "")};{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
-                logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
+                try:
+                    os.environ['DiabloLauncher'] = f'{envGameDir.replace(";", "")};{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
+                    logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
+                except AttributeError as error:
+                    logformat(errorLevel.ERR, f"could not save env value: {error}")
         else:
             if envGameDir == '':
                 messagebox.showwarning('환경변수 편집기', '게임 디렉토리 환경변수가 누락되었습니다.')
@@ -703,8 +706,11 @@ def SetEnvironmentValue():
                 envWindow.after(1, envWindow.focus_force())
                 return
             else:
-                os.environ['DiabloLauncher'] = f'{envGameDir.replace(";", "")};'
-                logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
+                try:
+                    os.environ['DiabloLauncher'] = f'{envGameDir.replace(";", "")};'
+                    logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
+                except AttributeError as error:
+                    logformat(errorLevel.ERR, f"could not save env value: {error}")
 
         UpdateStatusValue()
         ReloadStatusBar()
