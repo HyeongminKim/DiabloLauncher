@@ -581,7 +581,7 @@ def GetEnvironmentValue():
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=DownloadModsLink)
 
-    except (ValueError, TypeError) as error:
+    except (ValueError, TypeError, AttributeError) as error:
         messagebox.showerror('디아블로 런처', f'환경변수 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
         logformat(errorLevel.ERR, f'Unknown data or parameter style: {data}\n\t{error}')
         data = None
