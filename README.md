@@ -21,8 +21,11 @@
     <td>64-bit CPU</td>
   </tr>
   <tr>
-    <td>선택*</td>
+    <td rowspan="2">선택*</td>
     <td>해상도 조절 시 QRes 필요</td>
+  </tr>
+  <tr>
+    <td>명령행 인수 간편복사 시 clipboard 가 포함된 Python3+</td>
   </tr>
 </table>
 
