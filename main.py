@@ -995,13 +995,26 @@ def init():
             try:
                 import clipboard
             except (ModuleNotFoundError, ImportError) as error:
-                logformat(errorLevel.ERR, f'Unable to copy mods name: " -mod {definedMod} -txt". reason: {error}')
-                messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
+                logformat(errorLevel.WARN, f'Unable to copy mods name: " -mod {definedMod} -txt". reason: {error}. retrying copy string with alternative module...')
+                try:
+                    import pyperclip
+                except (ModuleNotFoundError, ImportError) as error:
+                    logformat(errorLevel.ERR, f'Unable to copy mods name: " -mod {definedMod} -txt". reason: {error}. all known module was not installed yet. please copy it manually.')
+                    messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
+                else:
+                    msg_box = messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
+                    if msg_box:
+                        pyperclip.copy(f' -mod {definedMod} -txt')
+                        logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt" with pyperclip module.')
+                    del pyperclip
+                    logformat(errorLevel.INFO, 'unloaded pyperclip module.')
             else:
                 msg_box = messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
                 if msg_box:
                     clipboard.copy(f' -mod {definedMod} -txt')
-                    logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt"')
+                    logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt" with clipboard module.')
+                del clipboard
+                logformat(errorLevel.INFO, 'unloaded clipboard module.')
         else:
             logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
             messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod modName -txt"를 입력해야 합니다.')
