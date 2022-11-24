@@ -25,7 +25,7 @@
     <td>해상도 조절 시 QRes 필요</td>
   </tr>
   <tr>
-    <td>명령행 간편 복사 시 [여기 나열된 모듈](https://github.com/HyeongminKim/DiabloLauncher/network/dependencies) 하나 이상 설치</td>
+    <td>명령행 간편복사 기능 사용시 <a href="https://github.com/HyeongminKim/DiabloLauncher/network/dependencies">나열된 모듈</a> 설치</td>
   </tr>
 </table>
 
