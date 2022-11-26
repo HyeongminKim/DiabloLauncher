@@ -1006,19 +1006,48 @@ def init():
                     if msg_box:
                         pyperclip.copy(f' -mod {definedMod} -txt')
                         logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt" with pyperclip module.')
-                    del pyperclip
-                    logformat(errorLevel.INFO, 'unloaded pyperclip module.')
+                        del pyperclip
+                        logformat(errorLevel.INFO, 'unloaded pyperclip module.')
+                    else:
+                        logformat(errorLevel.INFO, 'user aborted copy mods name: pyperclip module detected, however it was not imported. ')
+                    launch.after(1, launch.focus_force())
             else:
                 msg_box = messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
                 if msg_box:
                     clipboard.copy(f' -mod {definedMod} -txt')
                     logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt" with clipboard module.')
-                del clipboard
-                logformat(errorLevel.INFO, 'unloaded clipboard module.')
+                    del clipboard
+                    logformat(errorLevel.INFO, 'unloaded clipboard module.')
+                else:
+                    logformat(errorLevel.INFO, 'user aborted copy mods name: clipboard module detected, however it was not imported. ')
+                launch.after(1, launch.focus_force())
         else:
             logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
             messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod modName -txt"를 입력해야 합니다.')
+            launch.after(1, launch.focus_force())
 
+    def ModGeneralHelp():
+        messagebox.showinfo(title='디아블로 모드', message='"없는 문자열" 오류가 발생할 경우 모드팩 업데이트가 출시 되었는지 확인하시거나, json파일의 모든 누락된 ID를 직접 추가해 주세요.')
+        launch.after(1, launch.focus_force())
+
+    def ModHelpWindow():
+        launch.title('모드 도움말')
+
+        note = Label(launch, text='사용가능한 도움말')
+        applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp)
+
+        if definedMod is not None and definedMod != "":
+            logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
+            generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=5, command=ModGeneralHelp, state='normal')
+        else:
+            logformat(errorLevel.INFO, 'mods resolve problem button was disabled. reason: Unable to load mods detail. no such file or directory.')
+            generalHelp = Button(launch, text='모드 문제해결', width=20, height=5, command=ModGeneralHelp, state='disabled')
+
+        note.pack()
+        generalHelp.pack(side=LEFT, padx=10)
+        applyHelp.pack(side=RIGHT, padx=10)
+        ShowWindow()
+        launch.mainloop()
 
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
@@ -1046,7 +1075,7 @@ def init():
     modMenu.add_command(label='D2R 모드 디렉토리 열기', state='disabled', command=OpenD2RModDir)
     modMenu.add_command(label='현재 모드: 알 수 없음', state='disabled')
     modMenu.add_separator()
-    modMenu.add_command(label='모드 적용 방법...', command=ModApplyHelp)
+    modMenu.add_command(label='모드 도움말...', command=ModHelpWindow)
     menubar.add_cascade(label='모드', menu=modMenu)
 
     aboutMenu = Menu(menubar, tearoff=0)
