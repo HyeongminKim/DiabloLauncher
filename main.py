@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 
 # pylint: disable=W0104,W0603,W0621
-# pylint: disable=C0103,C0302,C0415,R1722
+# pylint: disable=C0200,C0302,C0415,R1722
 
 try:
     import os
@@ -181,17 +181,39 @@ def UpdateProgram():
         logformat(errorLevel.ERR, 'Program update failed. Please see the output.')
     updateChecked = True
 
-def ConvertTime(milliseconds: float):
-    elapsedTime = milliseconds
+def FormatTime(milliseconds: float, rawType: bool):
+    seconds_per_minute = 60
+    seconds_per_hour   = 60  * seconds_per_minute
+    seconds_per_day    = 24  * seconds_per_hour
+    seconds_per_week   = 7   * seconds_per_day
+    seconds_per_month  = 30  * seconds_per_day
+    seconds_per_year   = 365 * seconds_per_day
 
-    hours = int(elapsedTime / 3600)
-    elapsedTime = elapsedTime % 3600
-    minutes = int(elapsedTime / 60)
-    elapsedTime = elapsedTime % 60
-    seconds = int(elapsedTime)
+    elapsed_time = milliseconds
+    units = [ '년', '월', '주', '일', '시간', '분', '초' ]
+    unit_per_hours = [ seconds_per_year, seconds_per_month, seconds_per_week, seconds_per_day, seconds_per_hour, seconds_per_minute, 1]
+    ymwdhms = [ 0, 0, 0, 0, 0, 0, 0 ]
 
-    logformat(errorLevel.INFO, f'The provided {milliseconds} milliseconds converted to readable time - {hours}:{minutes}.{seconds}.')
-    return hours, minutes, seconds
+    for i, unit in enumerate(unit_per_hours):
+        if rawType and i < 4:
+            continue
+        ymwdhms[i] = int(elapsed_time / unit)
+        elapsed_time = elapsed_time - ymwdhms[i] * unit
+
+    text = ''
+    for i, unit in enumerate(units):
+        if not rawType and ymwdhms[i] > 0:
+            text = f'{text} {ymwdhms[i]}{unit}' if text != '' else f'{ymwdhms[i]}{unit}'
+
+    if rawType:
+        hour = ymwdhms[4]
+        minute = ymwdhms[5]
+        seconds = ymwdhms[6]
+        logformat(errorLevel.INFO, f'The provided {milliseconds} milliseconds converted to rawType time - {hour}:{minute}.{seconds}.')
+        return hour, minute, seconds
+    else:
+        logformat(errorLevel.INFO, f'The provided {milliseconds} milliseconds converted to readable time - {text}.')
+        return text
 
 def SaveGameRunningTime(playTime: float):
     runtimeFile = None
@@ -206,7 +228,7 @@ def SaveGameRunningTime(playTime: float):
             logformat(errorLevel.INFO, 'runtime.log file already exist. opening target file with append mode')
             runtimeFile = open(f'{userApp}/DiabloLauncher/runtime.log', 'a', encoding='utf-8')
         logformat(errorLevel.INFO, f'playTime: {playTime} will be write in {userApp}/DiabloLauncher/runtime.log')
-        hours, minutes, seconds = ConvertTime(playTime)
+        hours, minutes, seconds = FormatTime(playTime, True)
         if hours == 0 and minutes < 2:
             logformat(errorLevel.INFO, f'{playTime} will be ignored. The provided {hours}:{minutes}.{seconds} playtime lower then 2 minutes.')
         else:
@@ -329,7 +351,7 @@ def LaunchGameAgent():
                 messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
 
         SaveGameRunningTime(gameEnd - gameStart)
-        hours, minutes, seconds = ConvertTime(gameEnd - gameStart)
+        hours, minutes, seconds = FormatTime(gameEnd - gameStart, True)
         logformat(errorLevel.INFO, f'Running game time for this session: {hours}:{minutes}.{seconds}')
         if hours > 0:
             if minutes > 0 and seconds > 0:
@@ -801,9 +823,9 @@ def UpdateStatusValue():
 def ReloadStatusBar():
     loadStart = time.time()
     count, stat_max, stat_sum, stat_avg = LoadGameRunningTime()
-    maxHours, maxMinutes, maxSeconds = ConvertTime(stat_max)
-    avgHours, avgMinutes, avgSeconds = ConvertTime(stat_avg)
-    sumHours, sumMinutes, sumSeconds = ConvertTime(stat_sum)
+    maxTime = FormatTime(stat_max, False)
+    avgTime = FormatTime(stat_avg, False)
+    sumTime = FormatTime(stat_sum, False)
     loadEnd = time.time()
 
     elapsedTime = loadEnd - loadStart
@@ -819,38 +841,30 @@ def ReloadStatusBar():
     else:
         logformat(errorLevel.INFO, f'Loading game data elapsed time was {elapsedTime} seconds.')
 
-    logformat(errorLevel.INFO, f'Previous game time for max session: {maxHours}:{maxMinutes}.{maxSeconds}')
-    logformat(errorLevel.INFO, f'Previous game time for avg session: {avgHours}:{avgMinutes}.{avgSeconds}')
-    logformat(errorLevel.INFO, f'Previous game time for sum session: {sumHours}:{sumMinutes}.{sumSeconds}')
+    logformat(errorLevel.INFO, f'Previous game time for max session: {maxTime}')
+    logformat(errorLevel.INFO, f'Previous game time for avg session: {avgTime}')
+    logformat(errorLevel.INFO, f'Previous game time for sum session: {sumTime}')
 
-    if count >= 10 or maxHours >= 10 or avgHours >= 10 or sumHours >= 10:
-        root.title(f"디아블로 런처 (rev. {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()})")
-        if sumHours >= 8766000:
-            statusbar['text'] = f"세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: 로드할 수 없음"
-        elif sumHours >= 8766:
-            statusbar['text'] = f"세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {int(sumHours / 8766)}년 {int(sumHours % 8766)}월"
-        elif sumHours >= 731:
-            statusbar['text'] = f"세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {int(sumHours / 731)}월 {int(sumHours % 731)}주"
-        elif sumHours >= 168:
-            statusbar['text'] = f"세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {int(sumHours / 168)}주 {int(sumHours % 168)}일"
-        elif sumHours >= 24:
-            statusbar['text'] = f"세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {int(sumHours / 24)}일 {int(sumHours % 24)}시간"
-        else:
-            statusbar['text'] = f"세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {sumHours}시간 {sumMinutes}분 {sumSeconds}초"
+    if count > 10:
+        statusbar['text'] = f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
+        toolsMenu.entryconfig(7, state='normal')
+        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     elif count > 2:
-        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {sumHours}시간 {sumMinutes}분 {sumSeconds}초"
+        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
+        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     elif count > 0:
-        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: 데이터 부족 | 합계: {sumHours}시간 {sumMinutes}분 {sumSeconds}초"
+        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: 데이터 부족 | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
+        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     else:
         statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션 통계를 로드할 수 없음"
         statusbar['anchor'] = W
         toolsMenu.entryconfig(7, state='disabled')
-    Hovertip(statusbar, text=f"{subprocess.check_output('git rev-parse HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxHours}시간 {maxMinutes}분 {maxSeconds}초 | 평균: {avgHours}시간 {avgMinutes}분 {avgSeconds}초 | 합계: {sumHours}시간 {sumMinutes}분 {sumSeconds}초", hover_delay=500)
+        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션 통계를 로드할 수 없음", hover_delay=500)
 
 def init():
     global switchButton
