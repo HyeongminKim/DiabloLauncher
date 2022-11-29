@@ -745,6 +745,10 @@ def SetEnvironmentValue():
                 messagebox.showwarning('환경변수 편집기', f'{gamePath} 디렉토리에는 적합한 게임이 존재하지 않습니다.')
                 logformat(errorLevel.WARN, f'{gamePath} not contains game directory.')
                 envWindow.after(1, envWindow.focus_force())
+            elif gamePath.startswith('\\\\'):
+                logformat(errorLevel.WARN, 'Battle.net does not support network drive yet.')
+                messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 네트워크 드라이브로 지정되어 있습니다. Battle.net은 아직 이 드라이브를 지원하지 않습니다.')
+                envWindow.after(1, envWindow.focus_force())
             else:
                 envWindow.destroy()
 
@@ -791,6 +795,10 @@ def RequirementCheck():
     elif not os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and not os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
         logformat(errorLevel.WARN, f'game not exist in {gamePath}.')
         messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리에는 적합한 게임이 존재하지 않습니다.')
+    elif gamePath.startswith('\\\\'):
+        logformat(errorLevel.WARN, 'Battle.net does not support network drive yet.')
+        messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 네트워크 드라이브로 지정되어 있습니다. Battle.net은 아직 이 드라이브를 지원하지 않습니다.')
+
 
 def UpdateStatusValue():
     GetEnvironmentValue()
