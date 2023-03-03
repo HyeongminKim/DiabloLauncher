@@ -37,7 +37,7 @@ def logformat(level: errorLevel, text: str):
         print(f'{color.RED.value}[ERR] {text}{color.RESET.value}')
     elif level == errorLevel.FATL:
         print(f'{color.MAGENTA.value}[FATL] {text}{color.RESET.value}')
-        exit(1)
+        ExitProgram()
     else:
         logformat(errorLevel.ERR, f'{level} is not known error level type.')
 
@@ -149,12 +149,13 @@ def AlertWindow():
         messagebox.showwarning('디아블로 런처', '해상도가 조절된 상태에서는 런처를 종료할 수 없습니다. 먼저 해상도를 기본 설정으로 변경해 주시기 바랍니다.')
 
 def ExitProgram():
-    launch.destroy()
-    root.destroy()
+    if(launch != None and root != None):
+        launch.destroy()
+        root.destroy()
     exit(0)
 
 def InterruptProgram(sig, frame):
-    logformat(errorLevel.FATL, f'Keyboard Interrupt: {sig}')
+    logformat(errorLevel.ERR, f'Keyboard Interrupt: {sig}')
     if diabloExecuted:
         LaunchGameAgent()
     ExitProgram()
@@ -522,7 +523,7 @@ def ModsPreferSelector():
             os.system('sysdm.cpl ,3')
             messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
             logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
-            exit(0)
+            ExitProgram()
 
 def GetEnvironmentValue():
     global data
@@ -759,7 +760,7 @@ def SetEnvironmentValue():
             os.system('sysdm.cpl ,3')
             messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
             logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
-            exit(0)
+            ExitProgram()
         else:
             envWindow.after(1, envWindow.focus_force())
 
@@ -917,7 +918,6 @@ def init():
             UpdateProgram()
 
     def OpenGameStatusDir():
-        userApp = os.environ.get('AppData')
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
             logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory exist. The target directory will now open.')
             os.startfile(f'"{userApp}/DiabloLauncher"')
@@ -1009,7 +1009,9 @@ def init():
 
     def OpenD2RModDir():
         if not os.path.isdir(f'{gamePath}/Diablo II Resurrected/mods'):
+            logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory does not exist. The target directory will creating at this time.')
             os.mkdir(f'{gamePath}/Diablo II Resurrected/mods')
+        logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory exist. The target directory will now open.')
         os.startfile(f'"{gamePath}/Diablo II Resurrected/mods"')
 
     def ModApplyHelp():
