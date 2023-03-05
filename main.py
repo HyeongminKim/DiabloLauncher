@@ -6,13 +6,13 @@
 try:
     import os
     os.system('')
-    f'[FATL: 70-01-01 12:00] The DiabloLauncher stoped due to unsupported python version. (version_info < {3})'
+    f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3})'
 
     import subprocess
 
     from enum import Enum
 except (ModuleNotFoundError, ImportError) as error:
-    print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stoped due to {error}\033[0m')
+    print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
 
 class color(Enum):
@@ -80,7 +80,7 @@ try:
     from tkinter import Entry
     from idlelib.tooltip import Hovertip
 except (ModuleNotFoundError, ImportError) as error:
-    logformat(errorLevel.FATL, f'The DiabloLauncher stoped due to {error}')
+    logformat(errorLevel.FATL, f'The DiabloLauncher stopped due to {error}')
 
 diabloExecuted = False
 updateChecked = False
