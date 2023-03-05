@@ -6,11 +6,13 @@
 try:
     import os
     os.system('')
-    f'[FATL] The DiabloLauncher stoped due to unsupported python version. (version_info < {3})'
+    f'[FATL: 70-01-01 12:00] The DiabloLauncher stoped due to unsupported python version. (version_info < {3})'
+
+    import subprocess
 
     from enum import Enum
 except (ModuleNotFoundError, ImportError) as error:
-    print(f'\033[35m[FATL] The DiabloLauncher stoped due to {error}\033[0m')
+    print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stoped due to {error}\033[0m')
     exit(1)
 
 class color(Enum):
@@ -30,13 +32,13 @@ class errorLevel(Enum):
 
 def logformat(level: errorLevel, text: str):
     if level == errorLevel.INFO:
-        print(f'{color.GRAY.value}[INFO] {text}{color.RESET.value}')
+        print(f"{color.GRAY.value}[INFO: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
     elif level == errorLevel.WARN:
-        print(f'{color.YELLOW.value}[WARN] {text}{color.RESET.value}')
+        print(f"{color.YELLOW.value}[WARN: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
     elif level == errorLevel.ERR:
-        print(f'{color.RED.value}[ERR] {text}{color.RESET.value}')
+        print(f"{color.RED.value}[ ERR: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
     elif level == errorLevel.FATL:
-        print(f'{color.MAGENTA.value}[FATL] {text}{color.RESET.value}')
+        print(f"{color.MAGENTA.value}[FATL: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
         ExitProgram()
     else:
         logformat(errorLevel.ERR, f'{level} is not known error level type.')
@@ -62,7 +64,6 @@ try:
         logformat(errorLevel.FATL, f"{platform.processor()} CPU does not support (core: {multiprocessing.cpu_count()}, {'x64' if sys.maxsize > 2**32 else 'x86'}).\n\tPlease check Diablo Requirements and Specifications.")
 
     import signal
-    import subprocess
     import logging
 
     from datetime import datetime
