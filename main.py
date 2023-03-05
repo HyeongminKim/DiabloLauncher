@@ -1007,6 +1007,10 @@ def init():
             contents.pack()
             soundRecover.mainloop()
 
+    def OpenBattleNet():
+        logformat(errorLevel.INFO, 'Battle.net Launcher will now open... Please wait.')
+        os.startfile('C:/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
+
     def OpenD2RModDir():
         if not os.path.isdir(f'{gamePath}/Diablo II Resurrected/mods'):
             logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory does not exist. The target directory will creating at this time.')
@@ -1077,6 +1081,13 @@ def init():
     fileMenu = Menu(menubar, tearoff=0)
     fileMenu.add_command(label='게임폴더 열기', command=OpenGameDir, state='disabled')
     fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir, state='disabled')
+    fileMenu.add_separator()
+
+    if os.path.isfile('C:/Program Files (x86)/Battle.net/Battle.net Launcher.exe'):
+        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal')
+    else:
+        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled')
+
     menubar.add_cascade(label='파일', menu=fileMenu)
 
     toolsMenu = Menu(menubar, tearoff=0)
