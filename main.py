@@ -983,8 +983,10 @@ def init():
             webbrowser.open('https://www.apple.com/kr/legal/intellectual-property/guidelinesfor3rdparties.html')
 
         if resolutionProgram:
+            logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
             text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {subprocess.check_output('git --version', shell=True, encoding='utf-8').strip()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022 Hyeongmin Kim\n\n{subprocess.check_output('QRes /S | findstr QRes', shell=True, encoding='utf-8').strip()}\n{subprocess.check_output('QRes /S | findstr Copyright', shell=True, encoding='utf-8').strip()}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         else:
+            logformat(errorLevel.INFO, "Resolution change program does not detected")
             text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {subprocess.check_output('git --version', shell=True, encoding='utf-8').strip()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         blizzard = Button(about, text='블리자드 저작권 고지', command=openBlizzardLegalSite)
         apple = Button(about, text='애플컴퓨터 저작권 고지', command=openAppleLegalSite)
