@@ -6,10 +6,10 @@
 try:
     import os
     os.system('')
+    os.system('chcp 65001 > NUL')
     f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3})'
 
     import subprocess
-
     from enum import Enum
 except (ModuleNotFoundError, ImportError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
@@ -44,8 +44,9 @@ def logformat(level: errorLevel, text: str):
         logformat(errorLevel.ERR, f'{level} is not known error level type.')
 
 try:
-    import platform
+    logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
 
+    import platform
     if platform.system() != 'Windows':
         logformat(errorLevel.FATL, f'{platform.system()} system does not support yet.')
     else:
@@ -1179,8 +1180,6 @@ def init():
     root.mainloop()
 
 if __name__ == '__main__':
-    os.system('chcp 65001 > NUL')
-    logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
     multiprocessing.log_to_stderr()
     logger = multiprocessing.get_logger()
     logger.setLevel(logging.INFO)
