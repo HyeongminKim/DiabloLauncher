@@ -6,7 +6,6 @@
 try:
     import os
     os.system('')
-    os.system('chcp 65001 > NUL')
     f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3})'
 
     import subprocess
@@ -44,12 +43,13 @@ def logformat(level: errorLevel, text: str):
         logformat(errorLevel.ERR, f'{level} is not known error level type.')
 
 try:
-    logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
-
     import platform
     if platform.system() != 'Windows':
-        logformat(errorLevel.FATL, f'{platform.system()} system does not support yet.')
+        raise EnvironmentError(f'{platform.system()} system does not support yet.')
     else:
+        os.system('chcp 65001 > NUL')
+        logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
+
         if platform.release() == '7' or platform.release() == '8' or platform.release() == '10' or platform.release() == '11':
             logformat(errorLevel.INFO, 'support OS detected.')
         else:
@@ -80,8 +80,9 @@ try:
     from tkinter import filedialog
     from tkinter import Entry
     from idlelib.tooltip import Hovertip
-except (ModuleNotFoundError, ImportError) as error:
-    logformat(errorLevel.FATL, f'The DiabloLauncher stopped due to {error}')
+except (ModuleNotFoundError, ImportError, EnvironmentError) as error:
+    print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
+    exit(1)
 
 diabloExecuted = False
 updateChecked = False
