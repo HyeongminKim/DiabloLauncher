@@ -251,17 +251,18 @@ def LoadGameRunningTime():
     try:
         if os.path.isfile(f'{userApp}/DiabloLauncher/runtime.log'):
             runtimeFile = open(f'{userApp}/DiabloLauncher/runtime.log', 'r', encoding='utf-8')
+            logformat(errorLevel.INFO, f'Loading game stats {userApp}/DiabloLauncher/runtime.log with read only mode.')
             while True:
                 line = runtimeFile.readline()
                 if not line:
                     break
-                logformat(errorLevel.INFO, f'{line}')
                 data.append(line)
-            for line in data:
-                logformat(errorLevel.INFO, f'{float(line)}')
+            for index, line in enumerate(data, 1):
+                logformat(errorLevel.INFO, f"{'{:5d}'.format(index)} {float(line)}")
                 if stat_max < float(line):
                     stat_max = float(line)
                 stat_sum += float(line)
+            logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
             fileMenu.entryconfig(1, state='normal')
         else:
             raise FileNotFoundError
@@ -552,13 +553,9 @@ def GetEnvironmentValue():
             logformat(errorLevel.INFO, 'parameter conversion succeed')
 
         if resolutionProgram:
-            logformat(errorLevel.INFO, f'{gamePath}')
-            logformat(errorLevel.INFO, f'{int(originX)}')
-            logformat(errorLevel.INFO, f'{int(originY)}')
-            logformat(errorLevel.INFO, f'{float(originFR)}')
-            logformat(errorLevel.INFO, f'{int(alteredX)}')
-            logformat(errorLevel.INFO, f'{int(alteredY)}')
-            logformat(errorLevel.INFO, f'{float(alteredFR)}')
+            logformat(errorLevel.INFO, f'Game path: {gamePath}')
+            logformat(errorLevel.INFO, f'Default resolution: {int(originX)} X {int(originY)} {float(originFR)}Hz')
+            logformat(errorLevel.INFO, f'Convert resolution: {int(alteredX)} X {int(alteredY)} {float(alteredFR)}Hz')
 
         if os.path.isdir(gamePath):
             fileMenu.entryconfig(0, state='normal')
@@ -626,13 +623,9 @@ def GetEnvironmentValue():
     finally:
         logformat(errorLevel.INFO, f'{data}')
         if resolutionProgram:
-            logformat(errorLevel.INFO, f'{gamePath}')
-            logformat(errorLevel.INFO, f'{originX}')
-            logformat(errorLevel.INFO, f'{originY}')
-            logformat(errorLevel.INFO, f'{originFR}')
-            logformat(errorLevel.INFO, f'{alteredX}')
-            logformat(errorLevel.INFO, f'{alteredY}')
-            logformat(errorLevel.INFO, f'{alteredFR}')
+            logformat(errorLevel.INFO, f'Game path: {gamePath}')
+            logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
+            logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
         UpdateResProgram()
 
 def SetEnvironmentValue():
@@ -842,15 +835,15 @@ def ReloadStatusBar():
     elapsedTime = loadEnd - loadStart
     if elapsedTime > loadWaitTime:
         logformat(errorLevel.WARN, f'The request timeout when loading game data {userApp}/DiabloLauncher/runtime.log file.')
-        logformat(errorLevel.INFO, f'Loading game data elapsed time was {elapsedTime} seconds. But, current timeout setting is {loadWaitTime} seconds.')
+        logformat(errorLevel.INFO, f"Loading game data elapsed time was{'{:5.2f}'.format(elapsedTime)} seconds. But, current timeout setting is {loadWaitTime} seconds.")
         logformat(errorLevel.INFO, f'NOTE: The {userApp}/DiabloLauncher/runtime.log contents cleared.')
         ClearGameRunningTime()
     elif elapsedTime > (loadWaitTime / 2):
         logformat(errorLevel.WARN, f'The request job too slow when loading game data {userApp}/DiabloLauncher/runtime.log file.')
-        logformat(errorLevel.INFO, f'Loading game data elapsed time was {elapsedTime} seconds, and current timeout setting is {loadWaitTime} seconds.')
+        logformat(errorLevel.INFO, f"Loading game data elapsed time was{'{:5.2f}'.format(elapsedTime)} seconds, and current timeout setting is {loadWaitTime} seconds.")
         logformat(errorLevel.INFO, f'NOTE: {userApp}/DiabloLauncher/runtime.log contents will clear when this issues raised again.')
     else:
-        logformat(errorLevel.INFO, f'Loading game data elapsed time was {elapsedTime} seconds.')
+        logformat(errorLevel.INFO, f"Loading game data elapsed time was{'{:5.2f}'.format(elapsedTime)} seconds.")
 
     logformat(errorLevel.INFO, f'Previous game time for max session: {maxTime}')
     logformat(errorLevel.INFO, f'Previous game time for avg session: {avgTime}')
