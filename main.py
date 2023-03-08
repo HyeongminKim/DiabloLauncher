@@ -90,7 +90,7 @@ forceReboot = False
 
 rebootWaitTime = 10
 loadWaitTime = 10
-ignoreTime = 2
+ignoreTime = 5
 
 userApp = os.environ.get('AppData')
 userLocalApp = os.environ.get('LocalAppData')
@@ -367,7 +367,7 @@ def LaunchGameAgent():
                 messagebox.showinfo('디아블로 런처', f'이번 세션에는 {hours}시간 {seconds}초 동안 플레이 했습니다.')
             elif minutes == 0 and seconds == 0:
                 messagebox.showinfo('디아블로 런처', f'이번 세션에는 {hours}시간 동안 플레이 했습니다. ')
-        elif minutes >= 2:
+        elif minutes >= ignoreTime:
             if seconds > 0:
                 messagebox.showinfo('디아블로 런처', f'이번 세션에는 {minutes}분 {seconds}초 동안 플레이 했습니다. ')
             else:
