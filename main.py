@@ -86,18 +86,18 @@ except (ModuleNotFoundError, ImportError, EnvironmentError) as error:
 
 diabloExecuted = False
 updateChecked = False
-
 forceReboot = False
+
 rebootWaitTime = 10
 loadWaitTime = 10
+ignoreTime = 2
 
-data = None
 userApp = os.environ.get('AppData')
 userLocalApp = os.environ.get('LocalAppData')
-now = datetime.now()
+
+data = None
 gameStart = None
 gameEnd = None
-cnt_time = now.strftime("%H:%M:%S")
 gamePath = None
 resolutionProgram = False
 originX = None
@@ -233,8 +233,8 @@ def SaveGameRunningTime(playTime: float):
             runtimeFile = open(f'{userApp}/DiabloLauncher/runtime.log', 'a', encoding='utf-8')
         logformat(errorLevel.INFO, f'playTime: {playTime} will be write in {userApp}/DiabloLauncher/runtime.log')
         hours, minutes, seconds = FormatTime(playTime, True)
-        if hours == 0 and minutes < 2:
-            logformat(errorLevel.INFO, f'{playTime} will be ignored. The provided {hours}:{minutes}.{seconds} playtime lower then 2 minutes.')
+        if hours == 0 and minutes < ignoreTime:
+            logformat(errorLevel.INFO, f'{playTime} will be ignored. The provided {hours}:{minutes}.{seconds} playtime lower then {ignoreTime} minutes.')
         else:
             runtimeFile.write(f'{str(playTime)}\n')
             logformat(errorLevel.INFO, f'Successfully wrote {playTime} in {userApp}/DiabloLauncher/runtime.log')
