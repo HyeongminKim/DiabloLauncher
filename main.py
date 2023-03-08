@@ -66,6 +66,7 @@ try:
 
     import signal
     import logging
+    import winreg as reg
 
     from datetime import datetime
     import time
@@ -796,6 +797,51 @@ def RequirementCheck():
         logformat(errorLevel.WARN, 'Battle.net does not support network drive yet.')
         messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 네트워크 드라이브로 지정되어 있습니다. Battle.net은 아직 이 드라이브를 지원하지 않습니다.')
 
+def GetRegistryValue(regAddress: str, defaultLocation: str):
+    open = None
+    try:
+        key = reg.HKEY_LOCAL_MACHINE
+        open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
+        value, type = reg.QueryValueEx(open, "DisplayIcon")
+        if os.path.isfile(value):
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory.')
+            os.startfile(value)
+        else:
+            logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
+    except (OSError, WindowsError):
+        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry. replace target location to {defaultLocation}')
+        if os.path.isfile(defaultLocation):
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory.')
+            os.startfile(defaultLocation)
+        else:
+            logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
+    finally:
+        if(open is not None): reg.CloseKey(open)
+
+def ReturnRegistryValue(regAddress: str, defaultLocation: str):
+    open = None
+    try:
+        key = reg.HKEY_LOCAL_MACHINE
+        open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
+        value, type = reg.QueryValueEx(open, "DisplayIcon")
+        if os.path.isfile(value):
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory.')
+            if(open is not None): reg.CloseKey(open)
+            return True
+        else:
+            logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
+            if(open is not None): reg.CloseKey(open)
+            return False
+    except (OSError, WindowsError):
+        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry. replace target location to {defaultLocation}')
+        if os.path.isfile(defaultLocation):
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory.')
+            if(open is not None): reg.CloseKey(open)
+            return True
+        else:
+            logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
+            if(open is not None): reg.CloseKey(open)
+            return False
 
 def UpdateStatusValue():
     GetEnvironmentValue()
@@ -1006,8 +1052,7 @@ def init():
             soundRecover.mainloop()
 
     def OpenBattleNet():
-        logformat(errorLevel.INFO, 'Battle.net Launcher will now open... Please wait.')
-        os.startfile('C:/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
+        GetRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net', 'C:/Program Files (x86)/Battle.net/Battle.net Launcher.exe')
 
     def OpenD2RModDir():
         if not os.path.isdir(f'{gamePath}/Diablo II Resurrected/mods'):
@@ -1081,7 +1126,7 @@ def init():
     fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir, state='disabled')
     fileMenu.add_separator()
 
-    if os.path.isfile('C:/Program Files (x86)/Battle.net/Battle.net Launcher.exe'):
+    if ReturnRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net', 'C:/Program Files (x86)/Battle.net/Battle.net Launcher.exe'):
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal')
     else:
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled')
