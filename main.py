@@ -1100,7 +1100,17 @@ def init():
             launch.after(1, launch.focus_force())
 
     def ModGeneralHelp():
-        messagebox.showinfo(title='디아블로 모드', message='"없는 문자열" 오류가 발생할 경우 모드팩 업데이트가 출시 되었는지 확인하시거나, json파일의 모든 누락된 ID를 직접 추가해 주세요.')
+        messagebox.showinfo(title='디아블로 모드', message='"없는 문자열" 오류가 발생할 경우 모드팩 업데이트가 출시 되었는지 확인하시거나, json파일의 모든 누락된 ID를 직접 추가해 주세요. 자세한 사항은 "모드 업데이트 방법"을 참조해 주세요')
+        launch.after(1, launch.focus_force())
+
+    def ModAdvancedHelp():
+        msg_box = messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드 생성 또는 편집시 유용한 프로그램 리스트를 확인하시겠습니까?')
+        if msg_box:
+            webbrowser.open('https://github.com/eezstreet/D2RModding-SpriteEdit')
+            webbrowser.open('http://www.zezula.net/en/casc/main.html')
+            webbrowser.open('https://github.com/Cjreek/D2ExcelPlus')
+            webbrowser.open('https://github.com/WinMerge/winimerge')
+            webbrowser.open('https://github.com/microsoft/vscode')
         launch.after(1, launch.focus_force())
 
     def ModHelpWindow():
@@ -1111,14 +1121,17 @@ def init():
 
         if definedMod is not None and definedMod != "":
             logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
-            generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=5, command=ModGeneralHelp, state='normal')
+            generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=2, command=ModGeneralHelp, state='normal')
+            advancedHelp = Button(launch, text='모드 업데이트 방법', width=20, height=2, command=ModAdvancedHelp, state='normal')
         else:
             logformat(errorLevel.INFO, 'mods resolve problem button was disabled. reason: Unable to load mods detail. no such file or directory.')
-            generalHelp = Button(launch, text='모드 문제해결', width=20, height=5, command=ModGeneralHelp, state='disabled')
+            generalHelp = Button(launch, text='모드 문제해결', width=20, height=3, command=ModGeneralHelp, state='disabled')
+            advancedHelp = Button(launch, text='새로운 모드 생성', width=20, height=2, command=ModAdvancedHelp, state='normal')
 
-        note.pack()
-        generalHelp.pack(side=LEFT, padx=10)
-        applyHelp.pack(side=RIGHT, padx=10)
+        note.grid(row=0, column=0, columnspan=2)
+        generalHelp.grid(row=1, column=0)
+        advancedHelp.grid(row=2, column=0)
+        applyHelp.grid(row=1, column=1, rowspan=3)
         ShowWindow()
         launch.mainloop()
 
