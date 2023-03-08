@@ -14,6 +14,10 @@ except (ModuleNotFoundError, ImportError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
 
+userApp = os.environ.get('AppData')
+userLocalApp = os.environ.get('LocalAppData')
+logLevel = os.environ.get('D2R_LOG_LEVEL')
+
 class color(Enum):
     RESET = '\033[0m'
     RED = '\033[31m'
@@ -31,7 +35,8 @@ class errorLevel(Enum):
 
 def logformat(level: errorLevel, text: str):
     if level == errorLevel.INFO:
-        print(f"{color.GRAY.value}[INFO: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
+        if logLevel is not None and logLevel == "verbose":
+            print(f"{color.GRAY.value}[INFO: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
     elif level == errorLevel.WARN:
         print(f"{color.YELLOW.value}[WARN: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
     elif level == errorLevel.ERR:
@@ -92,9 +97,6 @@ forceReboot = False
 rebootWaitTime = 10
 loadWaitTime = 10
 ignoreTime = 5
-
-userApp = os.environ.get('AppData')
-userLocalApp = os.environ.get('LocalAppData')
 
 data = None
 gameStart = None
@@ -1221,9 +1223,10 @@ def init():
     root.mainloop()
 
 if __name__ == '__main__':
-    multiprocessing.log_to_stderr()
-    logger = multiprocessing.get_logger()
-    logger.setLevel(logging.INFO)
+    if logLevel is not None and logLevel == "verbose":
+        multiprocessing.log_to_stderr()
+        logger = multiprocessing.get_logger()
+        logger.setLevel(logging.INFO)
 
     mainThread = multiprocessing.Process(target=init)
     updateThread = multiprocessing.Process(target=UpdateProgram)
