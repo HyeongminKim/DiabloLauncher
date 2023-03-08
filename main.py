@@ -1162,7 +1162,12 @@ def init():
     aboutMenu.add_command(label='GitHub 방문', command=OpenDevSite)
     aboutMenu.add_command(label='이 디아블로 런처에 관하여...', command=AboutThisApp, accelerator='F1')
     aboutMenu.add_separator()
-    aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues)
+
+    if logLevel is not None and logLevel == "verbose":
+        aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='normal')
+    else:
+        aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='disabled')
+
     menubar.add_cascade(label='정보', menu=aboutMenu)
 
     root.bind_all("<F5>", ForceReload)
