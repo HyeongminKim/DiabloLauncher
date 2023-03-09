@@ -524,8 +524,14 @@ def SearchModInGitHub():
 def ModsPreferSelector():
     msg_box = messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드를 병합하지 않고 선호하는 모드를 불러오시려면 시스템 환경변수에서 "D2R_MOD_SET" 변수에 선호하는 모드 이름을 작성하시기 바랍니다. 지금 시스템 환경변수를 설정하시겠습니까?')
     if msg_box:
-        msg_box = messagebox.askquestion('디아블로 런처', '"고급 시스템 설정"에 접근 시 관리자 권한을 요청하는 프롬프트가 나타날 수 있으며, 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 계속하시겠습니까?', icon='question')
-        if msg_box == 'yes':
+        msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
+        if msg_box is not None and msg_box:
+            logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
+            subprocess.Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
+            messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
+            logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
+            ExitProgram()
+        elif msg_box is not None and not msg_box:
             logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
             os.system('sysdm.cpl ,3')
             messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
@@ -753,8 +759,14 @@ def SetEnvironmentValue():
                 envWindow.destroy()
 
     def openEnvSetting():
-        msg_box = messagebox.askquestion('디아블로 런처', '"고급 시스템 설정"에 접근 시 관리자 권한을 요청하는 프롬프트가 나타날 수 있으며, 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 계속하시겠습니까?', icon='question')
-        if msg_box == 'yes':
+        msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
+        if msg_box is not None and msg_box:
+            logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
+            subprocess.Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
+            messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
+            logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
+            ExitProgram()
+        elif msg_box is not None and not msg_box:
             logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
             os.system('sysdm.cpl ,3')
             messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
