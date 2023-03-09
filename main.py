@@ -1074,6 +1074,7 @@ def init():
                 except (ModuleNotFoundError, ImportError) as error:
                     logformat(errorLevel.ERR, f'Unable to copy mods name: " -mod {definedMod} -txt". reason: {error}. all known module was not installed yet. please copy it manually.')
                     messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
+                    launch.after(1, launch.focus_force())
                 else:
                     msg_box = messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
                     if msg_box:
@@ -1116,7 +1117,7 @@ def init():
     def ModHelpWindow():
         launch.title('모드 도움말')
 
-        note = Label(launch, text='사용가능한 도움말')
+        note = Label(launch, text='사용가능한 도움말', height=2)
         applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp)
 
         if definedMod is not None and definedMod != "":
