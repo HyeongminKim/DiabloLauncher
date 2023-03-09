@@ -43,22 +43,23 @@ def logformat(level: errorLevel, text: str):
         print(f"{color.RED.value}[ ERR: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
     elif level == errorLevel.FATL:
         print(f"{color.MAGENTA.value}[FATL: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
-        ExitProgram()
-    else:
-        logformat(errorLevel.ERR, f'{level} is not known error level type.')
+        if root is not None and launch is not None:
+            ExitProgram()
+        else:
+            exit(1)
 
 try:
     import platform
     if platform.system() != 'Windows':
-        raise EnvironmentError(f'{platform.system()} system does not support yet.')
-    else:
-        os.system('chcp 65001 > NUL')
-        logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
+        raise OSError(f'{platform.system()} system does not support yet.')
 
-        if platform.release() == '7' or platform.release() == '8' or platform.release() == '10' or platform.release() == '11':
-            logformat(errorLevel.INFO, 'support OS detected.')
-        else:
-            logformat(errorLevel.FATL, f'{platform.system()} {platform.release()} does not support. Please check Diablo Requirements and Specifications.')
+    os.system('chcp 65001 > NUL')
+    logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
+
+    if platform.release() == '7' or platform.release() == '8' or platform.release() == '10' or platform.release() == '11':
+        logformat(errorLevel.INFO, 'support OS detected.')
+    else:
+        logformat(errorLevel.FATL, f'{platform.system()} {platform.release()} does not support. Please check Diablo Requirements and Specifications.')
 
     import multiprocessing
     import sys
@@ -86,7 +87,7 @@ try:
     from tkinter import filedialog
     from tkinter import Entry
     from idlelib.tooltip import Hovertip
-except (ModuleNotFoundError, ImportError, EnvironmentError) as error:
+except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
 
@@ -155,7 +156,7 @@ def AlertWindow():
         messagebox.showwarning('디아블로 런처', '해상도가 조절된 상태에서는 런처를 종료할 수 없습니다. 먼저 해상도를 기본 설정으로 변경해 주시기 바랍니다.')
 
 def ExitProgram():
-    if(launch != None and root != None):
+    if(launch is not None and root is not None):
         launch.destroy()
         root.destroy()
     exit(0)
