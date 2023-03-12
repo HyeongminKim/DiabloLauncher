@@ -141,9 +141,12 @@ def HideWindow():
 def UpdateResProgram():
     global resolutionProgram
     logformat(errorLevel.INFO, 'QRes install check')
-    if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Program/Common/QRes.exe)'):
-        logformat(errorLevel.INFO, f"QRes installed in {subprocess.check_output('where QRes', shell=True, encoding='utf-8').strip()}")
-        resolutionProgram = True
+    if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
+        if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and os.system('where QRes > NUL 2>&1') != 0:
+            logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
+        else:
+            logformat(errorLevel.INFO, f"QRes installed in {subprocess.check_output('where QRes', shell=True, encoding='utf-8').strip()}")
+            resolutionProgram = True
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
 
