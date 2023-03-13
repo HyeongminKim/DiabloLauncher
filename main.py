@@ -821,6 +821,23 @@ def RequirementCheck():
         logformat(errorLevel.WARN, 'Battle.net does not support network drive yet.')
         messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 네트워크 드라이브로 지정되어 있습니다. Battle.net은 아직 이 드라이브를 지원하지 않습니다.')
 
+def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
+    target = None
+    try:
+        key = reg.HKEY_LOCAL_MACHINE
+        target = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
+        value, type = reg.QueryValueEx(target, queryName)
+        if os.path.isfile(value) or os.path.isdir(value):
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory is ready.')
+            if(target is not None): reg.CloseKey(target)
+            return value
+        else:
+            raise FileNotFoundError
+    except (OSError, WindowsError, FileNotFoundError):
+        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
+        if(target is not None): reg.CloseKey(target)
+        return None
+
 def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
     open = None
     try:
@@ -828,7 +845,7 @@ def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
         open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
         value, type = reg.QueryValueEx(open, queryName)
         if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory.')
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory is ready.')
             os.startfile(value)
         else:
             logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
@@ -844,14 +861,12 @@ def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
         open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
         value, type = reg.QueryValueEx(open, queryName)
         if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory.')
+            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory is ready.')
             if(open is not None): reg.CloseKey(open)
             return True
         else:
-            logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
-            if(open is not None): reg.CloseKey(open)
-            return False
-    except (OSError, WindowsError):
+            raise FileNotFoundError
+    except (OSError, WindowsError, FileNotFoundError):
         logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
         if(open is not None): reg.CloseKey(open)
         return False
