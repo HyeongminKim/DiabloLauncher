@@ -406,7 +406,7 @@ def LaunchGameAgent():
         note.pack()
         diablo2.pack(side=LEFT, padx=10)
         diablo3.pack(side=RIGHT, padx=10)
-        if not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+        if diablo2Path is None or not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
             diablo2['state'] = "disabled"
         else:
@@ -434,7 +434,7 @@ def LaunchGameAgent():
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
                 diablo2['text'] = 'Diablo II Resurrected'
 
-        if not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        if diablo3Path is None or not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo III launch button disabled, because launcher is not detected.')
             diablo3['state'] = "disabled"
         else:
@@ -767,9 +767,10 @@ def RequirementCheck():
     elif envData is None:
         logformat(errorLevel.WARN, 'parameter does not set.')
         messagebox.showwarning('디아블로 런처', '해상도 벡터가 설정되어 있지 않습니다. "[도구]->[해상도 벡터 편집기]" 메뉴를 클릭하여 임시로 모든 기능을 사용해 보십시오.')
-    elif not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+
+    if diablo2Path is None and diablo3Path is None:
         logformat(errorLevel.WARN, 'The game does not exist in registry.')
-        messagebox.showwarning('디아블로 런처', '등록된 레지스트리에 적합한 게임이 존재하지 않습니다.')
+        messagebox.showwarning('디아블로 런처', '이 컴퓨터에 디아블로 게임을 찾을 수 없습니다. 자세한 사항은 GitHub에 방문해 주세요.')
 
 def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
     target = None
@@ -828,20 +829,20 @@ def UpdateStatusValue():
     cnt_time = now.strftime("%H:%M:%S")
 
     if resolutionProgram:
-        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        if diablo2Path is not None and diablo3Path is not None:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+        elif diablo2Path is not None:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        elif diablo3Path is not None:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
         else:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
     else:
-        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        if diablo2Path is not None and diablo3Path is not None:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+        elif diablo2Path is not None:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        elif diablo3Path is not None:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
         else:
             status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n"
@@ -969,13 +970,13 @@ def init():
                 logformat(errorLevel.INFO, "QRes version: None")
             logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None and resolutionProgram else 'Unknown'}")
 
-            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            if diablo2Path is not None and diablo3Path is not None:
                 logformat(errorLevel.INFO, "Installed Diablo version: II, III")
                 logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
-            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+            elif diablo2Path is not None:
                 logformat(errorLevel.INFO, "Installed Diablo version: II")
                 logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
-            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            elif diablo3Path is not None:
                 logformat(errorLevel.INFO, "Installed Diablo version: III")
             else:
                 logformat(errorLevel.INFO, "Installed Diablo version: None")
@@ -1031,8 +1032,9 @@ def init():
         OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
 
     def OpenD2RModDir():
-        logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory exist. The target directory will now open.')
-        os.startfile(f'"{diablo2Path}/mods"')
+        if diablo2Path is not None:
+            logformat(errorLevel.INFO, f'The {diablo2Path}/mods directory exist. The target directory will now open.')
+            os.startfile(f'"{diablo2Path}/mods"')
 
     def ModApplyHelp():
         if definedMod is not None and definedMod != "":
@@ -1175,20 +1177,20 @@ def init():
     RequirementCheck()
 
     if resolutionProgram:
-        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        if diablo2Path is not None and diablo3Path is not None:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+        elif diablo2Path is not None:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        elif diablo3Path is not None:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
         else:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
     else:
-        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        if diablo2Path is not None and diablo3Path is not None:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+        elif diablo2Path is not None:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        elif diablo3Path is not None:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
         else:
             status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n")
