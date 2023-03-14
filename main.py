@@ -645,6 +645,9 @@ def GetResolutionValue():
         if resolutionProgram:
             logformat(errorLevel.INFO, f'Default resolution: {int(originX)} X {int(originY)} {float(originFR)}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {int(alteredX)} X {int(alteredY)} {float(alteredFR)}Hz')
+            if (os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>"') != 0) or (os.system(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>"') != 0):
+                messagebox.showwarning('디아블로 런처', '일부 해상도가 이 디스플레이와 호환되지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
+                logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
 
     except (ValueError, TypeError, AttributeError) as error:
         messagebox.showerror('디아블로 런처', f'해상도 벡터 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
@@ -713,17 +716,22 @@ def SetResolutionValue():
             logformat(errorLevel.WARN, 'some env can not be None.')
             envWindow.after(1, envWindow.focus_force())
             return
-        else:
-            try:
-                os.environ['DiabloLauncher'] = f'{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
-                logformat(errorLevel.INFO, f"resolutionVector = {os.environ.get('DiabloLauncher')}")
-            except AttributeError as error:
-                logformat(errorLevel.ERR, f"could not save env value: {error}")
-                UpdateStatusValue()
 
-        UpdateStatusValue()
-        ReloadStatusBar()
-        envWindow.destroy()
+        if (os.system(f'QRes /L | findstr /r "{envOriginX.get()}x" |findstr /r "{envOriginY.get()}," | findstr /r "\\<{envOriginFR.get()}\\>"') != 0) or (os.system(f'QRes /L | findstr /r "{envAlteredX.get()}x" |findstr /r "{envAlteredY.get()}," | findstr /r "\\<{envAlteredFR.get()}\\>"') != 0):
+            messagebox.showwarning('해상도 벡터 편집기', '일부 해상도가 이 디스플레이와 호환되지 않습니다. 현재 디스플레이와 호환되는 다른 해상도를 입력해 주세요.')
+            logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
+            envWindow.after(1, envWindow.focus_force())
+            return
+
+        try:
+            os.environ['DiabloLauncher'] = f'{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
+            logformat(errorLevel.INFO, f"resolutionVector = {os.environ.get('DiabloLauncher')}")
+            UpdateStatusValue()
+            ReloadStatusBar()
+            envWindow.destroy()
+        except AttributeError as error:
+            logformat(errorLevel.ERR, f"could not save env value: {error}")
+            UpdateStatusValue()
 
     def openEnvSetting():
         msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
