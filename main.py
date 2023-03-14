@@ -148,11 +148,16 @@ def CheckResProgram():
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
         if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and os.system('where QRes > NUL 2>&1') != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
+            toolsMenu.entryconfig(3, state='disabled')
+            resolutionProgram = False
         else:
             logformat(errorLevel.INFO, f"QRes installed in {subprocess.check_output('where QRes', shell=True, encoding='utf-8').strip()}")
+            toolsMenu.entryconfig(3, state='normal')
             resolutionProgram = True
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
+        toolsMenu.entryconfig(3, state='disabled')
+        resolutionProgram = False
 
 def AlertWindow():
     msg_box = messagebox.askquestion('디아블로 런처', f'현재 디스플레이 해상도가 {alteredX}x{alteredY} 로 조정되어 있습니다. 게임이 실행 중인 상태에서 해상도 설정을 복구할 경우 퍼포먼스에 영향을 미칠 수 있습니다. 그래도 해상도 설정을 복구하시겠습니까?', icon='question')
@@ -367,8 +372,8 @@ def LaunchGameAgent():
         root.protocol("WM_DELETE_WINDOW", ExitProgram)
         gameEndTime = time.time()
         switchButton['text'] = '디아블로 실행...'
-        toolsMenu.entryconfig(3, state='normal')
         if resolutionProgram:
+            toolsMenu.entryconfig(3, state='normal')
             if os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1') != 0:
                 logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
                 messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
@@ -476,7 +481,8 @@ def EmgergencyReboot():
         emergencyButton['text'] = '긴급 전원 작업 (게임 저장 후 실행 요망)'
         logformat(errorLevel.INFO, 'Aborting Emergency agent...')
         switchButton['state'] = "normal"
-        toolsMenu.entryconfig(3, state='normal')
+        if resolutionProgram:
+            toolsMenu.entryconfig(3, state='normal')
         os.system('shutdown -a')
         logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
         statusbar['anchor'] = CENTER
@@ -608,8 +614,15 @@ def FindGameInstalled():
     else:
         fileMenu.entryconfig(1, state='disabled')
 
+    if(diablo2Path is None and diablo3Path is None):
+        switchButton['state'] = "disabled"
+    else:
+        switchButton['state'] = "normal"
+
 def GetEnvironmentValue():
     global envData
+
+    CheckResProgram()
     if resolutionProgram:
         global originX
         global originY
@@ -636,6 +649,7 @@ def GetEnvironmentValue():
     except (ValueError, TypeError, AttributeError) as error:
         messagebox.showerror('디아블로 런처', f'환경변수 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
         logformat(errorLevel.ERR, f'Unknown data or parameter style: {envData}\n\t{error}')
+        switchButton['state'] = "disabled"
         envData = None
         originX = None
         originY = None
@@ -648,61 +662,50 @@ def GetEnvironmentValue():
         if resolutionProgram:
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
-        CheckResProgram()
 
 def SetEnvironmentValue():
     messagebox.showinfo('환경변수 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
     envWindow = Tk()
     envWindow.title('환경변수 편집기')
-    if resolutionProgram:
-        envWindow.geometry("265x100+200+200")
-    else:
-        envWindow.geometry("280x100+200+200")
+    envWindow.geometry("265x70+200+200")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
 
-    if resolutionProgram:
-        originXtext = Label(envWindow, text='기본 X')
-        originYtext = Label(envWindow, text=' Y')
-        originFRtext = Label(envWindow, text=' FR')
-        envOriginX = Entry(envWindow, width=5)
-        envOriginY = Entry(envWindow, width=5)
-        envOriginFR = Entry(envWindow, width=4)
+    originXtext = Label(envWindow, text='기본 X')
+    originYtext = Label(envWindow, text=' Y')
+    originFRtext = Label(envWindow, text=' FR')
+    envOriginX = Entry(envWindow, width=5)
+    envOriginY = Entry(envWindow, width=5)
+    envOriginFR = Entry(envWindow, width=4)
 
-        alteredXtext = Label(envWindow, text='변경 X')
-        alteredYtext = Label(envWindow, text=' Y')
-        alteredFRtext = Label(envWindow, text=' FR')
-        envAlteredX = Entry(envWindow, width=5)
-        envAlteredY = Entry(envWindow, width=5)
-        envAlteredFR = Entry(envWindow, width=4)
-    else:
-        infoText = Label(envWindow, text='나머지 환경변수는 QRes가 필요하므로 제외됨')
+    alteredXtext = Label(envWindow, text='변경 X')
+    alteredYtext = Label(envWindow, text=' Y')
+    alteredFRtext = Label(envWindow, text=' FR')
+    envAlteredX = Entry(envWindow, width=5)
+    envAlteredY = Entry(envWindow, width=5)
+    envAlteredFR = Entry(envWindow, width=4)
 
-    if resolutionProgram:
-        originXtext.grid(row=0, column=0)
-        envOriginX.grid(row=0, column=1)
-        originYtext.grid(row=0, column=2)
-        envOriginY.grid(row=0, column=3)
-        originFRtext.grid(row=0, column=4)
-        envOriginFR.grid(row=0, column=5)
+    originXtext.grid(row=0, column=0)
+    envOriginX.grid(row=0, column=1)
+    originYtext.grid(row=0, column=2)
+    envOriginY.grid(row=0, column=3)
+    originFRtext.grid(row=0, column=4)
+    envOriginFR.grid(row=0, column=5)
 
-        alteredXtext.grid(row=1, column=0)
-        envAlteredX.grid(row=1, column=1)
-        alteredYtext.grid(row=1, column=2)
-        envAlteredY.grid(row=1, column=3)
-        alteredFRtext.grid(row=1, column=4)
-        envAlteredFR.grid(row=1, column=5)
-    else:
-        infoText.pack()
+    alteredXtext.grid(row=1, column=0)
+    envAlteredX.grid(row=1, column=1)
+    alteredYtext.grid(row=1, column=2)
+    envAlteredY.grid(row=1, column=3)
+    alteredFRtext.grid(row=1, column=4)
+    envAlteredFR.grid(row=1, column=5)
 
     if envData is not None:
-        if resolutionProgram:
-            envOriginX.insert(0, originX)
-            envOriginY.insert(0, originY)
-            envOriginFR.insert(0, originFR)
-            envAlteredX.insert(0, alteredX)
-            envAlteredY.insert(0, alteredY)
-            envAlteredFR.insert(0, alteredFR)
+        envOriginX.insert(0, originX)
+        envOriginY.insert(0, originY)
+        envOriginFR.insert(0, originFR)
+        envAlteredX.insert(0, alteredX)
+        envAlteredY.insert(0, alteredY)
+        envAlteredFR.insert(0, alteredFR)
 
     def commit():
         if envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
@@ -761,8 +764,7 @@ def RequirementCheck():
         else:
             logformat(errorLevel.WARN, 'QRes install check dialog rejected due to "IGN_RES_ALERT" env prameter is true.\n\tPlease install QRes if would you like change display resolution.')
             print(f"\t{color.YELLOW.value}URL:{color.BLUE.value} https://www.softpedia.com/get/Multimedia/Video/Other-VIDEO-Tools/QRes.shtml{color.RESET.value}")
-
-    if envData is None:
+    elif envData is None:
         logformat(errorLevel.WARN, 'parameter not set.')
         messagebox.showwarning('디아블로 런처', '환경변수가 설정되어 있지 않습니다. "환경변수 편집" 버튼을 클릭하여 임시로 모든 기능을 사용해 보십시오.')
     elif not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
@@ -820,33 +822,29 @@ def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
         return False
 
 def UpdateStatusValue():
-    GetEnvironmentValue()
     FindGameInstalled()
+    GetEnvironmentValue()
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
-    if envData is None:
-        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n\n\n실행가능 버전: 없음\n\n"
-        switchButton['state'] = "disabled"
-    else:
-        if resolutionProgram:
-            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
-            else:
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
+
+    if resolutionProgram:
+        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
+        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
+        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
         else:
-            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
-            else:
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n"
-        switchButton['state'] = "normal"
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
+    else:
+        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
+        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
+        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
+        else:
+            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n"
 
 def ReloadStatusBar():
     loadStart = time.time()
@@ -1120,7 +1118,7 @@ def init():
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled')
 
     fileMenu.add_separator()
-    fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir, state='disabled')
+    fileMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
 
     menubar.add_cascade(label='파일', menu=fileMenu)
 
@@ -1128,7 +1126,10 @@ def init():
     toolsMenu.add_command(label='새로 고침', command=ForceReload, accelerator='F5')
     toolsMenu.add_command(label='런처 업데이트 확인...', command=ForceProgramUpdate)
     toolsMenu.add_separator()
-    toolsMenu.add_command(label='환경변수 에디터...', command=SetEnvironmentValue)
+    if resolutionProgram:
+        toolsMenu.add_command(label='환경변수 에디터...', command=SetEnvironmentValue, state='normal')
+    else:
+        toolsMenu.add_command(label='환경변수 에디터...', command=SetEnvironmentValue, state='disabled')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')
@@ -1162,39 +1163,35 @@ def init():
     root.bind_all("<F5>", ForceReload)
     root.bind_all("<F1>", AboutThisApp)
 
+    welcome = Label(root, text='')
+    switchButton = Button(root, text='디아블로 실행...', command=LaunchGameAgent, state='disabled')
+    emergencyButton = Button(root, text='긴급 전원 작업 (게임 저장 후 실행 요망)', height=2,command=EmgergencyReboot)
+    now = datetime.now()
+    cnt_time = now.strftime("%H:%M:%S")
+
     CheckResProgram()
     FindGameInstalled()
     GetEnvironmentValue()
     RequirementCheck()
 
-    welcome = Label(root, text='')
-    switchButton = Button(root, text='디아블로 실행...', command=LaunchGameAgent)
-    emergencyButton = Button(root, text='긴급 전원 작업 (게임 저장 후 실행 요망)', height=2,command=EmgergencyReboot)
-    now = datetime.now()
-    cnt_time = now.strftime("%H:%M:%S")
-    if envData is None:
-        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n\n\n실행가능 버전: 없음\n\n")
-        switchButton['state'] = "disabled"
-    else:
-        if resolutionProgram:
-            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
-            else:
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
+    if resolutionProgram:
+        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
+        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
+        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
         else:
-            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
-            else:
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n")
-        switchButton['state'] = "normal"
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
+    else:
+        if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
+        elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
+        elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
+        else:
+            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n")
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         info = Label(root, text='도움말\n디아블로를 원할히 플레이하려면 DiabloLauncher 환경 변수를 설정해 주세요.\n게임 디렉토리, 해상도를 변경하려면 DiabloLauncher 환경변수를 편집하세요.\nBootCamp 사운드 장치가 작동하지 않을 경우 소리 문제 해결 메뉴를 확인해 보세요.')
