@@ -619,7 +619,7 @@ def FindGameInstalled():
     else:
         switchButton['state'] = "normal"
 
-def GetEnvironmentValue():
+def GetResolutionValue():
     global envData
 
     CheckResProgram()
@@ -647,7 +647,7 @@ def GetEnvironmentValue():
             logformat(errorLevel.INFO, f'Convert resolution: {int(alteredX)} X {int(alteredY)} {float(alteredFR)}Hz')
 
     except (ValueError, TypeError, AttributeError) as error:
-        messagebox.showerror('디아블로 런처', f'환경변수 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
+        messagebox.showerror('디아블로 런처', f'해상도 벡터 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
         logformat(errorLevel.ERR, f'Unknown data or parameter style: {envData}\n\t{error}')
         switchButton['state'] = "disabled"
         envData = None
@@ -663,10 +663,10 @@ def GetEnvironmentValue():
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
-def SetEnvironmentValue():
-    messagebox.showinfo('환경변수 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
+def SetResolutionValue():
+    messagebox.showinfo('해상도 벡터 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
     envWindow = Tk()
-    envWindow.title('환경변수 편집기')
+    envWindow.title('해상도 벡터 편집기')
     envWindow.geometry("265x70+200+200")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
@@ -709,7 +709,7 @@ def SetEnvironmentValue():
 
     def commit():
         if envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
-            messagebox.showwarning('환경변수 편집기', '일부 환경변수가 누락되었습니다.')
+            messagebox.showwarning('해상도 벡터 편집기', '일부 환경변수가 누락되었습니다.')
             logformat(errorLevel.WARN, 'some env can not be None.')
             envWindow.after(1, envWindow.focus_force())
             return
@@ -765,11 +765,11 @@ def RequirementCheck():
             logformat(errorLevel.WARN, 'QRes install check dialog rejected due to "IGN_RES_ALERT" env prameter is true.\n\tPlease install QRes if would you like change display resolution.')
             print(f"\t{color.YELLOW.value}URL:{color.BLUE.value} https://www.softpedia.com/get/Multimedia/Video/Other-VIDEO-Tools/QRes.shtml{color.RESET.value}")
     elif envData is None:
-        logformat(errorLevel.WARN, 'parameter not set.')
-        messagebox.showwarning('디아블로 런처', '환경변수가 설정되어 있지 않습니다. "환경변수 편집" 버튼을 클릭하여 임시로 모든 기능을 사용해 보십시오.')
+        logformat(errorLevel.WARN, 'parameter does not set.')
+        messagebox.showwarning('디아블로 런처', '해상도 벡터가 설정되어 있지 않습니다. "[도구]->[해상도 벡터 편집기]" 메뉴를 클릭하여 임시로 모든 기능을 사용해 보십시오.')
     elif not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
         logformat(errorLevel.WARN, 'The game does not exist in registry.')
-        messagebox.showwarning('디아블로 런처', '레지스트리에는 적합한 게임이 존재하지 않습니다.')
+        messagebox.showwarning('디아블로 런처', '등록된 레지스트리에 적합한 게임이 존재하지 않습니다.')
 
 def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
     target = None
@@ -823,7 +823,7 @@ def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
 
 def UpdateStatusValue():
     FindGameInstalled()
-    GetEnvironmentValue()
+    GetResolutionValue()
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
 
@@ -1127,9 +1127,9 @@ def init():
     toolsMenu.add_command(label='런처 업데이트 확인...', command=ForceProgramUpdate)
     toolsMenu.add_separator()
     if resolutionProgram:
-        toolsMenu.add_command(label='환경변수 에디터...', command=SetEnvironmentValue, state='normal')
+        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='normal')
     else:
-        toolsMenu.add_command(label='환경변수 에디터...', command=SetEnvironmentValue, state='disabled')
+        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='disabled')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')
@@ -1171,7 +1171,7 @@ def init():
 
     CheckResProgram()
     FindGameInstalled()
-    GetEnvironmentValue()
+    GetResolutionValue()
     RequirementCheck()
 
     if resolutionProgram:
