@@ -103,9 +103,11 @@ gameStartTime = None
 gameEndTime = None
 
 envData = None
-gamePath = None
-resolutionProgram = False
+diablo2Path = None
+diablo3Path = None
+
 definedMod = None
+resolutionProgram = False
 
 originX = None
 originY = None
@@ -277,15 +279,15 @@ def LoadGameRunningTime():
                     stat_max = float(line)
                 stat_sum += float(line)
             logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
-            fileMenu.entryconfig(1, state='normal')
+            fileMenu.entryconfig(4, state='normal')
         else:
             raise FileNotFoundError
     except (OSError, FileNotFoundError) as error:
         logformat(errorLevel.ERR, f'Failed to load Game-play logs: {error}')
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
-            fileMenu.entryconfig(1, state='normal')
+            fileMenu.entryconfig(4, state='normal')
         else:
-            fileMenu.entryconfig(1, state='disabled')
+            fileMenu.entryconfig(4, state='disabled')
         return 0, 0, 0, 0
     else:
         if runtimeFile is not None:
@@ -346,7 +348,10 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
     else:
         switchButton['text'] = '게임 종료'
-    os.popen(f'"{gamePath}/{gameName}/{gameName} Launcher.exe"')
+    if(gameName == 'Diablo II Resurrected'):
+        os.popen(f'"{diablo2Path}/{gameName} Launcher.exe"')
+    elif(gameName == 'Diablo III'):
+        os.popen(f'"{diablo3Path}/{gameName} Launcher.exe"')
     toolsMenu.entryconfig(3, state='disabled')
     gameStartTime = time.time()
     HideWindow()
@@ -396,26 +401,26 @@ def LaunchGameAgent():
         note.pack()
         diablo2.pack(side=LEFT, padx=10)
         diablo3.pack(side=RIGHT, padx=10)
-        if not os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
+        if not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
             diablo2['state'] = "disabled"
         else:
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button enabled.')
             diablo2['state'] = "normal"
-            if os.path.isdir(gamePath + '/Diablo II Resurrected/mods'):
+            if os.path.isdir(diablo2Path + '/mods'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 GetModDetails()
                 if definedMod is not None and isinstance(definedMod, list):
                     logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
                 elif definedMod is not None and isinstance(definedMod, str):
-                    if os.path.isdir(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq'):
+                    if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
                         diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
                     else:
                         messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
                         logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                        logformat(errorLevel.WARN, f"\t- {gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'{definedMod}.mpq'}")
-                        logformat(errorLevel.WARN, f"\t- {gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'{definedMod}.mpq/data'}")
+                        logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq'}")
+                        logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq/data'}")
                         diablo2['text'] = 'Diablo II Resurrected'
                 else:
                     logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
@@ -424,7 +429,7 @@ def LaunchGameAgent():
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
                 diablo2['text'] = 'Diablo II Resurrected'
 
-        if not os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
+        if not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo III launch button disabled, because launcher is not detected.')
             diablo3['state'] = "disabled"
         else:
@@ -493,7 +498,7 @@ def EmgergencyReboot():
 
 def GetModDetails():
     global definedMod
-    envValue = os.listdir(f'{gamePath}/Diablo II Resurrected/mods')
+    envValue = os.listdir(f'{diablo2Path}/mods')
     if isinstance(envValue, list) and len(envValue) > 1:
         logformat(errorLevel.INFO, f"Detected mods: {envValue}. checking D2R_MOD_SET env value...")
         envMod = os.environ.get('D2R_MOD_SET')
@@ -509,7 +514,7 @@ def GetModDetails():
                 logformat(errorLevel.INFO, f"prefer mod was configured: {envValue}. the list of detected mods was overridden.")
                 definedMod = envValue
             else:
-                logformat(errorLevel.WARN, f"prefer mod is not configured. {envMod} does not exist in {gamePath}/Diablo II Resurrected/mods. Diablo Launcher will mods partially.")
+                logformat(errorLevel.WARN, f"prefer mod is not configured. {envMod} does not exist in {diablo2Path}/mods. Diablo Launcher will mods partially.")
                 definedMod = envValue
         else:
             logformat(errorLevel.WARN, "prefer mod is not configured. Diablo Launcher will mods partially.")
@@ -548,9 +553,63 @@ def ModsPreferSelector():
             logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
             ExitProgram()
 
+def FindGameInstalled():
+    global diablo2Path
+    global diablo3Path
+
+    if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
+        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
+        fileMenu.entryconfig(0, state='normal')
+
+        diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
+        if os.path.isdir(diablo2Path + '/mods'):
+            modMenu.entryconfig(0, state='normal')
+            modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
+            modMenu.entryconfig(1, state='disabled')
+            logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
+            GetModDetails()
+            if definedMod is not None and isinstance(definedMod, list):
+                logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
+                modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
+                modMenu.entryconfig(1, state='normal')
+                modMenu.entryconfig(1, command=ModsPreferSelector)
+            elif definedMod is not None and isinstance(definedMod, str):
+                if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
+                    modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
+                    modMenu.entryconfig(1, state='normal')
+                    modMenu.entryconfig(1, command=SearchModInGitHub)
+                else:
+                    messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
+                    logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
+                    logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq'}")
+                    logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq/data'}")
+                    modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
+            else:
+                logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
+                modMenu.entryconfig(1, label='새로운 모드 탐색')
+                modMenu.entryconfig(1, state='normal')
+                modMenu.entryconfig(1, command=DownloadModsLink)
+        else:
+            logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
+            modMenu.entryconfig(0, state='disabled')
+            modMenu.entryconfig(1, label='새로운 모드 탐색')
+            modMenu.entryconfig(1, state='normal')
+            modMenu.entryconfig(1, command=DownloadModsLink)
+    else:
+        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
+        fileMenu.entryconfig(0, state='disabled')
+        modMenu.entryconfig(0, state='disabled')
+        modMenu.entryconfig(1, state='disabled')
+        modMenu.entryconfig(1, label='게임이 설치되지 않음')
+
+    if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
+        diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
+        fileMenu.entryconfig(1, state='normal')
+    else:
+        fileMenu.entryconfig(1, state='disabled')
+
 def GetEnvironmentValue():
     global envData
-    global gamePath
     if resolutionProgram:
         global originX
         global originY
@@ -564,86 +623,29 @@ def GetEnvironmentValue():
         logformat(errorLevel.INFO, f'{envData}')
         temp = None
         if resolutionProgram:
-            logformat(errorLevel.INFO, 'QRes detected. parameter count should be 7')
-            gamePath, originX, originY, originFR, alteredX, alteredY, alteredFR, temp = envData.split(';')
+            logformat(errorLevel.INFO, 'QRes detected. parameter count should be 6')
+            originX, originY, originFR, alteredX, alteredY, alteredFR, temp = envData.split(';')
             logformat(errorLevel.INFO, 'parameter conversion succeed')
         else:
-            logformat(errorLevel.INFO, 'QRes not detected. parameter count should be 1')
-            gamePath, temp = envData.split(';')
-            logformat(errorLevel.INFO, 'parameter conversion succeed')
+            logformat(errorLevel.INFO, 'QRes not detected. Skipping parameter conversion.')
 
         if resolutionProgram:
-            logformat(errorLevel.INFO, f'Game path: {gamePath}')
             logformat(errorLevel.INFO, f'Default resolution: {int(originX)} X {int(originY)} {float(originFR)}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {int(alteredX)} X {int(alteredY)} {float(alteredFR)}Hz')
-
-        if os.path.isdir(gamePath):
-            fileMenu.entryconfig(0, state='normal')
-        else:
-            fileMenu.entryconfig(0, state='disabled')
-
-        if not os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
-            logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because launcher is not detected.')
-            modMenu.entryconfig(0, state='disabled')
-            modMenu.entryconfig(1, state='disabled')
-            modMenu.entryconfig(1, label='게임이 설치되지 않음')
-        else:
-            logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
-            if os.path.isdir(gamePath + '/Diablo II Resurrected/mods'):
-                modMenu.entryconfig(0, state='normal')
-                modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
-                modMenu.entryconfig(1, state='disabled')
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
-                GetModDetails()
-                if definedMod is not None and isinstance(definedMod, list):
-                    logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                    modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
-                    modMenu.entryconfig(1, state='normal')
-                    modMenu.entryconfig(1, command=ModsPreferSelector)
-                elif definedMod is not None and isinstance(definedMod, str):
-                    if os.path.isdir(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'/{definedMod}.mpq'):
-                        modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
-                        modMenu.entryconfig(1, state='normal')
-                        modMenu.entryconfig(1, command=SearchModInGitHub)
-                    else:
-                        messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
-                        logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                        logformat(errorLevel.WARN, f"\t- {gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'{definedMod}.mpq'}")
-                        logformat(errorLevel.WARN, f"\t- {gamePath + '/Diablo II Resurrected/mods/' + definedMod + f'{definedMod}.mpq/data'}")
-                        modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
-                else:
-                    logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
-                    modMenu.entryconfig(1, label='새로운 모드 탐색')
-                    modMenu.entryconfig(1, state='normal')
-                    modMenu.entryconfig(1, command=DownloadModsLink)
-            else:
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
-                modMenu.entryconfig(0, state='disabled')
-                modMenu.entryconfig(1, label='새로운 모드 탐색')
-                modMenu.entryconfig(1, state='normal')
-                modMenu.entryconfig(1, command=DownloadModsLink)
 
     except (ValueError, TypeError, AttributeError) as error:
         messagebox.showerror('디아블로 런처', f'환경변수 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
         logformat(errorLevel.ERR, f'Unknown data or parameter style: {envData}\n\t{error}')
         envData = None
-        gamePath = None
         originX = None
         originY = None
         originFR = None
         alteredX = None
         alteredY = None
         alteredFR = None
-
-        fileMenu.entryconfig(0, state='disabled')
-
-        modMenu.entryconfig(0, state='disabled')
-        modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
-        modMenu.entryconfig(1, state='disabled')
     finally:
         logformat(errorLevel.INFO, f'{envData}')
         if resolutionProgram:
-            logformat(errorLevel.INFO, f'Game path: {gamePath}')
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
         CheckResProgram()
@@ -659,18 +661,6 @@ def SetEnvironmentValue():
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
 
-    def openDirectoryDialog():
-        global envGameDir
-        temp = gamePath
-        logformat(errorLevel.INFO, f'Opening directory dialog location: {gamePath if gamePath is not None else "C:/Program Files (x86)"}')
-        envGameDir = filedialog.askdirectory(parent=envWindow, initialdir=f"{gamePath if gamePath is not None else 'C:/Program Files (x86)'}", title='Battle.net 게임 디렉토리 선택')
-        if envGameDir == "":
-            logformat(errorLevel.INFO, f'Selected directory dialog location: None directory path provided. resetting {temp}')
-            envGameDir = temp
-        else:
-            logformat(errorLevel.INFO, f'Selected directory dialog location: {envGameDir}')
-
-    envGameBtn = Button(envWindow, text=f'{"게임 디렉토리 변경..." if gamePath is not None else "게임 디렉토리 등록..."}', command=openDirectoryDialog, width=30)
     if resolutionProgram:
         originXtext = Label(envWindow, text='기본 X')
         originYtext = Label(envWindow, text=' Y')
@@ -689,23 +679,20 @@ def SetEnvironmentValue():
         infoText = Label(envWindow, text='나머지 환경변수는 QRes가 필요하므로 제외됨')
 
     if resolutionProgram:
-        envGameBtn.grid(row=0, column=1, columnspan=5)
+        originXtext.grid(row=0, column=0)
+        envOriginX.grid(row=0, column=1)
+        originYtext.grid(row=0, column=2)
+        envOriginY.grid(row=0, column=3)
+        originFRtext.grid(row=0, column=4)
+        envOriginFR.grid(row=0, column=5)
 
-        originXtext.grid(row=1, column=0)
-        envOriginX.grid(row=1, column=1)
-        originYtext.grid(row=1, column=2)
-        envOriginY.grid(row=1, column=3)
-        originFRtext.grid(row=1, column=4)
-        envOriginFR.grid(row=1, column=5)
-
-        alteredXtext.grid(row=2, column=0)
-        envAlteredX.grid(row=2, column=1)
-        alteredYtext.grid(row=2, column=2)
-        envAlteredY.grid(row=2, column=3)
-        alteredFRtext.grid(row=2, column=4)
-        envAlteredFR.grid(row=2, column=5)
+        alteredXtext.grid(row=1, column=0)
+        envAlteredX.grid(row=1, column=1)
+        alteredYtext.grid(row=1, column=2)
+        envAlteredY.grid(row=1, column=3)
+        alteredFRtext.grid(row=1, column=4)
+        envAlteredFR.grid(row=1, column=5)
     else:
-        envGameBtn.pack()
         infoText.pack()
 
     if envData is not None:
@@ -718,55 +705,22 @@ def SetEnvironmentValue():
             envAlteredFR.insert(0, alteredFR)
 
     def commit():
-        global envGameDir
-        try:
-            logformat(errorLevel.INFO, f'{envGameDir}')
-        except NameError:
-            envGameDir = gamePath
-            logformat(errorLevel.INFO, f'Selected directory dialog location: None directory path provided. resetting {envGameDir}')
-
-        if resolutionProgram:
-            if envGameDir == '' or envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
-                messagebox.showwarning('환경변수 편집기', '일부 환경변수가 누락되었습니다.')
-                logformat(errorLevel.WARN, 'some env can not be None.')
-                envWindow.after(1, envWindow.focus_force())
-                return
-            else:
-                try:
-                    os.environ['DiabloLauncher'] = f'{envGameDir.replace(";", "")};{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
-                    logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
-                except AttributeError as error:
-                    logformat(errorLevel.ERR, f"could not save env value: {error}")
+        if envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
+            messagebox.showwarning('환경변수 편집기', '일부 환경변수가 누락되었습니다.')
+            logformat(errorLevel.WARN, 'some env can not be None.')
+            envWindow.after(1, envWindow.focus_force())
+            return
         else:
-            if envGameDir == '':
-                messagebox.showwarning('환경변수 편집기', '게임 디렉토리 환경변수가 누락되었습니다.')
-                logformat(errorLevel.WARN, 'gamePath can not be None.')
-                envWindow.after(1, envWindow.focus_force())
-                return
-            else:
-                try:
-                    os.environ['DiabloLauncher'] = f'{envGameDir.replace(";", "")};'
-                    logformat(errorLevel.INFO, f"gamePath = {os.environ.get('DiabloLauncher')}")
-                except AttributeError as error:
-                    logformat(errorLevel.ERR, f"could not save env value: {error}")
+            try:
+                os.environ['DiabloLauncher'] = f'{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
+                logformat(errorLevel.INFO, f"resolutionVector = {os.environ.get('DiabloLauncher')}")
+            except AttributeError as error:
+                logformat(errorLevel.ERR, f"could not save env value: {error}")
+                UpdateStatusValue()
 
         UpdateStatusValue()
         ReloadStatusBar()
-        if envData is not None and not os.path.isdir(gamePath):
-            messagebox.showwarning('환경변수 편집기', f'{gamePath} 디렉토리가 존재하지 않습니다.')
-            logformat(errorLevel.WARN, f'{gamePath} no such directory.')
-            envWindow.after(1, envWindow.focus_force())
-        elif envData is not None and os.path.isdir(gamePath):
-            if not os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and not os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                messagebox.showwarning('환경변수 편집기', f'{gamePath} 디렉토리에는 적합한 게임이 존재하지 않습니다.')
-                logformat(errorLevel.WARN, f'{gamePath} not contains game directory.')
-                envWindow.after(1, envWindow.focus_force())
-            elif gamePath.startswith('\\\\'):
-                logformat(errorLevel.WARN, 'Battle.net does not support network drive yet.')
-                messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 네트워크 드라이브로 지정되어 있습니다. Battle.net은 아직 이 드라이브를 지원하지 않습니다.')
-                envWindow.after(1, envWindow.focus_force())
-            else:
-                envWindow.destroy()
+        envWindow.destroy()
 
     def openEnvSetting():
         msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
@@ -811,15 +765,9 @@ def RequirementCheck():
     if envData is None:
         logformat(errorLevel.WARN, 'parameter not set.')
         messagebox.showwarning('디아블로 런처', '환경변수가 설정되어 있지 않습니다. "환경변수 편집" 버튼을 클릭하여 임시로 모든 기능을 사용해 보십시오.')
-    elif envData is not None and not os.path.isdir(gamePath):
-        logformat(errorLevel.WARN, f'{gamePath} directory not exist.')
-        messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 존재하지 않습니다.')
-    elif not os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and not os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-        logformat(errorLevel.WARN, f'game not exist in {gamePath}.')
-        messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리에는 적합한 게임이 존재하지 않습니다.')
-    elif gamePath.startswith('\\\\'):
-        logformat(errorLevel.WARN, 'Battle.net does not support network drive yet.')
-        messagebox.showwarning('디아블로 런처', f'{gamePath} 디렉토리가 네트워크 드라이브로 지정되어 있습니다. Battle.net은 아직 이 드라이브를 지원하지 않습니다.')
+    elif not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        logformat(errorLevel.WARN, 'The game does not exist in registry.')
+        messagebox.showwarning('디아블로 런처', '레지스트리에는 적합한 게임이 존재하지 않습니다.')
 
 def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
     target = None
@@ -828,7 +776,7 @@ def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
         target = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
         value, type = reg.QueryValueEx(target, queryName)
         if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory is ready.')
+            logformat(errorLevel.INFO, f'{value} is exist in system.')
             if(target is not None): reg.CloseKey(target)
             return value
         else:
@@ -845,7 +793,7 @@ def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
         open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
         value, type = reg.QueryValueEx(open, queryName)
         if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory is ready.')
+            logformat(errorLevel.INFO, f'{value} is exist in system.')
             os.startfile(value)
         else:
             logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
@@ -861,7 +809,7 @@ def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
         open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
         value, type = reg.QueryValueEx(open, queryName)
         if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system. Please wait until target file or directory is ready.')
+            logformat(errorLevel.INFO, f'{value} is exist in system.')
             if(open is not None): reg.CloseKey(open)
             return True
         else:
@@ -873,30 +821,31 @@ def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
 
 def UpdateStatusValue():
     GetEnvironmentValue()
+    FindGameInstalled()
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
     if envData is None:
-        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: 아니요\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: 알 수 없음\n현재 해상도: 알 수 없음 \n게임 디렉토리: 알 수 없음\n디렉토리 존재여부: 아니요\n디아블로 실행: 알 수 없음\n실행가능 버전: 없음\n"
+        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n\n\n실행가능 버전: 없음\n\n"
         switchButton['state'] = "disabled"
     else:
         if resolutionProgram:
-            if os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-            elif os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-            elif os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
+            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
+            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
+            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
             else:
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
         else:
-            if os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-            elif os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-            elif os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
+            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
+            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
+            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
             else:
-                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
+                status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n"
         switchButton['state'] = "normal"
 
 def ReloadStatusBar():
@@ -992,10 +941,15 @@ def init():
             logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory exist. The target directory will now open.')
             os.startfile(f'"{userApp}/DiabloLauncher"')
 
-    def OpenGameDir():
-        if gamePath is not None and os.path.isdir(gamePath):
-            logformat(errorLevel.INFO, f'The {gamePath} directory exist. The target directory will now open.')
-            os.startfile(f'"{gamePath}"')
+    def OpenD2RDir():
+        if diablo2Path is not None and os.path.isdir(diablo2Path):
+             logformat(errorLevel.INFO, f'The {diablo2Path} directory exist. The target directory will now open.')
+             os.startfile(f'"{diablo2Path}"')
+
+    def OpenD3Dir():
+        if diablo3Path is not None and os.path.isdir(diablo3Path):
+             logformat(errorLevel.INFO, f'The {diablo3Path} directory exist. The target directory will now open.')
+             os.startfile(f'"{diablo3Path}"')
 
     def openControlPanel():
         os.system('control.exe appwiz.cpl')
@@ -1016,22 +970,18 @@ def init():
             else:
                 logformat(errorLevel.INFO, "QRes version: None")
             logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None and resolutionProgram else 'Unknown'}")
-            logformat(errorLevel.INFO, f"GameDir path: {f'{gamePath}' if gamePath is not None else 'Unknown'}")
-            if gamePath is not None:
-                if os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                    logformat(errorLevel.INFO, "Installed Diablo version: II, III")
-                    logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
-                elif os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
-                    logformat(errorLevel.INFO, "Installed Diablo version: II")
-                    logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
-                elif os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                    logformat(errorLevel.INFO, "Installed Diablo version: III")
-                else:
-                    logformat(errorLevel.INFO, "Installed Diablo version: None")
-            else:
-                logformat(errorLevel.INFO, "Installed Diablo version: N/A")
 
-            logformat(errorLevel.INFO, f"GameDir exist: {'True' if gamePath is not None and os.path.isdir(gamePath) else 'False'}")
+            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                logformat(errorLevel.INFO, "Installed Diablo version: II, III")
+                logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
+            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+                logformat(errorLevel.INFO, "Installed Diablo version: II")
+                logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
+            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                logformat(errorLevel.INFO, "Installed Diablo version: III")
+            else:
+                logformat(errorLevel.INFO, "Installed Diablo version: None")
+
             logformat(errorLevel.INFO, f"Diablo Executed: {'True' if diabloExecuted else 'False'}")
             logformat(errorLevel.INFO, "===== End Report ======")
             logformat(errorLevel.WARN, 'NOTE: Please attach the terminal output after the code-page log')
@@ -1083,11 +1033,8 @@ def init():
         OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
 
     def OpenD2RModDir():
-        if not os.path.isdir(f'{gamePath}/Diablo II Resurrected/mods'):
-            logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory does not exist. The target directory will creating at this time.')
-            os.mkdir(f'{gamePath}/Diablo II Resurrected/mods')
         logformat(errorLevel.INFO, f'The {userApp}/DiabloLauncher directory exist. The target directory will now open.')
-        os.startfile(f'"{gamePath}/Diablo II Resurrected/mods"')
+        os.startfile(f'"{diablo2Path}/mods"')
 
     def ModApplyHelp():
         if definedMod is not None and definedMod != "":
@@ -1164,14 +1111,16 @@ def init():
 
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
-    fileMenu.add_command(label='게임폴더 열기', command=OpenGameDir, state='disabled')
-    fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir, state='disabled')
-    fileMenu.add_separator()
+    fileMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
+    fileMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
 
     if TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal')
     else:
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled')
+
+    fileMenu.add_separator()
+    fileMenu.add_command(label='통계폴더 열기', command=OpenGameStatusDir, state='disabled')
 
     menubar.add_cascade(label='파일', menu=fileMenu)
 
@@ -1214,6 +1163,7 @@ def init():
     root.bind_all("<F1>", AboutThisApp)
 
     CheckResProgram()
+    FindGameInstalled()
     GetEnvironmentValue()
     RequirementCheck()
 
@@ -1223,28 +1173,29 @@ def init():
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
     if envData is None:
-        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: 아니요\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n해상도 벡터: 알 수 없음\n현재 해상도: 알 수 없음 \n게임 디렉토리: 알 수 없음\n디렉토리 존재여부: 아니요\n디아블로 실행: 알 수 없음\n실행가능 버전: 없음\n")
+        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: {'아니요' if os.system('QRes -L > NUL 2>&1') != 0 else '예'}\n\n\n실행가능 버전: 없음\n\n")
         switchButton['state'] = "disabled"
     else:
         if resolutionProgram:
-            if os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-            elif os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-            elif os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
+            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
+            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
+            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
             else:
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
         else:
-            if os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe') and os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-            elif os.path.isfile(gamePath + '/Diablo II Resurrected/Diablo II Resurrected Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-            elif os.path.isfile(gamePath + '/Diablo III/Diablo III Launcher.exe'):
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
+            if os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe') and os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
+            elif os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
+            elif os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
             else:
-                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n환경변수 설정됨: {'예' if envData is not None else '아니요'}\n해상도 변경 지원됨: 아니요\n\n\n게임 디렉토리: {f'{gamePath}' if envData is not None else '알 수 없음'}\n디렉토리 존재여부: {'예' if os.path.isdir(gamePath) and envData is not None else '아니요'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
+                status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n실행가능 버전: 없음\n\n")
         switchButton['state'] = "normal"
+
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         info = Label(root, text='도움말\n디아블로를 원할히 플레이하려면 DiabloLauncher 환경 변수를 설정해 주세요.\n게임 디렉토리, 해상도를 변경하려면 DiabloLauncher 환경변수를 편집하세요.\nBootCamp 사운드 장치가 작동하지 않을 경우 소리 문제 해결 메뉴를 확인해 보세요.')
     else:
