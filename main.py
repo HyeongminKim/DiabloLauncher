@@ -33,16 +33,23 @@ class errorLevel(Enum):
     ERR = 2
     FATL = 3
 
+def check_terminal_output(command: str):
+    try:
+        return subprocess.check_output(f'{command}', shell=True, encoding='utf-8').strip()
+    except subprocess.CalledProcessError:
+        logformat(errorLevel.ERR, f'{command} returned non-zero exit status.')
+        return None
+
 def logformat(level: errorLevel, text: str):
     if level == errorLevel.INFO:
         if logLevel is not None and logLevel == "verbose":
-            print(f"{color.GRAY.value}[INFO: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
+            print(f"{color.GRAY.value}[INFO: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
     elif level == errorLevel.WARN:
-        print(f"{color.YELLOW.value}[WARN: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
+        print(f"{color.YELLOW.value}[WARN: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
     elif level == errorLevel.ERR:
-        print(f"{color.RED.value}[ ERR: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
+        print(f"{color.RED.value}[ ERR: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
     elif level == errorLevel.FATL:
-        print(f"{color.MAGENTA.value}[FATL: {subprocess.check_output('date /t', shell=True, encoding='utf-8').strip()} {subprocess.check_output('time /t', shell=True, encoding='utf-8').strip()}] {text}{color.RESET.value}")
+        print(f"{color.MAGENTA.value}[FATL: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
         if root is not None and launch is not None:
             ExitProgram()
         else:
@@ -84,7 +91,6 @@ try:
     from tkinter import (W, CENTER)
     from tkinter import Menu
     from tkinter import messagebox
-    from tkinter import filedialog
     from tkinter import Entry
     from idlelib.tooltip import Hovertip
 except (ModuleNotFoundError, ImportError, OSError) as error:
@@ -151,7 +157,7 @@ def CheckResProgram():
             toolsMenu.entryconfig(3, state='disabled')
             resolutionProgram = False
         else:
-            logformat(errorLevel.INFO, f"QRes installed in {subprocess.check_output('where QRes', shell=True, encoding='utf-8').strip()}")
+            logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
             toolsMenu.entryconfig(3, state='normal')
             resolutionProgram = True
     else:
@@ -181,29 +187,38 @@ def InterruptProgram(sig, frame):
 
 def UpdateProgram():
     global updateChecked
-    localCommit = os.popen('git rev-parse HEAD').read().strip()
-    localVersion = os.popen('git rev-parse --short HEAD').read().strip()
-    logformat(errorLevel.INFO, 'Checking program updates...')
-    if os.system('git pull --rebase origin master > NUL 2>&1') == 0:
-        updatedCommit = os.popen('git rev-parse HEAD').read().strip()
-        remoteVersion = os.popen('git rev-parse --short HEAD').read().strip()
-        result = subprocess.check_output(f"git log --no-merges --pretty=format:'%s' {updatedCommit}...{localCommit}", shell=True, encoding='utf-8').strip()
 
-        if localVersion != remoteVersion:
-            messagebox.showinfo('디아블로 런처', f"디아블로 런처가 성공적으로 업데이트 되었습니다.\n\n\t-- 새로운 기능 ({localVersion} → {remoteVersion}) --\n{result}\n\n업데이트를 반영하시려면 프로그램을 다시 시작해 주세요.")
-            logformat(errorLevel.INFO, f'Successfully updated ({localVersion} → {remoteVersion}). Please restart DiabloLauncher to apply updates...')
+    if os.system('where git > NUL 2>&1') == 0:
+        localCommit = os.popen('git rev-parse HEAD').read().strip()
+        localVersion = os.popen('git rev-parse --short HEAD').read().strip()
+        logformat(errorLevel.INFO, 'Checking program updates...')
+        if os.system('git pull --rebase origin master > NUL 2>&1') == 0:
+            updatedCommit = os.popen('git rev-parse HEAD').read().strip()
+            remoteVersion = os.popen('git rev-parse --short HEAD').read().strip()
+            result = check_terminal_output(f"git log --no-merges --pretty=format:'%s' {updatedCommit}...{localCommit}")
+
+            if localVersion != remoteVersion:
+                messagebox.showinfo('디아블로 런처', f"디아블로 런처가 성공적으로 업데이트 되었습니다.\n\n\t-- 새로운 기능 ({localVersion} → {remoteVersion}) --\n{result}\n\n업데이트를 반영하시려면 프로그램을 다시 시작해 주세요.")
+                logformat(errorLevel.INFO, f'Successfully updated ({localVersion} → {remoteVersion}). Please restart DiabloLauncher to apply updates...')
+            else:
+                if updateChecked:
+                    messagebox.showinfo('디아블로 런처', '디아블로 런처가 최신 버전입니다.')
+                logformat(errorLevel.INFO, 'DiabloLauncher is Up to date.')
+        elif os.system('ping -n 1 -w 1 www.google.com > NUL 2>&1') != 0:
+            messagebox.showwarning('디아블로 런처', '인터넷 연결이 오프라인인 상태에서는 디아블로 런처를 업데이트 할 수 없습니다. 나중에 다시 시도해 주세요.')
+            logformat(errorLevel.ERR, 'Program update failed. Please check your internet connection.')
         else:
-            if updateChecked:
-                messagebox.showinfo('디아블로 런처', '디아블로 런처가 최신 버전입니다.')
-            logformat(errorLevel.INFO, 'DiabloLauncher is Up to date.')
-    elif os.system('ping -n 1 -w 1 www.google.com > NUL 2>&1') != 0:
-        messagebox.showwarning('디아블로 런처', '인터넷 연결이 오프라인인 상태에서는 디아블로 런처를 업데이트 할 수 없습니다. 나중에 다시 시도해 주세요.')
-        logformat(errorLevel.ERR, 'Program update failed. Please check your internet connection.')
-    else:
-        os.system('git status')
-        messagebox.showwarning('디아블로 런처', '레포에 알 수 없는 오류가 발생하였습니다. 자세한 사항은 로그를 참조해 주세요. ')
-        logformat(errorLevel.ERR, 'Program update failed. Please see the output.')
-    updateChecked = True
+            os.system('git status')
+            messagebox.showwarning('디아블로 런처', '레포에 알 수 없는 오류가 발생하였습니다. 자세한 사항은 로그를 참조해 주세요. ')
+            logformat(errorLevel.ERR, 'Program update failed. Please see the output.')
+        updateChecked = True
+    elif os.system('where git > NUL 2>&1') != 0 and updateChecked:
+        logformat(errorLevel.INFO, 'git command does not currently installed. downloading master.zip')
+        webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/archive/refs/heads/master.zip')
+        messagebox.showwarning('디아블로 런처', 'Git이 시스템에 설치되어 있지 않아 자동 업데이트를 사용할 수 없습니다. 다운로드 된 master.zip 파일 압축을 풀어 설치된 경로에 덮어쓰기해 주세요.')
+    elif os.system('where git > NUL 2>&1') != 0 and not updateChecked:
+        logformat(errorLevel.WARN, 'Automatically checking for updates has been disabled. Run the updater function again to switch to legacy update mode. ')
+        updateChecked = True
 
 def FormatTime(milliseconds: float, rawType: bool):
     seconds_per_minute = 60
@@ -890,22 +905,22 @@ def ReloadStatusBar():
         statusbar['text'] = f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
+        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     elif count > 2:
-        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
+        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     elif count > 0:
-        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: 데이터 부족 | 합계: {sumTime}"
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균: 데이터 부족 | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
+        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     else:
-        statusbar['text'] = f"{subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | 세션 통계를 로드할 수 없음"
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션 통계를 로드할 수 없음"
         statusbar['anchor'] = W
         toolsMenu.entryconfig(7, state='disabled')
-        Hovertip(statusbar, text=f"rev: {subprocess.check_output('git rev-parse --short HEAD', shell=True, encoding='utf-8').strip()} | RD: {subprocess.check_output('git log -1 --date=format:%Y-%m-%d --format=%ad', shell=True, encoding='utf-8').strip()} | 세션 통계를 로드할 수 없음", hover_delay=500)
+        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션 통계를 로드할 수 없음", hover_delay=500)
 
 def init():
     global switchButton
@@ -976,10 +991,10 @@ def init():
         msg_box = messagebox.askyesno(title='디아블로 런처', message='이슈를 제보할 경우 터미널에 출력된 전체 로그와 경고창, 프로그램 화면 등을 첨부하여 주세요. 만약 가능하다면 어떠한 이유로 문제가 발생하였으며, 문제가 재현 가능한지 등을 첨부하여 주시면 좀 더 빠른 대응이 가능합니다. 지금 이슈 제보 페이지를 방문하시겠습니까?')
         if msg_box:
             logformat(errorLevel.INFO, f"=== Generated Report at {cnt_time} ===")
-            logformat(errorLevel.INFO, f"Current agent: {platform.system()} {platform.release()}, Python {platform.python_version()}, {subprocess.check_output('git --version', shell=True, encoding='utf-8').strip()}")
+            logformat(errorLevel.INFO, f"Current agent: {platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}")
             logformat(errorLevel.INFO, f"env data: {'configured' if envData is not None else 'None'}")
             if resolutionProgram:
-                logformat(errorLevel.INFO, f"QRes version: {subprocess.check_output('QRes /S | findstr QRes', shell=True, encoding='utf-8').strip()}")
+                logformat(errorLevel.INFO, f"QRes version: {check_terminal_output('QRes /S | findstr QRes')}")
             else:
                 logformat(errorLevel.INFO, "QRes version: None")
             logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None and resolutionProgram else 'Unknown'}")
@@ -1015,10 +1030,10 @@ def init():
 
         if resolutionProgram:
             logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
-            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {subprocess.check_output('git --version', shell=True, encoding='utf-8').strip()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{subprocess.check_output('QRes /S | findstr QRes', shell=True, encoding='utf-8').strip()}\n{subprocess.check_output('QRes /S | findstr Copyright', shell=True, encoding='utf-8').strip()}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         else:
             logformat(errorLevel.INFO, "Resolution change program does not detected")
-            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {subprocess.check_output('git --version', shell=True, encoding='utf-8').strip()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         blizzard = Button(about, text='블리자드 저작권 고지', command=openBlizzardLegalSite)
         apple = Button(about, text='애플컴퓨터 저작권 고지', command=openAppleLegalSite)
 
