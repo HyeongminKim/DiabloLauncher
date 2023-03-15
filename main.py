@@ -340,7 +340,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             UpdateStatusValue()
             ReloadStatusBar()
             return
-        if os.system(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1') != 0:
+        if os.system(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1') != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showwarning('디아블로 런처', f'{alteredX}x{alteredY} {alteredFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
             diabloExecuted = False
@@ -349,6 +349,8 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             UpdateStatusValue()
             ReloadStatusBar()
             return
+
+        os.system(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1')
         switchButton['text'] = '디스플레이 해상도 복구 (게임 종료시 사용)'
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
     else:
@@ -374,9 +376,11 @@ def LaunchGameAgent():
         switchButton['text'] = '디아블로 실행...'
         if resolutionProgram:
             toolsMenu.entryconfig(3, state='normal')
-            if os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1') != 0:
+            if os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1') != 0:
                 logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
                 messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
+            else:
+                os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1')
 
         SaveGameRunningTime(gameEndTime - gameStartTime)
         hours, minutes, seconds = FormatTime(gameEndTime - gameStartTime, True)
@@ -458,9 +462,11 @@ def BootAgent(poweroff: str):
         emergencyButton['text'] = '긴급 종료 준비중... (종료 취소)'
         logformat(errorLevel.INFO, 'Starting Emergency reboot agent...')
     if resolutionProgram:
-        if os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1') != 0:
+        if os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1') != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
+        else:
+            os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1')
     HideWindow()
     UpdateStatusValue()
     if poweroff == 'r':
