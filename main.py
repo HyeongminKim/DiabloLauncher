@@ -299,15 +299,15 @@ def LoadGameRunningTime():
                     stat_max = float(line)
                 stat_sum += float(line)
             logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
-            fileMenu.entryconfig(4, state='normal')
+            fileMenu.entryconfig(2, state='normal')
         else:
             raise FileNotFoundError
     except (OSError, FileNotFoundError) as error:
         logformat(errorLevel.ERR, f'Failed to load Game-play logs: {error}')
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
-            fileMenu.entryconfig(4, state='normal')
+            fileMenu.entryconfig(2, state='normal')
         else:
-            fileMenu.entryconfig(4, state='disabled')
+            fileMenu.entryconfig(2, state='disabled')
         return 0, 0, 0, 0
     else:
         if runtimeFile is not None:
@@ -1142,14 +1142,13 @@ def init():
     fileMenu = Menu(menubar, tearoff=0)
     fileMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
     fileMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
+    fileMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
+    fileMenu.add_separator()
 
     if TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal')
     else:
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled')
-
-    fileMenu.add_separator()
-    fileMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
 
     menubar.add_cascade(label='파일', menu=fileMenu)
 
