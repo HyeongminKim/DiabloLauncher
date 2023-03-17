@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 
 # pylint: disable=W0104,W0603,W0621
-# pylint: disable=C0200,C0302,C0415,R1722
+# pylint: disable=C0200,C0302,C0415,R1722,C0115,C0116
 
 try:
     import os
