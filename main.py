@@ -111,6 +111,7 @@ gameEndTime = None
 envData = None
 diablo2Path = None
 diablo3Path = None
+diablo4Path = None
 
 definedMod = None
 resolutionProgram = False
@@ -419,12 +420,16 @@ def LaunchGameAgent():
     else:
         launch.title('디아블로 버전 선택')
 
-        note = Label(launch, text='사용가능한 디아블로 버전만 활성화 됩니다')
+        note = Label(launch, text='사용가능한 디아블로 버전만 활성화 됩니다', height=2)
         diablo2 = Button(launch, text='Diablo II Resurrected\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('Diablo II Resurrected', 1280, 720, 10))
-        diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
-        note.pack()
-        diablo2.pack(side=LEFT, padx=10)
-        diablo3.pack(side=RIGHT, padx=10)
+        diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
+        diablo4 = Button(launch, text='Diablo IV\n준비중', width=20, height=2, command= lambda: GameLauncher('Diablo II', 1280, 720, 10))
+
+        note.grid(row=0, column=0, columnspan=2)
+        diablo2.grid(row=1, column=0, rowspan=2)
+        diablo3.grid(row=1, column=1)
+        diablo4.grid(row=2, column=1)
+
         if diablo2Path is None or not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
             diablo2['state'] = "disabled"
@@ -460,6 +465,9 @@ def LaunchGameAgent():
             logformat(errorLevel.INFO, 'Diablo III launch button enabled.')
             diablo3['state'] = "normal"
             diablo3['text'] = 'Diablo III'
+
+        diablo4['state'] = "disabled"
+
         ShowWindow()
         launch.mainloop()
 

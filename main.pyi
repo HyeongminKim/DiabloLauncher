@@ -38,6 +38,7 @@ gameEndTime: None | float
 envData: None | str
 diablo2Path: None | str
 diablo3Path: None | str
+diablo4Path: None | str
 
 definedMod: None | str
 resolutionProgram: bool
