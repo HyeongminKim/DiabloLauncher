@@ -652,6 +652,7 @@ def FindGameInstalled():
         fileMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(1, state='disabled')
+        modMenu.entryconfig(3, state='disabled')
         modMenu.entryconfig(1, label='게임이 설치되지 않음')
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
