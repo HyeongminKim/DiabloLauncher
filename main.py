@@ -300,15 +300,15 @@ def LoadGameRunningTime():
                     stat_max = float(line)
                 stat_sum += float(line)
             logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
-            fileMenu.entryconfig(2, state='normal')
+            fileMenu.entryconfig(3, state='normal')
         else:
             raise FileNotFoundError
     except (OSError, FileNotFoundError) as error:
         logformat(errorLevel.ERR, f'Failed to load Game-play logs: {error}')
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
-            fileMenu.entryconfig(2, state='normal')
+            fileMenu.entryconfig(3, state='normal')
         else:
-            fileMenu.entryconfig(2, state='disabled')
+            fileMenu.entryconfig(3, state='disabled')
         return 0, 0, 0, 0
     else:
         if runtimeFile is not None:
@@ -375,6 +375,8 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         os.popen(f'"{diablo2Path}/{gameName} Launcher.exe"')
     elif(gameName == 'Diablo III'):
         os.popen(f'"{diablo3Path}/{gameName} Launcher.exe"')
+    elif(gameName == 'Diablo IV'):
+        os.popen(f'"{diablo4Path}/{gameName} Launcher.exe"')
     toolsMenu.entryconfig(3, state='disabled')
     gameStartTime = time.time()
     HideWindow()
@@ -423,7 +425,7 @@ def LaunchGameAgent():
         note = Label(launch, text='사용가능한 디아블로 버전만 활성화 됩니다', height=2)
         diablo2 = Button(launch, text='Diablo II Resurrected\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('Diablo II Resurrected', 1280, 720, 10))
         diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
-        diablo4 = Button(launch, text='Diablo IV\n준비중', width=20, height=2, command= lambda: GameLauncher('Diablo II', 1280, 720, 10))
+        diablo4 = Button(launch, text='Diablo IV 베타\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo II', 1280, 720, 10))
 
         note.grid(row=0, column=0, columnspan=2)
         diablo2.grid(row=1, column=0, rowspan=2)
@@ -466,7 +468,13 @@ def LaunchGameAgent():
             diablo3['state'] = "normal"
             diablo3['text'] = 'Diablo III'
 
-        diablo4['state'] = "disabled"
+        if diablo4Path is None or not os.path.isfile(diablo4Path + '/Diablo IV Launcher.exe'):
+            logformat(errorLevel.INFO, 'Diablo IV launch button disabled, because launcher is not detected.')
+            diablo4['state'] = "disabled"
+        else:
+            logformat(errorLevel.INFO, 'Diablo IV launch button enabled.')
+            diablo4['state'] = "normal"
+            diablo4['text'] = 'Diablo IV 베타\n3월 20일 만료 예정'
 
         ShowWindow()
         launch.mainloop()
@@ -591,6 +599,7 @@ def ModsPreferSelector():
 def FindGameInstalled():
     global diablo2Path
     global diablo3Path
+    global diablo4Path
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
@@ -643,7 +652,13 @@ def FindGameInstalled():
     else:
         fileMenu.entryconfig(1, state='disabled')
 
-    if(diablo2Path is None and diablo3Path is None):
+    if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')):
+        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')
+        fileMenu.entryconfig(2, state='normal')
+    else:
+        fileMenu.entryconfig(2, state='disabled')
+
+    if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
         switchButton['state'] = "disabled"
     else:
         switchButton['state'] = "normal"
@@ -805,7 +820,7 @@ def RequirementCheck():
         logformat(errorLevel.WARN, 'parameter does not set.')
         messagebox.showwarning('디아블로 런처', '해상도 벡터가 설정되어 있지 않습니다. "[도구]->[해상도 벡터 편집기]" 메뉴를 클릭하여 임시로 모든 기능을 사용해 보십시오.')
 
-    if diablo2Path is None and diablo3Path is None:
+    if diablo2Path is None and diablo3Path is None and diablo4Path is None:
         logformat(errorLevel.WARN, 'The game does not exist in registry.')
         messagebox.showwarning('디아블로 런처', '이 컴퓨터에 디아블로 게임을 찾을 수 없습니다. 자세한 사항은 GitHub에 방문해 주세요.')
 
@@ -866,23 +881,9 @@ def UpdateStatusValue():
     cnt_time = now.strftime("%H:%M:%S")
 
     if resolutionProgram:
-        if diablo2Path is not None and diablo3Path is not None:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-        elif diablo2Path is not None:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-        elif diablo3Path is not None:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
-        else:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n"
+        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
     else:
-        if diablo2Path is not None and diablo3Path is not None:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n"
-        elif diablo2Path is not None:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n"
-        elif diablo3Path is not None:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n"
-        else:
-            status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n\n실행가능 버전: 없음\n"
+        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
 
 def ReloadStatusBar():
     loadStart = time.time()
@@ -941,7 +942,7 @@ def init():
     global modMenu
 
     root.title("디아블로 런처")
-    root.geometry("520x370+100+100")
+    root.geometry("520x350+100+100")
     root.deiconify()
     root.resizable(False, False)
     root.attributes('-toolwindow', True)
@@ -979,13 +980,18 @@ def init():
 
     def OpenD2RDir():
         if diablo2Path is not None and os.path.isdir(diablo2Path):
-             logformat(errorLevel.INFO, f'The {diablo2Path} directory exist. The target directory will now open.')
-             os.startfile(f'"{diablo2Path}"')
+            logformat(errorLevel.INFO, f'The {diablo2Path} directory exist. The target directory will now open.')
+            os.startfile(f'"{diablo2Path}"')
 
     def OpenD3Dir():
         if diablo3Path is not None and os.path.isdir(diablo3Path):
-             logformat(errorLevel.INFO, f'The {diablo3Path} directory exist. The target directory will now open.')
-             os.startfile(f'"{diablo3Path}"')
+            logformat(errorLevel.INFO, f'The {diablo3Path} directory exist. The target directory will now open.')
+            os.startfile(f'"{diablo3Path}"')
+
+    def OpenD4Dir():
+        if diablo4Path is not None and os.path.isdir(diablo4Path):
+            logformat(errorLevel.INFO, f'The {diablo4Path} directory exist. The target directory will now open.')
+            os.startfile(f'"{diablo4Path}"')
 
     def openControlPanel():
         os.system('control.exe appwiz.cpl')
@@ -1007,14 +1013,12 @@ def init():
                 logformat(errorLevel.INFO, "QRes version: None")
             logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None and resolutionProgram else 'Unknown'}")
 
-            if diablo2Path is not None and diablo3Path is not None:
-                logformat(errorLevel.INFO, "Installed Diablo version: II, III")
+            if diablo2Path is not None and diablo3Path is not None and diablo4Path is not None:
+                logformat(errorLevel.INFO, "Installed Diablo version: II, III, IV")
                 logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
-            elif diablo2Path is not None:
-                logformat(errorLevel.INFO, "Installed Diablo version: II")
+            elif diablo2Path is not None or diablo3Path is not None or diablo4Path is not None:
+                logformat(errorLevel.INFO, "Installed Diablo version: partially")
                 logformat(errorLevel.INFO, f"Diablo II Resurrected mods: {definedMod if definedMod is not None else 'N/A'}")
-            elif diablo3Path is not None:
-                logformat(errorLevel.INFO, "Installed Diablo version: III")
             else:
                 logformat(errorLevel.INFO, "Installed Diablo version: None")
 
@@ -1026,7 +1030,7 @@ def init():
     def AboutThisApp(*args):
         about = Tk()
         about.title("이 디아블로 런처에 관하여")
-        about.geometry("470x310+400+400")
+        about.geometry("480x310+400+400")
         about.deiconify()
         about.resizable(False, False)
         about.attributes('-toolwindow', True)
@@ -1038,10 +1042,10 @@ def init():
 
         if resolutionProgram:
             logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
-            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         else:
             logformat(errorLevel.INFO, "Resolution change program does not detected")
-            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         blizzard = Button(about, text='블리자드 저작권 고지', command=openBlizzardLegalSite)
         apple = Button(about, text='애플컴퓨터 저작권 고지', command=openAppleLegalSite)
 
@@ -1150,6 +1154,7 @@ def init():
     fileMenu = Menu(menubar, tearoff=0)
     fileMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
     fileMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
+    fileMenu.add_command(label='Diablo IV 디렉토리 열기', command=OpenD4Dir, state='disabled')
     fileMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
     fileMenu.add_separator()
 
@@ -1213,29 +1218,15 @@ def init():
     RequirementCheck()
 
     if resolutionProgram:
-        if diablo2Path is not None and diablo3Path is not None:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-        elif diablo2Path is not None:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-        elif diablo3Path is not None:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
-        else:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: 없음\n")
+        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
     else:
-        if diablo2Path is not None and diablo3Path is not None:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II, III\n")
-        elif diablo2Path is not None:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: II\n")
-        elif diablo3Path is not None:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n실행가능 버전: III\n")
-        else:
-            status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n\n실행가능 버전: 없음\n")
+        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         info = Label(root, text='도움말\n디아블로를 원할히 플레이하려면 DiabloLauncher 환경 변수를 설정해 주세요.\n게임 디렉토리, 해상도를 변경하려면 DiabloLauncher 환경변수를 편집하세요.\nBootCamp 사운드 장치가 작동하지 않을 경우 소리 문제 해결 메뉴를 확인해 보세요.')
     else:
         info = Label(root, text='도움말\n디아블로를 원할히 플레이하려면 DiabloLauncher 환경 변수를 설정해 주세요.\n게임 디렉토리, 해상도를 변경하려면 DiabloLauncher 환경변수를 편집하세요.\n디아블로를 실행하기 전 사운드 장치가 제대로 설정 되어있는지 확인해 보세요.')
-    notice = Label(root, text="Blizzard 정책상 게임 실행은 직접 실행하여야 하며 실행시 알림창 지시를 따르시기 바랍니다.\n해당 프로그램을 사용함으로써 발생하는 모든 불이익은 전적으로 사용자에게 있습니다.\n지원되는 디아블로 버전은 Diablo II Resurrected, Diablo III 입니다.")
+    notice = Label(root, text="Blizzard 정책상 게임 실행은 직접 실행하여야 하며 실행시 알림창 지시를 따르시기 바랍니다.\n해당 프로그램을 사용함으로써 발생하는 모든 불이익은 전적으로 사용자에게 있습니다.\n지원되는 디아블로 버전은 Diablo II Resurrected, Diablo III, Diablo IV 입니다.")
 
     statusbar = Label(root, text='Initializing...', bd=1, relief='sunken')
 
