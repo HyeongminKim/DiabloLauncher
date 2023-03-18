@@ -145,6 +145,7 @@ def ShowWindow():
 def HideWindow():
     root.after(1, root.focus_force())
     for widget in launch.winfo_children():
+        logformat(errorLevel.INFO, f'abandoning module {widget}')
         widget.destroy()
     launch.title('무제')
     launch.withdraw()
@@ -176,7 +177,14 @@ def AlertWindow():
 
 def ExitProgram():
     if(launch is not None and root is not None):
+        for widget in launch.winfo_children():
+            logformat(errorLevel.INFO, f'Shutting down and abandoning module {widget}')
+            widget.destroy()
         launch.destroy()
+
+        for widget in root.winfo_children():
+            logformat(errorLevel.INFO, f'Shutting down and abandoning module {widget}')
+            widget.destroy()
         root.destroy()
     exit(0)
 
