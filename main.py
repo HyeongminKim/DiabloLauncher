@@ -612,6 +612,7 @@ def FindGameInstalled():
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
         fileMenu.entryconfig(0, state='normal')
+        modMenu.entryconfig(3, state='normal')
 
         diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
         if os.path.isdir(diablo2Path + '/mods'):
