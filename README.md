@@ -12,7 +12,7 @@
     <td>tkinter 가 포함된 Python3+</td>
   </tr>
   <tr>
-    <td>Diablo II Resurrected 플레이시 Windows 10+</td>
+    <td>D2R 또는 Diablo IV 플레이시 Windows 10+</td>
   </tr>
   <tr>
     <td>Diablo III 플레이시 Windows 7+</td>
