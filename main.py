@@ -16,7 +16,7 @@ except (ModuleNotFoundError, ImportError) as error:
 
 userApp = os.environ.get('AppData')
 userLocalApp = os.environ.get('LocalAppData')
-logLevel = os.environ.get('D2R_LOG_LEVEL')
+logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
 
 class color(Enum):
     RESET = '\033[0m'
