@@ -92,6 +92,7 @@ try:
     from tkinter import Menu
     from tkinter import messagebox
     from tkinter import Entry
+    from tkinter import Frame
     from idlelib.tooltip import Hovertip
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
@@ -375,7 +376,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             return
 
         os.system(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1')
-        switchButton['text'] = '디스플레이 해상도 복구 (게임 종료시 사용)'
+        switchButton['text'] = '디스플레이 해상도 복구\n(게임 종료시 사용)'
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
     else:
         switchButton['text'] = '게임 종료'
@@ -495,10 +496,10 @@ def BootAgent(poweroff: str):
     if diabloExecuted:
         SaveGameRunningTime(gameEndTime - gameStartTime)
     if poweroff == 'r':
-        emergencyButton['text'] = '긴급 재시동 준비중... (재시동 취소)'
+        emergencyButton['text'] = '긴급 재시동 준비중...\n(재시동 취소)'
         logformat(errorLevel.INFO, 'Starting Emergency reboot agent...')
     elif poweroff == 's':
-        emergencyButton['text'] = '긴급 종료 준비중... (종료 취소)'
+        emergencyButton['text'] = '긴급 종료 준비중...\n(종료 취소)'
         logformat(errorLevel.INFO, 'Starting Emergency reboot agent...')
     if resolutionProgram:
         if os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1') != 0:
@@ -523,7 +524,7 @@ def EmgergencyReboot():
     global forceReboot
     if forceReboot:
         forceReboot = False
-        emergencyButton['text'] = '긴급 전원 작업 (게임 저장 후 실행 요망)'
+        emergencyButton['text'] = '긴급 전원 작업\n(게임 저장 후 실행 요망)'
         logformat(errorLevel.INFO, 'Aborting Emergency agent...')
         switchButton['state'] = "normal"
         if resolutionProgram:
@@ -952,7 +953,7 @@ def init():
     global modMenu
 
     root.title("디아블로 런처")
-    root.geometry("520x350+100+100")
+    root.geometry("520x360+100+100")
     root.deiconify()
     root.resizable(False, False)
     root.attributes('-toolwindow', True)
@@ -961,6 +962,8 @@ def init():
     launch.resizable(False, False)
     launch.attributes('-toolwindow', True)
     root.after(1, root.focus_force())
+
+    rootFrame = Frame(root)
 
     launch.protocol("WM_DELETE_WINDOW", HideWindow)
     root.protocol("WM_DELETE_WINDOW", ExitProgram)
@@ -1217,8 +1220,12 @@ def init():
     root.bind_all("<F1>", AboutThisApp)
 
     welcome = Label(root, text='')
-    switchButton = Button(root, text='디아블로 실행...', command=LaunchGameAgent, state='disabled')
-    emergencyButton = Button(root, text='긴급 전원 작업 (게임 저장 후 실행 요망)', height=2,command=EmgergencyReboot)
+    switchButton = Button(rootFrame, text='디아블로 실행...', command=LaunchGameAgent, width=35, height=5, state='disabled')
+    emergencyButton = Button(rootFrame, text='긴급 전원 작업\n(게임 저장 후 실행 요망)', width=35, height=5, command=EmgergencyReboot)
+
+    switchButton.grid(column=0, row=0)
+    emergencyButton.grid(column=1, row=0)
+
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
 
@@ -1241,8 +1248,7 @@ def init():
     statusbar = Label(root, text='Initializing...', bd=1, relief='sunken')
 
     welcome.pack()
-    switchButton.pack()
-    emergencyButton.pack(pady=4)
+    rootFrame.pack()
     status.pack()
     info.pack()
     notice.pack()
