@@ -140,7 +140,7 @@ def AlertWindow():
     else:
         messagebox.showwarning('디아블로 런처', '해상도가 조절된 상태에서는 런처를 종료할 수 없습니다. 먼저 해상도를 기본 설정으로 변경해 주시기 바랍니다.')
 
-def ExitProgram():
+def ExitProgram(*args):
     if(launch is not None and root is not None):
         for widget in launch.winfo_children():
             logformat(errorLevel.INFO, f'Shutting down and abandoning module {widget}')
@@ -214,15 +214,15 @@ def LoadGameRunningTime():
                     stat_max = float(line)
                 stat_sum += float(line)
             logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
-            fileMenu.entryconfig(3, state='normal')
+            aboutMenu.entryconfig(7, state='normal')
         else:
             raise FileNotFoundError
     except (OSError, FileNotFoundError) as error:
         logformat(errorLevel.ERR, f'Failed to load Game-play logs: {error}')
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
-            fileMenu.entryconfig(3, state='normal')
+            aboutMenu.entryconfig(7, state='normal')
         else:
-            fileMenu.entryconfig(3, state='disabled')
+            aboutMenu.entryconfig(7, state='disabled')
         return 0, 0, 0, 0
     else:
         if runtimeFile is not None:
@@ -513,7 +513,7 @@ def FindGameInstalled():
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
-        fileMenu.entryconfig(0, state='normal')
+        aboutMenu.entryconfig(3, state='normal')
         modMenu.entryconfig(3, state='normal')
 
         diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
@@ -552,7 +552,7 @@ def FindGameInstalled():
             modMenu.entryconfig(1, command=DownloadModsLink)
     else:
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
-        fileMenu.entryconfig(0, state='disabled')
+        aboutMenu.entryconfig(3, state='disabled')
         modMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(1, state='disabled')
         modMenu.entryconfig(3, state='disabled')
@@ -560,15 +560,15 @@ def FindGameInstalled():
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
         diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
-        fileMenu.entryconfig(1, state='normal')
+        aboutMenu.entryconfig(4, state='normal')
     else:
-        fileMenu.entryconfig(1, state='disabled')
+        aboutMenu.entryconfig(4, state='disabled')
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')):
         diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')
-        fileMenu.entryconfig(2, state='normal')
+        aboutMenu.entryconfig(5, state='normal')
     else:
-        fileMenu.entryconfig(2, state='disabled')
+        aboutMenu.entryconfig(5, state='disabled')
 
     if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
         switchButton['state'] = "disabled"
@@ -622,7 +622,9 @@ def GetResolutionValue():
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
-def SetResolutionValue():
+def SetResolutionValue(*args):
+    if not resolutionProgram: return
+
     messagebox.showinfo('해상도 벡터 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
     envWindow = Tk()
     envWindow.title('해상도 벡터 편집기')
@@ -857,7 +859,10 @@ def init():
     def OpenDevSite():
         webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher')
 
-    def OpenDevIssues():
+    def OpenDevIssues(*args):
+        logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
+        if logLevel is None or logLevel != "verbose": return
+
         now = datetime.now()
         cnt_time = now.strftime("%H:%M:%S")
         msg_box = messagebox.askyesno(title='디아블로 런처', message='이슈를 제보할 경우 터미널에 출력된 전체 로그와 경고창, 프로그램 화면 등을 첨부하여 주세요. 만약 가능하다면 어떠한 이유로 문제가 발생하였으며, 문제가 재현 가능한지 등을 첨부하여 주시면 좀 더 빠른 대응이 가능합니다. 지금 이슈 제보 페이지를 방문하시겠습니까?')
@@ -927,13 +932,16 @@ def init():
             contents.pack()
             soundRecover.mainloop()
 
-    def OpenBattleNet():
+    def OpenBattleNet(*args):
         OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
 
     def OpenD2RModDir():
         if diablo2Path is not None:
             logformat(errorLevel.INFO, f'The {diablo2Path}/mods directory exist. The target directory will now open.')
             os.startfile(f'"{diablo2Path}/mods"')
+
+    def OpenProgramDir():
+        os.startfile(f"{check_terminal_output('echo %cd%')}")
 
     def ModApplyHelp():
         if definedMod is not None and definedMod != "":
@@ -1010,16 +1018,14 @@ def init():
 
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
-    fileMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
-    fileMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
-    fileMenu.add_command(label='Diablo IV 디렉토리 열기', command=OpenD4Dir, state='disabled')
-    fileMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
-    fileMenu.add_separator()
 
     if TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
-        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal')
+        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal', accelerator='Ctrl+O')
     else:
-        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled')
+        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled', accelerator='Ctrl+O')
+
+    fileMenu.add_separator()
+    fileMenu.add_command(label='종료', command=ExitProgram, accelerator='Ctrl+W')
 
     menubar.add_cascade(label='파일', menu=fileMenu)
 
@@ -1028,9 +1034,9 @@ def init():
     toolsMenu.add_command(label='런처 업데이트 확인...', command=UpdateProgram)
     toolsMenu.add_separator()
     if resolutionProgram:
-        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='normal')
+        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='normal', accelerator='Ctrl+,')
     else:
-        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='disabled')
+        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='disabled', accelerator='Ctrl+,')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')
@@ -1054,16 +1060,28 @@ def init():
     aboutMenu.add_command(label='이 디아블로 런처에 관하여...', command=AboutThisApp, accelerator='F1')
     aboutMenu.add_separator()
 
+    aboutMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
+    aboutMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
+    aboutMenu.add_command(label='Diablo IV 디렉토리 열기', command=OpenD4Dir, state='disabled')
+    aboutMenu.add_separator()
+    aboutMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
+    aboutMenu.add_command(label='프로그램 설치 디렉토리 열기', command=OpenProgramDir)
+    aboutMenu.add_separator()
+
     logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
     if logLevel is not None and logLevel == "verbose":
-        aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='normal')
+        aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='normal', accelerator='F12')
     else:
-        aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='disabled')
+        aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='disabled', accelerator='F12')
 
     menubar.add_cascade(label='정보', menu=aboutMenu)
 
     root.bind_all("<F5>", ForceReload)
     root.bind_all("<F1>", AboutThisApp)
+    root.bind_all("<F12>", OpenDevIssues)
+    root.bind_all("<Control-w>", ExitProgram)
+    root.bind_all("<Control-,>", SetResolutionValue)
+    root.bind_all("<Control-o>", OpenBattleNet)
 
     welcome = Label(root, text='')
     switchButton = Button(rootFrame, text='디아블로 실행...', command=LaunchGameAgent, width=35, height=5, state='disabled')
