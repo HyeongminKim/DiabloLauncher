@@ -1,0 +1,3 @@
+# pylint: disable=W0613
+
+def check_terminal_output(command: str) -> (None | str): ...

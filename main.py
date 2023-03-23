@@ -9,51 +9,14 @@ try:
     f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3})'
 
     import subprocess
-    from enum import Enum
+    from src.utility.logcat import logformat, errorLevel, color
+    from src.utility.terminal import check_terminal_output
 except (ModuleNotFoundError, ImportError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
 
 userApp = os.environ.get('AppData')
 userLocalApp = os.environ.get('LocalAppData')
-logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-
-class color(Enum):
-    RESET = '\033[0m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    GRAY = '\033[90m'
-
-class errorLevel(Enum):
-    INFO = 0
-    WARN = 1
-    ERR = 2
-    FATL = 3
-
-def check_terminal_output(command: str):
-    try:
-        return subprocess.check_output(f'{command} 2> NUL', shell=True, encoding='utf-8').strip()
-    except subprocess.CalledProcessError:
-        logformat(errorLevel.ERR, f'{command} returned non-zero exit status.')
-        return None
-
-def logformat(level: errorLevel, text: str):
-    if level == errorLevel.INFO:
-        if logLevel is not None and logLevel == "verbose":
-            print(f"{color.GRAY.value}[INFO: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
-    elif level == errorLevel.WARN:
-        print(f"{color.YELLOW.value}[WARN: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
-    elif level == errorLevel.ERR:
-        print(f"{color.RED.value}[ ERR: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
-    elif level == errorLevel.FATL:
-        print(f"{color.MAGENTA.value}[FATL: {check_terminal_output('date /t')} {check_terminal_output('time /t')}] {text}{color.RESET.value}")
-        if root is not None and launch is not None:
-            ExitProgram()
-        else:
-            exit(1)
 
 try:
     import platform
@@ -79,7 +42,6 @@ try:
 
     import signal
     import logging
-    import winreg as reg
 
     from datetime import datetime
     import time
@@ -94,6 +56,9 @@ try:
     from tkinter import Entry
     from tkinter import Frame
     from idlelib.tooltip import Hovertip
+
+    from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValue
+    from src.data.game_data import FormatTime, SaveGameRunningTime, ClearGameRunningTime, ignoreTime
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
@@ -104,7 +69,6 @@ forceReboot = False
 
 rebootWaitTime = 10
 loadWaitTime = 10
-ignoreTime = 5
 
 gameStartTime = None
 gameEndTime = None
@@ -230,65 +194,6 @@ def UpdateProgram():
         logformat(errorLevel.WARN, 'Automatically checking for updates has been disabled. Run the updater function again to switch to legacy update mode. ')
         updateChecked = True
 
-def FormatTime(milliseconds: float, rawType: bool):
-    seconds_per_minute = 60
-    seconds_per_hour   = 60  * seconds_per_minute
-    seconds_per_day    = 24  * seconds_per_hour
-    seconds_per_week   = 7   * seconds_per_day
-    seconds_per_month  = 30  * seconds_per_day
-    seconds_per_year   = 365 * seconds_per_day
-
-    elapsed_time = milliseconds
-    units = [ '년', '월', '주', '일', '시간', '분', '초' ]
-    unit_per_hours = [ seconds_per_year, seconds_per_month, seconds_per_week, seconds_per_day, seconds_per_hour, seconds_per_minute, 1]
-    ymwdhms = [ 0, 0, 0, 0, 0, 0, 0 ]
-
-    for i, unit in enumerate(unit_per_hours):
-        if rawType and i < 4:
-            continue
-        ymwdhms[i] = int(elapsed_time / unit)
-        elapsed_time = elapsed_time - ymwdhms[i] * unit
-
-    text = ''
-    for i, unit in enumerate(units):
-        if not rawType and ymwdhms[i] > 0:
-            text = f'{text} {ymwdhms[i]}{unit}' if text != '' else f'{ymwdhms[i]}{unit}'
-
-    if rawType:
-        hour = ymwdhms[4]
-        minute = ymwdhms[5]
-        seconds = ymwdhms[6]
-        logformat(errorLevel.INFO, f'The provided {milliseconds} milliseconds converted to rawType time - {hour}:{minute}.{seconds}.')
-        return hour, minute, seconds
-    else:
-        logformat(errorLevel.INFO, f'The provided {milliseconds} milliseconds converted to readable time - {text}.')
-        return text
-
-def SaveGameRunningTime(playTime: float):
-    runtimeFile = None
-    try:
-        if not os.path.isfile(f'{userApp}/DiabloLauncher/runtime.log'):
-            if not os.path.isdir(f'{userApp}/DiabloLauncher'):
-                logformat(errorLevel.INFO, 'DiabloLauncher directory does not exist. creating directory')
-                os.mkdir(f'{userApp}/DiabloLauncher')
-            logformat(errorLevel.INFO, 'runtime.log file does not exist. creating target file with write mode')
-            runtimeFile = open(f'{userApp}/DiabloLauncher/runtime.log', 'w', encoding='utf-8')
-        else:
-            logformat(errorLevel.INFO, 'runtime.log file already exist. opening target file with append mode')
-            runtimeFile = open(f'{userApp}/DiabloLauncher/runtime.log', 'a', encoding='utf-8')
-        logformat(errorLevel.INFO, f'playTime: {playTime} will be write in {userApp}/DiabloLauncher/runtime.log')
-        hours, minutes, seconds = FormatTime(playTime, True)
-        if hours == 0 and minutes < ignoreTime:
-            logformat(errorLevel.INFO, f'{playTime} will be ignored. The provided {hours}:{minutes}.{seconds} playtime lower then {ignoreTime} minutes.')
-        else:
-            runtimeFile.write(f'{str(playTime)}\n')
-            logformat(errorLevel.INFO, f'Successfully wrote {playTime} in {userApp}/DiabloLauncher/runtime.log')
-    except (OSError, FileExistsError) as error:
-        logformat(errorLevel.ERR, f'Failed to save Game-play logs: {error}')
-    finally:
-        if runtimeFile is not None:
-            runtimeFile.close()
-
 def LoadGameRunningTime():
     data = []
     stat_max = 0
@@ -328,13 +233,6 @@ def LoadGameRunningTime():
             return len(data), stat_max, 0, 0
         else:
             return 0, 0, 0, 0
-
-def ClearGameRunningTime():
-    if os.path.isfile(f'{userApp}/DiabloLauncher/runtime.log'):
-        os.remove(f'{userApp}/DiabloLauncher/runtime.log')
-        ReloadStatusBar()
-    else:
-        logformat(errorLevel.ERR, f'Failed to remove {userApp}/DiabloLauncher/runtime.log file. no such file or directory.')
 
 def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     global diabloExecuted
@@ -838,56 +736,6 @@ def RequirementCheck():
         logformat(errorLevel.WARN, 'The game does not exist in registry.')
         messagebox.showwarning('디아블로 런처', '이 컴퓨터에 디아블로 게임을 찾을 수 없습니다. 자세한 사항은 GitHub에 방문해 주세요.')
 
-def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
-    target = None
-    try:
-        key = reg.HKEY_LOCAL_MACHINE
-        target = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
-        value, type = reg.QueryValueEx(target, queryName)
-        if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
-            if(target is not None): reg.CloseKey(target)
-            return value
-        else:
-            raise FileNotFoundError
-    except (OSError, WindowsError, FileNotFoundError):
-        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
-        if(target is not None): reg.CloseKey(target)
-        return None
-
-def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
-    open = None
-    try:
-        key = reg.HKEY_LOCAL_MACHINE
-        open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
-        value, type = reg.QueryValueEx(open, queryName)
-        if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
-            os.startfile(value)
-        else:
-            logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
-    except (OSError, WindowsError):
-        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
-    finally:
-        if(open is not None): reg.CloseKey(open)
-
-def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
-    open = None
-    try:
-        key = reg.HKEY_LOCAL_MACHINE
-        open = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
-        value, type = reg.QueryValueEx(open, queryName)
-        if os.path.isfile(value) or os.path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
-            if(open is not None): reg.CloseKey(open)
-            return True
-        else:
-            raise FileNotFoundError
-    except (OSError, WindowsError, FileNotFoundError):
-        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
-        if(open is not None): reg.CloseKey(open)
-        return False
-
 def UpdateStatusValue():
     FindGameInstalled()
     GetResolutionValue()
@@ -982,12 +830,6 @@ def init():
     def ForceReload(*args):
         UpdateStatusValue()
         ReloadStatusBar()
-
-    def ForceProgramUpdate():
-        msg_box = messagebox.askquestion('디아블로 런처', '디아블로 런처 초기 실행 이후에 업데이트를 수행할 경우 디아블로 런처가 불안정해질 수 있습니다. 계속 진행하시겠습니까?', icon='question')
-        if msg_box == 'yes':
-            logformat(errorLevel.WARN, 'Force program update will take effect Diablo Launcher make unstable probably.')
-            UpdateProgram()
 
     def OpenGameStatusDir():
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
@@ -1183,7 +1025,7 @@ def init():
 
     toolsMenu = Menu(menubar, tearoff=0)
     toolsMenu.add_command(label='새로 고침', command=ForceReload, accelerator='F5')
-    toolsMenu.add_command(label='런처 업데이트 확인...', command=ForceProgramUpdate)
+    toolsMenu.add_command(label='런처 업데이트 확인...', command=UpdateProgram)
     toolsMenu.add_separator()
     if resolutionProgram:
         toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='normal')
@@ -1212,6 +1054,7 @@ def init():
     aboutMenu.add_command(label='이 디아블로 런처에 관하여...', command=AboutThisApp, accelerator='F1')
     aboutMenu.add_separator()
 
+    logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
     if logLevel is not None and logLevel == "verbose":
         aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='normal')
     else:
@@ -1264,6 +1107,7 @@ def init():
     root.mainloop()
 
 if __name__ == '__main__':
+    logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
     if logLevel is not None and logLevel == "verbose":
         multiprocessing.log_to_stderr()
         logger = multiprocessing.get_logger()
