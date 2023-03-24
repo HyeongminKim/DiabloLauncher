@@ -383,8 +383,8 @@ def LaunchGameAgent():
             diablo4['state'] = "normal"
             diablo4['text'] = 'Diablo IV 베타\n3월 27일 만료 예정'
 
-        diablo4['state'] = "disabled"
-        diablo4['text'] = 'Diablo IV 베타\n3월 25일 출시 예정'
+        # diablo4['state'] = "disabled"
+        # diablo4['text'] = 'Diablo IV EA\n6월 3일 출시 예정'
 
         ShowWindow()
         launch.mainloop()
