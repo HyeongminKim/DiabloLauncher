@@ -237,6 +237,17 @@ def LoadGameRunningTime():
 def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     global diabloExecuted
     global gameStartTime
+
+    result = check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True)
+    if result is not None:
+        logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
+        messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다.')
+        root.protocol("WM_DELETE_WINDOW", ExitProgram)
+        HideWindow()
+        UpdateStatusValue()
+        ReloadStatusBar()
+        return
+
     diabloExecuted = True
     logformat(errorLevel.INFO, f'Launching {gameName}...')
     if resolutionProgram:
@@ -278,6 +289,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
     else:
         switchButton['text'] = '게임 종료'
+
     if(gameName == 'Diablo II Resurrected'):
         os.popen(f'"{diablo2Path}/{gameName} Launcher.exe"')
     elif(gameName == 'Diablo III'):
@@ -933,7 +945,13 @@ def init():
             soundRecover.mainloop()
 
     def OpenBattleNet(*args):
-        OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
+        result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
+        if result is None:
+            OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
+        else:
+            logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
+            messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다.')
+
 
     def OpenD2RModDir():
         if diablo2Path is not None:
