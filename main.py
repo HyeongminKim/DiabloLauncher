@@ -102,6 +102,7 @@ fileMenu = None
 toolsMenu = None
 aboutMenu = None
 modMenu = None
+gameMenu = None
 
 def ShowWindow():
     launch.deiconify()
@@ -214,15 +215,15 @@ def LoadGameRunningTime():
                     stat_max = float(line)
                 stat_sum += float(line)
             logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
-            aboutMenu.entryconfig(7, state='normal')
+            aboutMenu.entryconfig(3, state='normal')
         else:
             raise FileNotFoundError
     except (OSError, FileNotFoundError) as error:
         logformat(errorLevel.ERR, f'Failed to load Game-play logs: {error}')
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
-            aboutMenu.entryconfig(7, state='normal')
+            aboutMenu.entryconfig(3, state='normal')
         else:
-            aboutMenu.entryconfig(7, state='disabled')
+            aboutMenu.entryconfig(3, state='disabled')
         return 0, 0, 0, 0
     else:
         if runtimeFile is not None:
@@ -525,7 +526,7 @@ def FindGameInstalled():
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
-        aboutMenu.entryconfig(3, state='normal')
+        gameMenu.entryconfig(0, state='normal')
         modMenu.entryconfig(3, state='normal')
 
         diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
@@ -564,7 +565,7 @@ def FindGameInstalled():
             modMenu.entryconfig(1, command=DownloadModsLink)
     else:
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
-        aboutMenu.entryconfig(3, state='disabled')
+        gameMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(1, state='disabled')
         modMenu.entryconfig(3, state='disabled')
@@ -572,15 +573,15 @@ def FindGameInstalled():
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
         diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
-        aboutMenu.entryconfig(4, state='normal')
+        gameMenu.entryconfig(1, state='normal')
     else:
-        aboutMenu.entryconfig(4, state='disabled')
+        gameMenu.entryconfig(1, state='disabled')
 
     if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')):
         diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')
-        aboutMenu.entryconfig(5, state='normal')
+        gameMenu.entryconfig(2, state='normal')
     else:
-        aboutMenu.entryconfig(5, state='disabled')
+        gameMenu.entryconfig(2, state='disabled')
 
     if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
         switchButton['state'] = "disabled"
@@ -815,6 +816,7 @@ def init():
     global fileMenu
     global toolsMenu
     global aboutMenu
+    global gameMenu
     global modMenu
 
     root.title("디아블로 런처")
@@ -868,9 +870,6 @@ def init():
     def openControlPanel():
         os.system('control.exe appwiz.cpl')
 
-    def OpenDevSite():
-        webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher')
-
     def OpenDevIssues(*args):
         logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
         if logLevel is None or logLevel != "verbose": return
@@ -915,18 +914,24 @@ def init():
         def openAppleLegalSite():
             webbrowser.open('https://www.apple.com/kr/legal/intellectual-property/guidelinesfor3rdparties.html')
 
+        def OpenDevSite():
+            webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher')
+
         if resolutionProgram:
             logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
             text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         else:
             logformat(errorLevel.INFO, "Resolution change program does not detected")
             text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
-        blizzard = Button(about, text='블리자드 저작권 고지', command=openBlizzardLegalSite)
-        apple = Button(about, text='애플컴퓨터 저작권 고지', command=openAppleLegalSite)
 
-        text.grid(row=0, column=0, columnspan=2)
+        blizzard = Button(about, text='블리자드 라이선스', command=openBlizzardLegalSite)
+        apple = Button(about, text='애플 라이선스', command=openAppleLegalSite)
+        this_app = Button(about, text='디아블로 런처 라이선스', command=OpenDevSite)
+
+        text.grid(row=0, column=0, columnspan=3)
         blizzard.grid(row=1, column=0)
-        apple.grid(row=1, column=1)
+        this_app.grid(row=1, column=1)
+        apple.grid(row=1, column=2)
         about.mainloop()
 
     def BootCampSoundRecover():
@@ -1074,16 +1079,17 @@ def init():
     menubar.add_cascade(label='모드', menu=modMenu)
 
     aboutMenu = Menu(menubar, tearoff=0)
-    aboutMenu.add_command(label='GitHub 방문', command=OpenDevSite)
     aboutMenu.add_command(label='이 디아블로 런처에 관하여...', command=AboutThisApp, accelerator='F1')
     aboutMenu.add_separator()
 
-    aboutMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
-    aboutMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
-    aboutMenu.add_command(label='Diablo IV 디렉토리 열기', command=OpenD4Dir, state='disabled')
-    aboutMenu.add_separator()
+    gameMenu = Menu(aboutMenu, tearoff=0)
+    gameMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
+    gameMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
+    gameMenu.add_command(label='Diablo IV 디렉토리 열기', command=OpenD4Dir, state='disabled')
+
+    aboutMenu.add_cascade(label='게임 디렉토리', menu=gameMenu)
     aboutMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
-    aboutMenu.add_command(label='프로그램 설치 디렉토리 열기', command=OpenProgramDir)
+    aboutMenu.add_command(label='디아블로 런처 디렉토리 열기', command=OpenProgramDir)
     aboutMenu.add_separator()
 
     logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
