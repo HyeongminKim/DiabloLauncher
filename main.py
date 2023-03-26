@@ -242,7 +242,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     result = check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True)
     if result is not None:
         logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
-        messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다.')
+        messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다. 디아블로를 안정적으로 플레이하기 위해 먼저 Battle.net을 종료해 주시기 바랍니다.')
         root.protocol("WM_DELETE_WINDOW", ExitProgram)
         HideWindow()
         UpdateStatusValue()
@@ -955,7 +955,7 @@ def init():
             OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
         else:
             logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
-            messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다.')
+            messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다. 예기치 않은 오류를 최소화 하기위해 먼저 Battle.net을 종료한 후 다시 시도해 주세요.')
 
 
     def OpenD2RModDir():
