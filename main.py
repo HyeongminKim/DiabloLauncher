@@ -57,7 +57,7 @@ try:
     from tkinter import Frame
     from idlelib.tooltip import Hovertip
 
-    from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValue
+    from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, ClearGameRunningTime, ignoreTime
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
@@ -93,10 +93,13 @@ root.withdraw()
 launch = Tk()
 launch.withdraw()
 
+welcome = None
 switchButton = None
 emergencyButton = None
 status = None
 statusbar = None
+info = None
+notice = None
 
 fileMenu = None
 toolsMenu = None
@@ -132,6 +135,52 @@ def CheckResProgram():
         logformat(errorLevel.INFO, 'QRes did not installed')
         toolsMenu.entryconfig(3, state='disabled')
         resolutionProgram = False
+
+def CheckDarkMode():
+    # dark bg="#272727"
+    # dark menu bar bg="#202020"
+    # dark txt color="#FFFFFF"
+    # light bg="#F0F0F0"
+    # light menu bar bg="#FFFFFF"
+    # light txt color="#000000"
+    if(TestRegistryValueAsRaw(r'SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize', 'AppsUseLightTheme')):
+        root.configure(bg='#272727')
+        launch.configure(bg='#272727')
+
+        welcome['background'] = '#272727'
+        status['background'] = '#272727'
+        statusbar['background'] = '#272727'
+        switchButton['background'] = '#272727'
+        emergencyButton['background'] = '#272727'
+        info['background'] = '#272727'
+        notice['background'] = '#272727'
+
+        welcome['foreground'] = '#FFFFFF'
+        status['foreground'] = '#FFFFFF'
+        statusbar['foreground'] = '#FFFFFF'
+        switchButton['foreground'] = '#FFFFFF'
+        emergencyButton['foreground'] = '#FFFFFF'
+        info['foreground'] = '#FFFFFF'
+        notice['foreground'] = '#FFFFFF'
+    else:
+        root.configure(bg='#F0F0F0')
+        launch.configure(bg='#F0F0F0')
+
+        welcome['background'] = '#F0F0F0'
+        status['background'] = '#F0F0F0'
+        statusbar['background'] = '#F0F0F0'
+        switchButton['background'] = '#F0F0F0'
+        emergencyButton['background'] = '#F0F0F0'
+        info['background'] = '#F0F0F0'
+        notice['background'] = '#F0F0F0'
+
+        welcome['foreground'] = '#000000'
+        status['foreground'] = '#000000'
+        statusbar['foreground'] = '#000000'
+        switchButton['foreground'] = '#000000'
+        emergencyButton['foreground'] = '#000000'
+        info['foreground'] = '#000000'
+        notice['foreground'] = '#000000'
 
 def AlertWindow():
     msg_box = messagebox.askquestion('디아블로 런처', f'현재 디스플레이 해상도가 {alteredX}x{alteredY} 로 조정되어 있습니다. 게임이 실행 중인 상태에서 해상도 설정을 복구할 경우 퍼포먼스에 영향을 미칠 수 있습니다. 그래도 해상도 설정을 복구하시겠습니까?', icon='question')
@@ -524,7 +573,7 @@ def FindGameInstalled():
     global diablo3Path
     global diablo4Path
 
-    if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
         gameMenu.entryconfig(0, state='normal')
         modMenu.entryconfig(3, state='normal')
@@ -571,13 +620,13 @@ def FindGameInstalled():
         modMenu.entryconfig(3, state='disabled')
         modMenu.entryconfig(1, label='게임이 설치되지 않음')
 
-    if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
         diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
         gameMenu.entryconfig(1, state='normal')
     else:
         gameMenu.entryconfig(1, state='disabled')
 
-    if(TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')):
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')):
         diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')
         gameMenu.entryconfig(2, state='normal')
     else:
@@ -809,6 +858,9 @@ def ReloadStatusBar():
         Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션 통계를 로드할 수 없음", hover_delay=500)
 
 def init():
+    global welcome
+    global info
+    global notice
     global switchButton
     global emergencyButton
     global status
@@ -1042,7 +1094,7 @@ def init():
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
 
-    if TestRegistryValue(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
+    if TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal', accelerator='Ctrl+O')
     else:
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled', accelerator='Ctrl+O')
@@ -1143,6 +1195,7 @@ def init():
     statusbar.pack(side=BOTTOM, fill='x')
 
     ReloadStatusBar()
+    CheckDarkMode()
 
     root.config(menu=menubar)
 

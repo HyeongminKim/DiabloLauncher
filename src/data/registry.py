@@ -38,7 +38,7 @@ def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
     finally:
         if(target is not None): reg.CloseKey(target)
 
-def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
+def TestRegistryValueAsFile(regAddress: str, queryName: str = 'DisplayIcon'):
     target = None
     try:
         key = reg.HKEY_LOCAL_MACHINE
@@ -51,6 +51,23 @@ def TestRegistryValue(regAddress: str, queryName: str = 'DisplayIcon'):
         else:
             raise FileNotFoundError
     except (OSError, WindowsError, FileNotFoundError):
+        logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
+        if(target is not None): reg.CloseKey(target)
+        return False
+
+def TestRegistryValueAsRaw(regAddress: str, queryName: str):
+    target = None
+    try:
+        key = reg.HKEY_CURRENT_USER
+        target = reg.OpenKey(key, regAddress, 0, reg.KEY_READ)
+        value, type = reg.QueryValueEx(target, queryName)
+        if value == 0:
+            logformat(errorLevel.INFO, f'{value} is exist in system.')
+            if(target is not None): reg.CloseKey(target)
+            return True
+        else:
+            raise OSError
+    except (OSError, WindowsError):
         logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
         if(target is not None): reg.CloseKey(target)
         return False
