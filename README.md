@@ -21,11 +21,8 @@
     <td>64-bit CPU</td>
   </tr>
   <tr>
-    <td rowspan="2">선택*</td>
+    <td>선택*</td>
     <td>해상도 조절 시 QRes 필요</td>
-  </tr>
-  <tr>
-    <td>명령행 간편복사 기능 사용시 <a href="https://github.com/HyeongminKim/DiabloLauncher/network/dependencies">나열된 모듈</a> 설치</td>
   </tr>
 </table>
 
