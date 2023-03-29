@@ -59,6 +59,7 @@ try:
 
     from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, ClearGameRunningTime, ignoreTime
+    from src.data.json_parse import loadConfigurationFile
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
@@ -458,7 +459,10 @@ def LaunchGameAgent():
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
                 elif definedMod is not None and isinstance(definedMod, str):
                     if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
-                        diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
+                        if loadConfigurationFile() is not None:
+                            diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
+                        else:
+                            diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 감지됨'
                     else:
                         messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
                         logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
@@ -654,12 +658,15 @@ def FindGameInstalled():
             GetModDetails()
             if definedMod is not None and isinstance(definedMod, list):
                 logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
+                modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=ModsPreferSelector)
             elif definedMod is not None and isinstance(definedMod, str):
                 if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
-                    modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
+                    if loadConfigurationFile() is not None:
+                        modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
+                    else:
+                        modMenu.entryconfig(1, label=f'감지된 모드: {definedMod}')
                     modMenu.entryconfig(1, state='normal')
                     modMenu.entryconfig(1, command=SearchModInGitHub)
                 else:
@@ -1256,7 +1263,10 @@ def init():
         launch.title('모드 도움말')
 
         note = Label(launch, text='사용가능한 도움말', height=2)
-        applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp)
+        if loadConfigurationFile() is not None:
+            applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp, state='disabled')
+        else:
+            applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
 
         if definedMod is not None and definedMod != "":
             logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
