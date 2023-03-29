@@ -102,6 +102,8 @@ statusbar = None
 info = None
 notice = None
 
+applyHelp = None
+
 fileMenu = None
 toolsMenu = None
 aboutMenu = None
@@ -1214,6 +1216,8 @@ def init():
         if definedMod is not None and definedMod != "":
             if(dumpConfigurationFile(f' -mod {definedMod} -txt')):
                 logformat(errorLevel.INFO, f'Successfully applied mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                applyHelp['text'] = f'{definedMod} 모드\n적용됨'
+                applyHelp['state'] = 'disabled'
                 GetModDetails()
                 FindGameInstalled()
             else:
@@ -1240,8 +1244,9 @@ def init():
         launch.after(1, launch.focus_force())
 
     def ModHelpWindow():
-        launch.title('모드 도움말')
+        global applyHelp
 
+        launch.title('모드 도움말')
         note = Label(launch, text='사용가능한 도움말', height=2)
         external_conf = loadConfigurationFile()
         if definedMod is not None:
