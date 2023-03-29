@@ -59,7 +59,7 @@ try:
 
     from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, ClearGameRunningTime, ignoreTime
-    from src.data.json_parse import loadConfigurationFile
+    from src.data.json_parse import loadConfigurationFile, dumpConfigurationFile
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
@@ -1212,39 +1212,17 @@ def init():
 
     def ModApplyHelp():
         if definedMod is not None and definedMod != "":
-            try:
-                import clipboard
-            except (ModuleNotFoundError, ImportError) as error:
-                logformat(errorLevel.WARN, f'Unable to copy mods name: " -mod {definedMod} -txt". reason: {error}. retrying copy string with alternative module...')
-                try:
-                    import pyperclip
-                except (ModuleNotFoundError, ImportError) as error:
-                    logformat(errorLevel.ERR, f'Unable to copy mods name: " -mod {definedMod} -txt". reason: {error}. all known module was not installed yet. please copy it manually.')
-                    messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
-                    launch.after(1, launch.focus_force())
-                else:
-                    msg_box = messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
-                    if msg_box:
-                        pyperclip.copy(f' -mod {definedMod} -txt')
-                        logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt" with pyperclip module.')
-                        del pyperclip
-                        logformat(errorLevel.INFO, 'unloaded pyperclip module.')
-                    else:
-                        logformat(errorLevel.INFO, 'user aborted copy mods name: pyperclip module detected, however it was not imported. ')
-                    launch.after(1, launch.focus_force())
+            if(dumpConfigurationFile(f' -mod {definedMod} -txt')):
+                logformat(errorLevel.INFO, f'Successfully applied mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                GetModDetails()
+                FindGameInstalled()
             else:
-                msg_box = messagebox.askyesno(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다. 편리하게 명령행 인수를 입력하기 위해 제공된 파라미터를 클립보드에 복사하시겠습니까?')
-                if msg_box:
-                    clipboard.copy(f' -mod {definedMod} -txt')
-                    logformat(errorLevel.INFO, f'Successfully copied mods name: " -mod {definedMod} -txt" with clipboard module.')
-                    del clipboard
-                    logformat(errorLevel.INFO, 'unloaded clipboard module.')
-                else:
-                    logformat(errorLevel.INFO, 'user aborted copy mods name: clipboard module detected, however it was not imported. ')
+                logformat(errorLevel.ERR, f'Unable to edit mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
                 launch.after(1, launch.focus_force())
         else:
             logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
-            messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod modName -txt"를 입력해야 합니다.')
+            messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod 모드명 -txt"를 입력해야 합니다.')
             launch.after(1, launch.focus_force())
 
     def ModGeneralHelp():
@@ -1266,10 +1244,13 @@ def init():
 
         note = Label(launch, text='사용가능한 도움말', height=2)
         external_conf = loadConfigurationFile()
-        if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-            applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp, state='disabled')
+        if definedMod is not None:
+            if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용됨', width=20, height=5, command=ModApplyHelp, state='disabled')
+            else:
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModApplyHelp, state='normal')
         else:
-            applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
+            applyHelp = Button(launch, text='모드\n적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
 
         if definedMod is not None and definedMod != "":
             logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
