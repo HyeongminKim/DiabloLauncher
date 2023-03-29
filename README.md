@@ -38,7 +38,7 @@
 - 작성하기 전 먼저 같은 문제를 겪고 있는 사람이 있는지 확인해 보세요.
 
 ### 데모 스크린 샷
-<img src="https://user-images.githubusercontent.com/25660580/226981237-2b245968-e6fb-419c-a060-c2d8b3c0e976.png" width="50%" height="50%">
+<img src="https://user-images.githubusercontent.com/25660580/228509742-31a8d08f-81e5-4b6a-a781-21ffd3f26e2e.png" width="50%" height="50%">
 
 ### 면책사항
 - 이 프로그램 또는 모드를 사용하여 발생하는 모든 불이익은 전적으로 사용자에게 있습니다.
