@@ -111,6 +111,7 @@ modMenu = None
 gameMenu = None
 
 def ShowWindow():
+    launch.geometry(f"300x125+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 300 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 125 / 2)}")
     launch.deiconify()
     launch.after(1, launch.focus_force())
 
@@ -768,7 +769,7 @@ def SetResolutionValue(*args):
     messagebox.showinfo('해상도 벡터 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
     envWindow = Tk()
     envWindow.title('해상도 벡터 편집기')
-    envWindow.geometry("265x70+200+200")
+    envWindow.geometry(f"265x70+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 265 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 70 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
 
@@ -1104,7 +1105,7 @@ def init():
     def AboutThisApp(*args):
         about = Tk()
         about.title("이 디아블로 런처에 관하여")
-        about.geometry("480x310+400+400")
+        about.geometry(f"480x310+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 480 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 310 / 2)}")
         about.deiconify()
         about.resizable(False, False)
         about.attributes('-toolwindow', True)
@@ -1172,7 +1173,7 @@ def init():
         if msg_box:
             soundRecover = Tk()
             soundRecover.title("Cirrus Logic 문제 해결")
-            soundRecover.geometry("480x170+300+300")
+            soundRecover.geometry(f"480x170+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 480 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 170 / 2)}")
             soundRecover.deiconify()
             soundRecover.resizable(False, False)
             soundRecover.attributes('-toolwindow', True)
@@ -1216,7 +1217,7 @@ def init():
         if diabloExecuted or check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True) is not None:
             logformat(errorLevel.ERR, "Unable to open mods helper. reason: Battle.net or Diablo is now running.")
             messagebox.showerror(title='디아블로 모드', message='현재 디아블로 또는 Battle.net이 실행 중입니다. 예기치 않은 오류를 최소화하기 위해 먼저 해당 앱을 종료한 후 다시 시도해 주세요.')
-            launch.after(1, launch.focus_force())
+            ShowWindow()
             return
 
         external_conf = loadConfigurationFile()
@@ -1229,7 +1230,7 @@ def init():
             else:
                 logformat(errorLevel.ERR, f'Unable to load mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
                 messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
-                launch.after(1, launch.focus_force())
+                ShowWindow()
         elif definedMod is not None and external_conf == f' -mod {definedMod} -txt':
             if(dumpConfigurationFile('')):
                 logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
@@ -1239,15 +1240,15 @@ def init():
             else:
                 logformat(errorLevel.ERR, f'Unable to unload mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
                 messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected를 모드 없이 플레이하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 제거해야 합니다.')
-                launch.after(1, launch.focus_force())
+                ShowWindow()
         else:
             logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
             messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod 모드명 -txt"를 입력해야 합니다.')
-            launch.after(1, launch.focus_force())
+            ShowWindow()
 
     def ModGeneralHelp():
         messagebox.showinfo(title='디아블로 모드', message='"없는 문자열" 오류가 발생할 경우 모드팩 업데이트가 출시 되었는지 확인하시거나, json파일의 모든 누락된 ID를 직접 추가해 주세요. 자세한 사항은 "모드 업데이트 방법"을 참조해 주세요')
-        launch.after(1, launch.focus_force())
+        ShowWindow()
 
     def ModAdvancedHelp():
         msg_box = messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드 생성 또는 편집시 유용한 프로그램 리스트를 확인하시겠습니까?')
@@ -1257,7 +1258,7 @@ def init():
             webbrowser.open('https://github.com/Cjreek/D2ExcelPlus')
             webbrowser.open('https://github.com/WinMerge/winimerge')
             webbrowser.open('https://github.com/microsoft/vscode')
-        launch.after(1, launch.focus_force())
+        ShowWindow()
 
     def ModHelpWindow():
         global applyHelp
