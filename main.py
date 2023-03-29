@@ -459,7 +459,8 @@ def LaunchGameAgent():
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
                 elif definedMod is not None and isinstance(definedMod, str):
                     if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
-                        if loadConfigurationFile() is not None:
+                        external_conf = loadConfigurationFile()
+                        if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
                             diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
                         else:
                             diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 감지됨'
@@ -663,7 +664,8 @@ def FindGameInstalled():
                 modMenu.entryconfig(1, command=ModsPreferSelector)
             elif definedMod is not None and isinstance(definedMod, str):
                 if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
-                    if loadConfigurationFile() is not None:
+                    external_conf = loadConfigurationFile()
+                    if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
                         modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
                     else:
                         modMenu.entryconfig(1, label=f'감지된 모드: {definedMod}')
@@ -1263,7 +1265,8 @@ def init():
         launch.title('모드 도움말')
 
         note = Label(launch, text='사용가능한 도움말', height=2)
-        if loadConfigurationFile() is not None:
+        external_conf = loadConfigurationFile()
+        if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
             applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp, state='disabled')
         else:
             applyHelp = Button(launch, text='모드 적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
