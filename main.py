@@ -151,7 +151,9 @@ def CheckDarkMode():
         status['background'] = '#272727'
         statusbar['background'] = '#272727'
         switchButton['background'] = '#272727'
+        switchButton['activebackground'] = '#272727'
         emergencyButton['background'] = '#272727'
+        emergencyButton['activebackground'] = '#272727'
         info['background'] = '#272727'
         notice['background'] = '#272727'
 
@@ -159,9 +161,13 @@ def CheckDarkMode():
         status['foreground'] = '#FFFFFF'
         statusbar['foreground'] = '#FFFFFF'
         switchButton['foreground'] = '#FFFFFF'
+        switchButton['activeforeground'] = '#FFFFFF'
         emergencyButton['foreground'] = '#FFFFFF'
+        emergencyButton['activeforeground'] = '#FFFFFF'
         info['foreground'] = '#FFFFFF'
         notice['foreground'] = '#FFFFFF'
+
+        return True
     else:
         root.configure(bg='#F0F0F0')
         launch.configure(bg='#F0F0F0')
@@ -170,7 +176,9 @@ def CheckDarkMode():
         status['background'] = '#F0F0F0'
         statusbar['background'] = '#F0F0F0'
         switchButton['background'] = '#F0F0F0'
+        switchButton['activebackground'] = '#F0F0F0'
         emergencyButton['background'] = '#F0F0F0'
+        emergencyButton['activebackground'] = '#F0F0F0'
         info['background'] = '#F0F0F0'
         notice['background'] = '#F0F0F0'
 
@@ -178,9 +186,13 @@ def CheckDarkMode():
         status['foreground'] = '#000000'
         statusbar['foreground'] = '#000000'
         switchButton['foreground'] = '#000000'
+        switchButton['activeforeground'] = '#000000'
         emergencyButton['foreground'] = '#000000'
+        emergencyButton['activeforeground'] = '#000000'
         info['foreground'] = '#000000'
         notice['foreground'] = '#000000'
+
+        return False
 
 def AlertWindow():
     msg_box = messagebox.askquestion('디아블로 런처', f'현재 디스플레이 해상도가 {alteredX}x{alteredY} 로 조정되어 있습니다. 게임이 실행 중인 상태에서 해상도 설정을 복구할 경우 퍼포먼스에 영향을 미칠 수 있습니다. 그래도 해상도 설정을 복구하시겠습니까?', icon='question')
@@ -401,6 +413,37 @@ def LaunchGameAgent():
         diablo3.grid(row=1, column=1)
         diablo4.grid(row=2, column=1)
 
+        if(CheckDarkMode()):
+            note['background'] = '#272727'
+            note['foreground'] = '#FFFFFF'
+            diablo2['background'] = '#272727'
+            diablo2['activebackground'] = '#272727'
+            diablo2['foreground'] = '#FFFFFF'
+            diablo2['activeforeground'] = '#FFFFFF'
+            diablo3['background'] = '#272727'
+            diablo3['activebackground'] = '#272727'
+            diablo3['foreground'] = '#FFFFFF'
+            diablo3['activeforeground'] = '#FFFFFF'
+            diablo4['background'] = '#272727'
+            diablo4['activebackground'] = '#272727'
+            diablo4['foreground'] = '#FFFFFF'
+            diablo4['activeforeground'] = '#FFFFFF'
+        else:
+            note['background'] = '#F0F0F0'
+            note['foreground'] = '#000000'
+            diablo2['background'] = '#F0F0F)'
+            diablo2['activebackground'] = '#F0F0F0'
+            diablo2['foreground'] = '#000000'
+            diablo2['activeforeground'] = '#000000'
+            diablo3['background'] = '#F0F0F)'
+            diablo3['activebackground'] = '#F0F0F0'
+            diablo3['foreground'] = '#000000'
+            diablo3['activeforeground'] = '#000000'
+            diablo4['background'] = '#F0F0F)'
+            diablo4['activebackground'] = '#F0F0F0'
+            diablo4['foreground'] = '#000000'
+            diablo4['activeforeground'] = '#000000'
+
         if diablo2Path is None or not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
             diablo2['state'] = "disabled"
@@ -508,6 +551,30 @@ def EmgergencyReboot():
         note.pack()
         reboot.pack(side=LEFT, padx=10)
         halt.pack(side=RIGHT, padx=10)
+
+        if(CheckDarkMode()):
+            note['background'] = '#272727'
+            note['foreground'] = '#FFFFFF'
+            reboot['background'] = '#272727'
+            reboot['activebackground'] = '#272727'
+            reboot['foreground'] = '#FFFFFF'
+            reboot['activeforeground'] = '#FFFFFF'
+            halt['background'] = '#272727'
+            halt['activebackground'] = '#272727'
+            halt['foreground'] = '#FFFFFF'
+            halt['activeforeground'] = '#FFFFFF'
+        else:
+            note['background'] = '#F0F0F0'
+            note['foreground'] = '#000000'
+            reboot['background'] = '#F0F0F0'
+            reboot['activebackground'] = '#F0F0F0'
+            reboot['foreground'] = '#000000'
+            reboot['activeforeground'] = '#000000'
+            halt['background'] = '#F0F0F0'
+            halt['activebackground'] = '#F0F0F0'
+            halt['foreground'] = '#000000'
+            halt['activeforeground'] = '#000000'
+
         ShowWindow()
         launch.mainloop()
 
@@ -780,6 +847,75 @@ def SetResolutionValue(*args):
         envSet.pack(side=LEFT, padx=10)
         commitBtn.pack(side=RIGHT, padx=10)
 
+    if(CheckDarkMode()):
+        envWindow['background'] = '#272727'
+        originXtext['background'] = '#272727'
+        originXtext['foreground'] = '#FFFFFF'
+        envOriginX['background'] = '#272727'
+        envOriginX['foreground'] = '#FFFFFF'
+        originYtext['background'] = '#272727'
+        originYtext['foreground'] = '#FFFFFF'
+        envOriginY['background'] = '#272727'
+        envOriginY['foreground'] = '#FFFFFF'
+        originFRtext['background'] = '#272727'
+        originFRtext['foreground'] = '#FFFFFF'
+        envOriginFR['background'] = '#272727'
+        envOriginFR['foreground'] = '#FFFFFF'
+        alteredXtext['background'] = '#272727'
+        alteredXtext['foreground'] = '#FFFFFF'
+        envAlteredX['background'] = '#272727'
+        envAlteredX['foreground'] = '#FFFFFF'
+        alteredYtext['background'] = '#272727'
+        alteredYtext['foreground'] = '#FFFFFF'
+        envAlteredY['background'] = '#272727'
+        envAlteredY['foreground'] = '#FFFFFF'
+        alteredFRtext['background'] = '#272727'
+        alteredFRtext['foreground'] = '#FFFFFF'
+        envAlteredFR['background'] = '#272727'
+        envAlteredFR['foreground'] = '#FFFFFF'
+        envSet['background'] = '#272727'
+        envSet['activebackground'] = '#272727'
+        envSet['foreground'] = '#FFFFFF'
+        envSet['activeforeground'] = '#FFFFFF'
+        commitBtn['background'] = '#272727'
+        commitBtn['activebackground'] = '#272727'
+        commitBtn['foreground'] = '#FFFFFF'
+        commitBtn['activeforeground'] = '#FFFFFF'
+    else:
+        envWindow['background'] = '#F0F0F0'
+        originXtext['background'] = '#F0F0F0'
+        originXtext['foreground'] = '#000000'
+        envOriginX['background'] = '#F0F0F0'
+        envOriginX['foreground'] = '#000000'
+        originYtext['background'] = '#F0F0F0'
+        originYtext['foreground'] = '#000000'
+        envOriginY['background'] = '#F0F0F0'
+        envOriginY['foreground'] = '#000000'
+        originFRtext['background'] = '#F0F0F0'
+        originFRtext['foreground'] = '#000000'
+        envOriginFR['background'] = '#F0F0F0'
+        envOriginFR['foreground'] = '#000000'
+        alteredXtext['background'] = '#F0F0F0'
+        alteredXtext['foreground'] = '#000000'
+        envAlteredX['background'] = '#F0F0F0'
+        envAlteredX['foreground'] = '#000000'
+        alteredYtext['background'] = '#F0F0F0'
+        alteredYtext['foreground'] = '#000000'
+        envAlteredY['background'] = '#F0F0F0'
+        envAlteredY['foreground'] = '#000000'
+        alteredFRtext['background'] = '#F0F0F0'
+        alteredFRtext['foreground'] = '#000000'
+        envAlteredFR['background'] = '#F0F0F0'
+        envAlteredFR['foreground'] = '#000000'
+        envSet['background'] = '#F0F0F0'
+        envSet['activebackground'] = '#F0F0F0'
+        envSet['foreground'] = '#000000'
+        envSet['activeforeground'] = '#000000'
+        commitBtn['background'] = '#F0F0F0'
+        commitBtn['activebackground'] = '#F0F0F0'
+        commitBtn['foreground'] = '#000000'
+        commitBtn['activeforeground'] = '#000000'
+
     envWindow.mainloop()
 
 def RequirementCheck():
@@ -898,6 +1034,7 @@ def init():
     def ForceReload(*args):
         UpdateStatusValue()
         ReloadStatusBar()
+        CheckDarkMode()
 
     def OpenGameStatusDir():
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
@@ -984,6 +1121,39 @@ def init():
         blizzard.grid(row=1, column=0)
         this_app.grid(row=1, column=1)
         apple.grid(row=1, column=2)
+
+        if(CheckDarkMode()):
+            about['background'] = '#272727'
+            text['background'] = '#272727'
+            text['foreground'] = '#FFFFFF'
+            blizzard['background'] = '#272727'
+            blizzard['activebackground'] = '#272727'
+            blizzard['foreground'] = '#FFFFFF'
+            blizzard['activeforeground'] = '#FFFFFF'
+            apple['background'] = '#272727'
+            apple['activebackground'] = '#272727'
+            apple['foreground'] = '#FFFFFF'
+            apple['activeforeground'] = '#FFFFFF'
+            this_app['background'] = '#272727'
+            this_app['activebackground'] = '#272727'
+            this_app['foreground'] = '#FFFFFF'
+            this_app['activeforeground'] = '#FFFFFF'
+        else:
+            about['background'] = '#F0F0F0'
+            text['background'] = '#F0F0F0'
+            text['foreground'] = '#000000'
+            blizzard['background'] = '#F0F0F0'
+            blizzard['activebackground'] = '#F0F0F0'
+            blizzard['foreground'] = '#000000'
+            blizzard['activeforeground'] = '#000000'
+            apple['background'] = '#F0F0F0'
+            apple['activebackground'] = '#F0F0F0'
+            apple['foreground'] = '#000000'
+            apple['activeforeground'] = '#000000'
+            this_app['background'] = '#F0F0F0'
+            this_app['activebackground'] = '#F0F0F0'
+            this_app['foreground'] = '#000000'
+            this_app['activeforeground'] = '#000000'
         about.mainloop()
 
     def BootCampSoundRecover():
@@ -999,6 +1169,19 @@ def init():
             contents = Label(soundRecover, text='1. BootCamp 지원 앱에서 Windows 지원 소프트웨어를 USB에 저장합니다.\n2. BootCamp로 재시동합니다.\n3. msconfig를 실행에 입력하여 부팅 옵션을 안전 부팅의 최소 설치로 선택합니다.\n4. BootCamp를 안전모드로 재시동합니다. \n5. 실행에 devmgmt.msc를 입력하여 장치관리자를 띄웁니다. \n6. Cirrus Logic 디바이스와 드라이버를 제거합니다.\n7. 1번에서 다운받은 폴더 경로를 드라이버 설치경로로 선택합니다. \n8. msconfig를 실행에 입력하여 안전부팅 체크박스를 해제합니다. \n9. BootCamp를 재시동합니다. ', anchor=W, justify=LEFT)
             notice.pack()
             contents.pack()
+
+            if(CheckDarkMode()):
+                soundRecover['background'] = '#272727'
+                notice['background'] = '#272727'
+                notice['foreground'] = '#FFFFFF'
+                contents['background'] = '#272727'
+                contents['foreground'] = '#FFFFFF'
+            else:
+                soundRecover['background'] = '#F0F0F0'
+                notice['background'] = '#F0F0F0'
+                notice['foreground'] = '#000000'
+                contents['background'] = '#F0F0F0'
+                contents['foreground'] = '#000000'
             soundRecover.mainloop()
 
     def OpenBattleNet(*args):
@@ -1088,6 +1271,38 @@ def init():
         generalHelp.grid(row=1, column=0)
         advancedHelp.grid(row=2, column=0)
         applyHelp.grid(row=1, column=1, rowspan=3)
+
+        if(CheckDarkMode()):
+            note['background'] = '#272727'
+            note['foreground'] = '#FFFFFF'
+            generalHelp['background'] = '#272727'
+            generalHelp['activebackground'] = '#272727'
+            generalHelp['foreground'] = '#FFFFFF'
+            generalHelp['activeforeground'] = '#FFFFFF'
+            advancedHelp['background'] = '#272727'
+            advancedHelp['activebackground'] = '#272727'
+            advancedHelp['foreground'] = '#FFFFFF'
+            advancedHelp['activeforeground'] = '#FFFFFF'
+            applyHelp['background'] = '#272727'
+            applyHelp['activebackground'] = '#272727'
+            applyHelp['foreground'] = '#FFFFFF'
+            applyHelp['activeforeground'] = '#FFFFFF'
+        else:
+            note['background'] = '#F0F0F0'
+            note['foreground'] = '#000000'
+            generalHelp['background'] = '#F0F0F0'
+            generalHelp['activebackground'] = '#F0F0F0'
+            generalHelp['foreground'] = '#000000'
+            generalHelp['activeforeground'] = '#000000'
+            advancedHelp['background'] = '#F0F0F0'
+            advancedHelp['activebackground'] = '#F0F0F0'
+            advancedHelp['foreground'] = '#000000'
+            advancedHelp['activeforeground'] = '#000000'
+            applyHelp['background'] = '#F0F0F0'
+            applyHelp['activebackground'] = '#F0F0F0'
+            applyHelp['foreground'] = '#000000'
+            applyHelp['activeforeground'] = '#000000'
+
         ShowWindow()
         launch.mainloop()
 
