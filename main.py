@@ -1213,6 +1213,12 @@ def init():
         os.startfile(f"{check_terminal_output('echo %cd%')}")
 
     def ModApplyHelp():
+        if diabloExecuted or check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True) is not None:
+            logformat(errorLevel.ERR, "Unable to open mods helper. reason: Battle.net or Diablo is now running.")
+            messagebox.showerror(title='디아블로 모드', message='현재 디아블로 또는 Battle.net이 실행 중입니다. 예기치 않은 오류를 최소화하기 위해 먼저 해당 앱을 종료한 후 다시 시도해 주세요.')
+            launch.after(1, launch.focus_force())
+            return
+
         external_conf = loadConfigurationFile()
         if definedMod is not None and external_conf != f' -mod {definedMod} -txt':
             if(dumpConfigurationFile(f' -mod {definedMod} -txt')):
