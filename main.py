@@ -1213,16 +1213,26 @@ def init():
         os.startfile(f"{check_terminal_output('echo %cd%')}")
 
     def ModApplyHelp():
-        if definedMod is not None and definedMod != "":
+        external_conf = loadConfigurationFile()
+        if definedMod is not None and external_conf != f' -mod {definedMod} -txt':
             if(dumpConfigurationFile(f' -mod {definedMod} -txt')):
                 logformat(errorLevel.INFO, f'Successfully applied mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
-                applyHelp['text'] = f'{definedMod} 모드\n적용됨'
-                applyHelp['state'] = 'disabled'
+                applyHelp['text'] = f'{definedMod} 모드\n적용해제'
                 GetModDetails()
                 FindGameInstalled()
             else:
-                logformat(errorLevel.ERR, f'Unable to edit mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                logformat(errorLevel.ERR, f'Unable to load mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
                 messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 입력해야 합니다.')
+                launch.after(1, launch.focus_force())
+        elif definedMod is not None and external_conf == f' -mod {definedMod} -txt':
+            if(dumpConfigurationFile('')):
+                logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                applyHelp['text'] = f'{definedMod} 모드\n적용하기'
+                GetModDetails()
+                FindGameInstalled()
+            else:
+                logformat(errorLevel.ERR, f'Unable to unload mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected를 모드 없이 플레이하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 제거해야 합니다.')
                 launch.after(1, launch.focus_force())
         else:
             logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
@@ -1251,7 +1261,7 @@ def init():
         external_conf = loadConfigurationFile()
         if definedMod is not None:
             if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용됨', width=20, height=5, command=ModApplyHelp, state='disabled')
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용해제', width=20, height=5, command=ModApplyHelp, state='normal')
             else:
                 applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModApplyHelp, state='normal')
         else:
