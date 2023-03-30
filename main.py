@@ -647,6 +647,7 @@ def FindGameInstalled():
     global diablo2Path
     global diablo3Path
     global diablo4Path
+    global definedMod
 
     if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
@@ -685,12 +686,14 @@ def FindGameInstalled():
                 modMenu.entryconfig(1, label='새로운 모드 탐색')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=DownloadModsLink)
+                definedMod = None
         else:
             logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
             modMenu.entryconfig(0, state='disabled')
             modMenu.entryconfig(1, label='새로운 모드 탐색')
             modMenu.entryconfig(1, state='normal')
             modMenu.entryconfig(1, command=DownloadModsLink)
+            definedMod = None
     else:
         logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
         gameMenu.entryconfig(0, state='disabled')
@@ -698,6 +701,7 @@ def FindGameInstalled():
         modMenu.entryconfig(1, state='disabled')
         modMenu.entryconfig(3, state='disabled')
         modMenu.entryconfig(1, label='게임이 설치되지 않음')
+        definedMod = None
 
     if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
         diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
@@ -1046,6 +1050,7 @@ def init():
     def ForceReload(*args):
         UpdateStatusValue()
         ReloadStatusBar()
+        FindGameInstalled()
         CheckDarkMode()
 
     def OpenGameStatusDir():
@@ -1213,7 +1218,7 @@ def init():
     def OpenProgramDir():
         os.startfile(f"{check_terminal_output('echo %cd%')}")
 
-    def ModApplyHelp():
+    def ModApplyHelper():
         if diabloExecuted or check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True) is not None:
             logformat(errorLevel.ERR, "Unable to open mods helper. reason: Battle.net or Diablo is now running.")
             messagebox.showerror(title='디아블로 모드', message='현재 디아블로 또는 Battle.net이 실행 중입니다. 예기치 않은 오류를 최소화하기 위해 먼저 해당 앱을 종료한 후 다시 시도해 주세요.')
@@ -1266,17 +1271,24 @@ def init():
         launch.title('모드 도움말')
         note = Label(launch, text='사용가능한 도움말', height=2)
         external_conf = loadConfigurationFile()
-        if definedMod is not None:
+        if definedMod is not None and isinstance(definedMod, str):
             if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용해제', width=20, height=5, command=ModApplyHelp, state='normal')
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용해제', width=20, height=5, command=ModApplyHelper, state='normal')
             else:
-                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModApplyHelp, state='normal')
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModApplyHelper, state='normal')
+        elif definedMod is None or definedMod == "":
+            applyHelp = Button(launch, text='모드\n적용방법', width=20, height=5, command=ModApplyHelper, state='normal')
         else:
-            applyHelp = Button(launch, text='모드\n적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
+            applyHelp = Button(launch, text='모드\n병합필요', width=20, height=5, command=ModApplyHelper, state='disabled')
 
         if definedMod is not None and definedMod != "":
-            logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
-            generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=2, command=ModGeneralHelp, state='normal')
+            if isinstance(definedMod, str):
+                logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
+                generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=2, command=ModGeneralHelp, state='normal')
+            else:
+                logformat(errorLevel.INFO, 'mods resolve problem button was disabled. reason: Too many loads mod details.')
+                generalHelp = Button(launch, text='모드 문제해결', width=20, height=2, command=ModGeneralHelp, state='disabled')
+
             advancedHelp = Button(launch, text='모드 업데이트 방법', width=20, height=2, command=ModAdvancedHelp, state='normal')
         else:
             logformat(errorLevel.INFO, 'mods resolve problem button was disabled. reason: Unable to load mods detail. no such file or directory.')
