@@ -6,7 +6,6 @@ from os import startfile
 from src.utility.logcat import logformat, errorLevel
 
 def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
-    target = None
     try:
         key = reg.HKEY_LOCAL_MACHINE
         with reg.OpenKey(key, regAddress, 0, reg.KEY_READ) as target:
@@ -22,7 +21,6 @@ def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
         return None
 
 def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
-    target = None
     try:
         key = reg.HKEY_LOCAL_MACHINE
         with reg.OpenKey(key, regAddress, 0, reg.KEY_READ) as target:
@@ -37,7 +35,6 @@ def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
         logformat(errorLevel.ERR, f'Unable to locate {regAddress} registry.')
 
 def TestRegistryValueAsFile(regAddress: str, queryName: str = 'DisplayIcon'):
-    target = None
     try:
         key = reg.HKEY_LOCAL_MACHINE
         with reg.OpenKey(key, regAddress, 0, reg.KEY_READ) as target:
@@ -53,7 +50,6 @@ def TestRegistryValueAsFile(regAddress: str, queryName: str = 'DisplayIcon'):
         return False
 
 def TestRegistryValueAsRaw(regAddress: str, queryName: str):
-    target = None
     try:
         key = reg.HKEY_CURRENT_USER
         with reg.OpenKey(key, regAddress, 0, reg.KEY_READ) as target:

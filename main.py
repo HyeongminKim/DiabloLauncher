@@ -58,7 +58,7 @@ try:
     from idlelib.tooltip import Hovertip
 
     from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
-    from src.data.game_data import FormatTime, SaveGameRunningTime, ClearGameRunningTime, ignoreTime
+    from src.data.game_data import FormatTime, SaveGameRunningTime, LoadGameRunningTime, ClearGameRunningTime, ignoreTime
     from src.data.json_parse import loadConfigurationFile, dumpConfigurationFile
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
@@ -259,46 +259,6 @@ def UpdateProgram():
     elif os.system('where git > NUL 2>&1') != 0 and not updateChecked:
         logformat(errorLevel.WARN, 'Automatically checking for updates has been disabled. Run the updater function again to switch to legacy update mode. ')
         updateChecked = True
-
-def LoadGameRunningTime():
-    data = []
-    stat_max = 0
-    stat_sum = 0
-    runtimeFile = None
-    try:
-        if os.path.isfile(f'{userApp}/DiabloLauncher/runtime.log'):
-            runtimeFile = open(f'{userApp}/DiabloLauncher/runtime.log', 'r', encoding='utf-8')
-            logformat(errorLevel.INFO, f'Loading game stats {userApp}/DiabloLauncher/runtime.log with read only mode.')
-            while True:
-                line = runtimeFile.readline()
-                if not line:
-                    break
-                data.append(line)
-            for index, line in enumerate(data, 1):
-                logformat(errorLevel.INFO, f"{'{:5d}'.format(index)} {float(line)}")
-                if stat_max < float(line):
-                    stat_max = float(line)
-                stat_sum += float(line)
-            logformat(errorLevel.INFO, 'Successfully Loaded game stats file.')
-            aboutMenu.entryconfig(3, state='normal')
-        else:
-            raise FileNotFoundError
-    except (OSError, FileNotFoundError) as error:
-        logformat(errorLevel.ERR, f'Failed to load Game-play logs: {error}')
-        if os.path.isdir(f'{userApp}/DiabloLauncher'):
-            aboutMenu.entryconfig(3, state='normal')
-        else:
-            aboutMenu.entryconfig(3, state='disabled')
-        return 0, 0, 0, 0
-    else:
-        if runtimeFile is not None:
-            runtimeFile.close()
-        if data is not None and stat_sum != 0:
-            return len(data), stat_max, stat_sum, (stat_sum / len(data))
-        elif data is not None and stat_sum == 0:
-            return len(data), stat_max, 0, 0
-        else:
-            return 0, 0, 0, 0
 
 def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     global diabloExecuted
@@ -965,6 +925,12 @@ def UpdateStatusValue():
 
 def ReloadStatusBar():
     loadStart = time.time()
+
+    if os.path.isdir(f'{userApp}/DiabloLauncher'):
+        aboutMenu.entryconfig(3, state='normal')
+    else:
+        aboutMenu.entryconfig(3, state='disabled')
+
     count, stat_max, stat_sum, stat_avg = LoadGameRunningTime()
     maxTime = FormatTime(stat_max, False)
     avgTime = FormatTime(stat_avg, False)
@@ -1046,6 +1012,7 @@ def init():
             msg_box = messagebox.askyesno(title='디아블로 런처', message=f'통계 재설정을 수행할 경우 {count}개의 세션이 영원히 유실되며 되돌릴 수 없습니다. 만약의 경우를 대비하여 {userApp}/DiabloLauncher/runtime.log 파일을 백업하시기 바랍니다. 통계 재설정을 계속 하시겠습니까? ')
             if msg_box:
                 ClearGameRunningTime()
+                ForceReload()
 
     def ForceReload(*args):
         UpdateStatusValue()
