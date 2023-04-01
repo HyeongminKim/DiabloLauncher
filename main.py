@@ -114,6 +114,7 @@ def ShowWindow():
     launch.geometry(f"300x125+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 300 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 125 / 2)}")
     launch.deiconify()
     launch.after(1, launch.focus_force())
+    launch.attributes('-topmost', 'true')
 
 def HideWindow():
     root.after(1, root.focus_force())
@@ -122,6 +123,7 @@ def HideWindow():
         widget.destroy()
     launch.title('무제')
     launch.withdraw()
+    launch.attributes('-topmost', 'false')
 
 def CheckResProgram():
     global resolutionProgram
@@ -736,6 +738,7 @@ def SetResolutionValue(*args):
     envWindow.geometry(f"265x70+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 265 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 70 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
+    envWindow.attributes('-topmost', 'true')
 
     originXtext = Label(envWindow, text='기본 X')
     originYtext = Label(envWindow, text=' Y')
@@ -1081,6 +1084,7 @@ def init():
         about.deiconify()
         about.resizable(False, False)
         about.attributes('-toolwindow', True)
+        about.attributes('-topmost', 'true')
 
         def openBlizzardLegalSite():
             webbrowser.open('https://www.blizzard.com/en-us/legal/9c9cb70b-d1ed-4e17-998a-16c6df46be7b/copyright-notices')
@@ -1149,6 +1153,7 @@ def init():
             soundRecover.deiconify()
             soundRecover.resizable(False, False)
             soundRecover.attributes('-toolwindow', True)
+            soundRecover.attributes('-topmost', 'true')
             notice = Label(soundRecover, text='이 도움말의 일부 과정은 macOS의 BootCamp 지원 앱에서 수행해야 합니다.')
             contents = Label(soundRecover, text='1. BootCamp 지원 앱에서 Windows 지원 소프트웨어를 USB에 저장합니다.\n2. BootCamp로 재시동합니다.\n3. msconfig를 실행에 입력하여 부팅 옵션을 안전 부팅의 최소 설치로 선택합니다.\n4. BootCamp를 안전모드로 재시동합니다. \n5. 실행에 devmgmt.msc를 입력하여 장치관리자를 띄웁니다. \n6. Cirrus Logic 디바이스와 드라이버를 제거합니다.\n7. 1번에서 다운받은 폴더 경로를 드라이버 설치경로로 선택합니다. \n8. msconfig를 실행에 입력하여 안전부팅 체크박스를 해제합니다. \n9. BootCamp를 재시동합니다. ', anchor=W, justify=LEFT)
             notice.pack()
