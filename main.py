@@ -315,8 +315,14 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         os.system(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1')
         switchButton['text'] = '디스플레이 해상도 복구\n(게임 종료시 사용)'
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
+        HideWindow()
+
+        if(root.winfo_x() + root.winfo_reqwidth() > int(alteredX) or root.winfo_y() + root.winfo_reqheight() > int(alteredY)):
+            root.geometry("520x360+100+100")
+            logformat(errorLevel.WARN, 'Reset the window position to default due to the current resolution settings.')
     else:
         switchButton['text'] = '게임 종료'
+        HideWindow()
 
     if(gameName == 'Diablo II Resurrected'):
         os.popen(f'"{diablo2Path}/{gameName} Launcher.exe"')
@@ -326,7 +332,6 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         os.popen(f'"{diablo4Path}/{gameName} Launcher.exe"')
     toolsMenu.entryconfig(3, state='disabled')
     gameStartTime = time.time()
-    HideWindow()
     UpdateStatusValue()
     ReloadStatusBar()
 
