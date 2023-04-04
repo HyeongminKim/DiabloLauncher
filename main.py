@@ -6,7 +6,7 @@
 try:
     import os
     os.system('')
-    f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3})'
+    f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3.6})'
 
     import subprocess
     from src.utility.logcat import logformat, errorLevel, color
