@@ -21,10 +21,10 @@ userLocalApp = os.environ.get('LocalAppData')
 try:
     import platform
     if platform.system() == 'Darwin':
-        os.system(f"osascript -e 'display alert \"지원하지 않는 OS 감지됨\" message \"디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. \" as critical'")
+        os.system(f"osascript -e 'display alert \"지원하지 않는 OS 감지됨\" message \"디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. \" as critical' &> /dev/null")
         raise OSError(f'{platform.system()} system does not support yet.')
     elif platform.system() == 'Linux':
-        os.system(f"whiptail --msgbox --title '지원하지 않는 OS 감지됨' '디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. ' 10 60")
+        os.system(f"whiptail --msgbox --title '지원하지 않는 OS 감지됨' '디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. ' 10 60 &> /dev/null")
         raise OSError(f'{platform.system()} system does not support yet.')
     elif platform.system() != 'Windows':
         print(f'\033[33m[FATL: 70-01-01 12:00] This {platform.system()} system will not supported native GUI alert.\033[0m')
