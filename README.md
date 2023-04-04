@@ -9,7 +9,7 @@
   </tr>
   <tr>
     <td rowspan="4">필수</td>
-    <td>tkinter 가 포함된 Python3+</td>
+    <td>tkinter 가 포함된 Python3.6+</td>
   </tr>
   <tr>
     <td>D2R 또는 Diablo IV 플레이시 Windows 10+</td>
