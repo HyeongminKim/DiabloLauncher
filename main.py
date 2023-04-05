@@ -431,9 +431,13 @@ def LaunchGameAgent():
             if os.path.isdir(diablo2Path + '/mods'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 GetModDetails()
-                if definedMod is not None and isinstance(definedMod, list):
+                envModState = os.environ.get('D2R_MOD_MUTE')
+                if definedMod is not None and isinstance(definedMod, list) and envModState is None:
                     logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
+                elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState == "true":
+                    logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to D2R_MOD_MUTE env value are set.")
+                    diablo2['text'] = 'Diablo II Resurrected'
                 elif definedMod is not None and isinstance(definedMod, str):
                     if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
                         external_conf = loadConfigurationFile()
@@ -635,11 +639,19 @@ def FindGameInstalled():
             modMenu.entryconfig(1, state='disabled')
             logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
             GetModDetails()
-            if definedMod is not None and isinstance(definedMod, list):
+            envModState = os.environ.get('D2R_MOD_MUTE')
+
+            if definedMod is not None and isinstance(definedMod, list) and envModState is None:
                 logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
                 modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=ModsPreferSelector)
+            elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState == "true":
+                logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to D2R_MOD_MUTE env value are set.")
+                modMenu.entryconfig(1, label='새로운 모드 탐색')
+                modMenu.entryconfig(1, state='normal')
+                modMenu.entryconfig(1, command=DownloadModsLink)
+                definedMod = None
             elif definedMod is not None and isinstance(definedMod, str):
                 if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
                     external_conf = loadConfigurationFile()
@@ -1202,7 +1214,12 @@ def init():
     def OpenProgramDir():
         os.startfile(f"{check_terminal_output('echo %cd%')}")
 
-    def ModApplyHelper():
+    def ModApplyHelp():
+        logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
+        messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod 모드명 -txt"를 입력해야 합니다.')
+        ShowWindow()
+
+    def ModAutoApply():
         if diabloExecuted or check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True) is not None:
             logformat(errorLevel.ERR, "Unable to open mods helper. reason: Battle.net or Diablo is now running.")
             messagebox.showerror(title='디아블로 모드', message='현재 디아블로 또는 Battle.net이 실행 중입니다. 예기치 않은 오류를 최소화하기 위해 먼저 해당 앱을 종료한 후 다시 시도해 주세요.')
@@ -1230,10 +1247,6 @@ def init():
                 logformat(errorLevel.ERR, f'Unable to unload mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
                 messagebox.showinfo(title='디아블로 모드', message=f'Diablo II Resurrected를 모드 없이 플레이하기 위해서 명령행 인수에 " -mod {definedMod} -txt"를 제거해야 합니다.')
                 ShowWindow()
-        else:
-            logformat(errorLevel.INFO, 'Unable to load mods detail. no such file or directory.')
-            messagebox.showinfo(title='디아블로 모드', message='Diablo II Resurrected에 모드를 적용하기 위해서 명령행 인수에 " -mod 모드명 -txt"를 입력해야 합니다.')
-            ShowWindow()
 
     def ModGeneralHelp():
         messagebox.showinfo(title='디아블로 모드', message='"없는 문자열" 오류가 발생할 경우 모드팩 업데이트가 출시 되었는지 확인하시거나, json파일의 모든 누락된 ID를 직접 추가해 주세요. 자세한 사항은 "모드 업데이트 방법"을 참조해 주세요')
@@ -1251,21 +1264,22 @@ def init():
 
     def ModHelpWindow():
         global applyHelp
+        envModState = os.environ.get('D2R_MOD_MUTE')
 
         launch.title('모드 도움말')
         note = Label(launch, text='사용가능한 도움말', height=2)
         external_conf = loadConfigurationFile()
         if definedMod is not None and isinstance(definedMod, str):
             if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용해제', width=20, height=5, command=ModApplyHelper, state='normal')
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용해제', width=20, height=5, command=ModAutoApply, state='normal')
             else:
-                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModApplyHelper, state='normal')
-        elif definedMod is None or definedMod == "":
-            applyHelp = Button(launch, text='모드\n적용방법', width=20, height=5, command=ModApplyHelper, state='normal')
+                applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModAutoApply, state='normal')
+        elif definedMod is None or definedMod == "" or (envModState is not None and envModState == "true"):
+            applyHelp = Button(launch, text='모드\n적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
         else:
-            applyHelp = Button(launch, text='모드\n병합필요', width=20, height=5, command=ModApplyHelper, state='disabled')
+            applyHelp = Button(launch, text='모드\n병합필요', width=20, height=5, command=ModApplyHelp, state='disabled')
 
-        if definedMod is not None and definedMod != "":
+        if definedMod is not None and definedMod != "" and envModState is None:
             if isinstance(definedMod, str):
                 logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
                 generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=2, command=ModGeneralHelp, state='normal')
