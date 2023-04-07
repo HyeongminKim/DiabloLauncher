@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 
-from os import environ, path, mkdir, remove
+from os import environ, path, mkdir
 from src.utility.logcat import errorLevel, logformat
 
 userApp = environ.get('AppData')
@@ -101,7 +101,8 @@ def SaveGameRunningTime(playTime: float):
 
 def ClearGameRunningTime():
     if path.isfile(f'{userApp}/DiabloLauncher/runtime.log'):
-        remove(f'{userApp}/DiabloLauncher/runtime.log')
+        with open(f'{userApp}/DiabloLauncher/runtime.log', 'w', encoding='utf-8'):
+            logformat(errorLevel.INFO, f'Successfully flushed {userApp}/DiabloLauncher/runtime.log file.')
     else:
         logformat(errorLevel.ERR, f'Failed to remove {userApp}/DiabloLauncher/runtime.log file. no such file or directory.')
 
