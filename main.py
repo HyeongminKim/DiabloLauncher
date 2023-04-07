@@ -1258,7 +1258,7 @@ def init():
             webbrowser.open('https://github.com/eezstreet/D2RModding-SpriteEdit')
             webbrowser.open('http://www.zezula.net/en/casc/main.html')
             webbrowser.open('https://github.com/Cjreek/D2ExcelPlus')
-            webbrowser.open('https://github.com/WinMerge/winimerge')
+            webbrowser.open('https://github.com/WinMerge/winmerge')
             webbrowser.open('https://github.com/microsoft/vscode')
         ShowWindow()
 
