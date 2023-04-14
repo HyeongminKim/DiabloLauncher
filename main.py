@@ -4,11 +4,11 @@
 # pylint: disable=C0200,C0302,C0415,R1722,C0115,C0116
 
 try:
-    import os
-    os.system('')
+    from subprocess import call, Popen
+    call('', shell=True)
     f'[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to unsupported python version. (version_info < {3.6})'
 
-    import subprocess
+    import os
     from src.utility.logcat import logformat, errorLevel, color
     from src.utility.terminal import check_terminal_output
 except (ModuleNotFoundError, ImportError) as error:
@@ -21,16 +21,16 @@ userLocalApp = os.environ.get('LocalAppData')
 try:
     import platform
     if platform.system() == 'Darwin':
-        os.system(f"osascript -e 'display alert \"지원하지 않는 OS 감지됨\" message \"디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. \" as critical' &> /dev/null")
+        call(f"osascript -e 'display alert \"지원하지 않는 OS 감지됨\" message \"디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. \" as critical' &> /dev/null", shell=True)
         raise OSError(f'{platform.system()} system does not support yet.')
     elif platform.system() == 'Linux':
-        os.system(f"whiptail --msgbox --title '지원하지 않는 OS 감지됨' '디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. ' 10 60 &> /dev/null")
+        call(f"whiptail --msgbox --title '지원하지 않는 OS 감지됨' '디아블로 런처는 현재 {platform.system()}을(를) 지원하지 않습니다. ' 10 60 &> /dev/null", shell=True)
         raise OSError(f'{platform.system()} system does not support yet.')
     elif platform.system() != 'Windows':
         print(f'\033[33m[FATL: 70-01-01 12:00] This {platform.system()} system will not supported native GUI alert.\033[0m')
         raise OSError(f'{platform.system()} system does not support yet.')
 
-    os.system('chcp 65001 > NUL')
+    call('chcp 65001 > NUL', shell=True)
     logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
 
     if platform.release() == '7' or platform.release() == '8' or platform.release() == '10' or platform.release() == '11':
@@ -96,10 +96,8 @@ alteredX = None
 alteredY = None
 alteredFR = None
 
-root = Tk()
-root.withdraw()
-launch = Tk()
-launch.withdraw()
+root = None
+launch = None
 
 welcome = None
 switchButton = None
@@ -136,7 +134,7 @@ def CheckResProgram():
     global resolutionProgram
     logformat(errorLevel.INFO, 'QRes install check')
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
-        if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and os.system('where QRes > NUL 2>&1') != 0:
+        if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and call('where QRes > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
             toolsMenu.entryconfig(3, state='disabled')
             resolutionProgram = False
@@ -237,11 +235,11 @@ def InterruptProgram(sig, frame):
 def UpdateProgram():
     global updateChecked
 
-    if os.system('where git > NUL 2>&1') == 0:
+    if call('where git > NUL 2>&1', shell=True) == 0:
         localCommit = os.popen('git rev-parse HEAD').read().strip()
         localVersion = os.popen('git rev-parse --short HEAD').read().strip()
         logformat(errorLevel.INFO, 'Checking program updates...')
-        if os.system('git pull --rebase origin master > NUL 2>&1') == 0:
+        if call('git pull --rebase origin master > NUL 2>&1', shell=True) == 0:
             updatedCommit = os.popen('git rev-parse HEAD').read().strip()
             remoteVersion = os.popen('git rev-parse --short HEAD').read().strip()
             result = check_terminal_output(f"git log --no-merges --pretty=format:'%s' {updatedCommit}...{localCommit}")
@@ -253,19 +251,19 @@ def UpdateProgram():
                 if updateChecked:
                     messagebox.showinfo('디아블로 런처', '디아블로 런처가 최신 버전입니다.')
                 logformat(errorLevel.INFO, 'DiabloLauncher is Up to date.')
-        elif os.system('ping -n 1 -w 1 www.google.com > NUL 2>&1') != 0:
+        elif call('ping -n 1 -w 1 www.google.com > NUL 2>&1', shell=True) != 0:
             messagebox.showwarning('디아블로 런처', '인터넷 연결이 오프라인인 상태에서는 디아블로 런처를 업데이트 할 수 없습니다. 나중에 다시 시도해 주세요.')
             logformat(errorLevel.ERR, 'Program update failed. Please check your internet connection.')
         else:
-            os.system('git status')
+            Popen('git status', shell=True)
             messagebox.showwarning('디아블로 런처', '레포에 알 수 없는 오류가 발생하였습니다. 자세한 사항은 로그를 참조해 주세요. ')
             logformat(errorLevel.ERR, 'Program update failed. Please see the output.')
         updateChecked = True
-    elif os.system('where git > NUL 2>&1') != 0 and updateChecked:
+    elif call('where git > NUL 2>&1', shell=True) != 0 and updateChecked:
         logformat(errorLevel.INFO, 'git command does not currently installed. downloading master.zip')
         webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/archive/refs/heads/master.zip')
         messagebox.showwarning('디아블로 런처', 'Git이 시스템에 설치되어 있지 않아 자동 업데이트를 사용할 수 없습니다. 다운로드 된 master.zip 파일 압축을 풀어 설치된 경로에 덮어쓰기해 주세요.')
-    elif os.system('where git > NUL 2>&1') != 0 and not updateChecked:
+    elif call('where git > NUL 2>&1', shell=True) != 0 and not updateChecked:
         logformat(errorLevel.WARN, 'Automatically checking for updates has been disabled. Run the updater function again to switch to legacy update mode. ')
         updateChecked = True
 
@@ -309,7 +307,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             UpdateStatusValue()
             ReloadStatusBar()
             return
-        if os.system(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1') != 0:
+        if call(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showwarning('디아블로 런처', f'{alteredX}x{alteredY} {alteredFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
             diabloExecuted = False
@@ -319,7 +317,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             ReloadStatusBar()
             return
 
-        os.system(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1')
+        Popen(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1', shell=True)
         switchButton['text'] = '디스플레이 해상도 복구\n(게임 종료시 사용)'
         root.protocol("WM_DELETE_WINDOW", AlertWindow)
         HideWindow()
@@ -353,11 +351,11 @@ def LaunchGameAgent():
         switchButton['text'] = '디아블로 실행...'
         if resolutionProgram:
             toolsMenu.entryconfig(3, state='normal')
-            if os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1') != 0:
+            if call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0:
                 logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
                 messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
             else:
-                os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1')
+                Popen(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1', shell=True)
 
         SaveGameRunningTime(gameEndTime - gameStartTime)
         hours, minutes, seconds = FormatTime(gameEndTime - gameStartTime, True)
@@ -494,17 +492,17 @@ def BootAgent(poweroff: str):
         emergencyButton['text'] = '긴급 종료 준비중...\n(종료 취소)'
         logformat(errorLevel.INFO, 'Starting Emergency reboot agent...')
     if resolutionProgram:
-        if os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1') != 0:
+        if call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
         else:
-            os.system(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1')
+            Popen(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1', shell=True)
     HideWindow()
     UpdateStatusValue()
     if poweroff == 'r':
-        os.system('shutdown -r -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 재시동] 기능으로 인해 재시동 됩니다."')
+        Popen('shutdown -r -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 재시동] 기능으로 인해 재시동 됩니다."', shell=True)
     elif poweroff == 's':
-        os.system('shutdown -s -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 종료] 기능으로 인해 종료 됩니다."')
+        Popen('shutdown -s -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 종료] 기능으로 인해 종료 됩니다."', shell=True)
     logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
     statusbar['text'] = '로드할 수 없음'
     Hovertip(statusbar, text='', hover_delay=500)
@@ -521,7 +519,7 @@ def EmgergencyReboot():
         switchButton['state'] = "normal"
         if resolutionProgram:
             toolsMenu.entryconfig(3, state='normal')
-        os.system('shutdown -a')
+        Popen('shutdown -a', shell=True)
         logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
         statusbar['anchor'] = CENTER
         UpdateStatusValue()
@@ -610,13 +608,13 @@ def ModsPreferSelector():
         msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
         if msg_box is not None and msg_box:
             logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
-            subprocess.Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
+            Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
             messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
             logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
             ExitProgram()
         elif msg_box is not None and not msg_box:
             logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
-            os.system('sysdm.cpl ,3')
+            Popen('sysdm.cpl ,3', shell=True)
             messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
             logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
             ExitProgram()
@@ -732,7 +730,7 @@ def GetResolutionValue():
         if resolutionProgram:
             logformat(errorLevel.INFO, f'Default resolution: {int(originX)} X {int(originY)} {float(originFR)}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {int(alteredX)} X {int(alteredY)} {float(alteredFR)}Hz')
-            if (os.system(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1') != 0) or (os.system(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1') != 0):
+            if (call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0) or (call(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1', shell=True) != 0):
                 messagebox.showwarning('디아블로 런처', '일부 해상도가 이 디스플레이와 호환되지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
                 logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
 
@@ -807,7 +805,7 @@ def SetResolutionValue(*args):
             envWindow.after(1, envWindow.focus_force())
             return
 
-        if (os.system(f'QRes /L | findstr /r "{envOriginX.get()}x" |findstr /r "{envOriginY.get()}," | findstr /r "\\<{envOriginFR.get()}\\>" > NUL 2>&1') != 0) or (os.system(f'QRes /L | findstr /r "{envAlteredX.get()}x" |findstr /r "{envAlteredY.get()}," | findstr /r "\\<{envAlteredFR.get()}\\>" > NUL 2>&1') != 0):
+        if (call(f'QRes /L | findstr /r "{envOriginX.get()}x" |findstr /r "{envOriginY.get()}," | findstr /r "\\<{envOriginFR.get()}\\>" > NUL 2>&1', shell=True) != 0) or (call(f'QRes /L | findstr /r "{envAlteredX.get()}x" |findstr /r "{envAlteredY.get()}," | findstr /r "\\<{envAlteredFR.get()}\\>" > NUL 2>&1', shell=True) != 0):
             messagebox.showwarning('해상도 벡터 편집기', '일부 해상도가 이 디스플레이와 호환되지 않습니다. 현재 디스플레이와 호환되는 다른 해상도를 입력해 주세요.')
             logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
             envWindow.after(1, envWindow.focus_force())
@@ -827,13 +825,13 @@ def SetResolutionValue(*args):
         msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
         if msg_box is not None and msg_box:
             logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
-            subprocess.Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
+            Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
             messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
             logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
             ExitProgram()
         elif msg_box is not None and not msg_box:
             logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
-            os.system('sysdm.cpl ,3')
+            Popen('sysdm.cpl ,3', shell=True)
             messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
             logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
             ExitProgram()
@@ -1015,6 +1013,13 @@ def init():
     global aboutMenu
     global gameMenu
     global modMenu
+    global root
+    global launch
+
+    root = Tk()
+    root.withdraw()
+    launch = Tk()
+    launch.withdraw()
 
     root.title("디아블로 런처")
     root.geometry("520x360+100+100")
@@ -1068,7 +1073,7 @@ def init():
             os.startfile(f'"{diablo4Path}"')
 
     def openControlPanel():
-        os.system('control.exe appwiz.cpl')
+        Popen('control.exe appwiz.cpl', shell=True)
 
     def OpenDevIssues(*args):
         logLevel = os.environ.get('LOG_VERBOSE_LEVEL')

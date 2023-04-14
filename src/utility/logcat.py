@@ -1,11 +1,12 @@
 #-*- coding:utf-8 -*-
 
-import os
+from os import environ
+from subprocess import call
 from datetime import datetime
 from enum import Enum
 
-os.system('')
-logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
+call('', shell=True)
+logLevel = environ.get('LOG_VERBOSE_LEVEL')
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
