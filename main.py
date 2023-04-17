@@ -237,9 +237,9 @@ def UpdateProgram():
     global updateChecked
 
     if releaseMode:
-        logformat(errorLevel.INFO, 'Portable DiabloLauncher release does not supported auto-update function yet. downloading master.zip')
-        webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/archive/refs/heads/master.zip')
-        messagebox.showwarning('디아블로 런처', 'EXE 파일로 배포된 디아블로 런처는 자동 업데이트를 아직 사용할 수 없습니다. 다운로드 된 master.zip 파일 압축을 풀어 설치된 경로에 덮어쓰기해 주세요.')
+        logformat(errorLevel.INFO, 'Portable DiabloLauncher release does not supported auto-update function yet. Please wait until loading releases page.')
+        webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/releases')
+        messagebox.showwarning('디아블로 런처', 'EXE 파일로 배포된 디아블로 런처는 자동 업데이트를 아직 지원하지 않습니다. 최신 버전은 브라우저에서 확인해 주세요.')
         return
 
     if call('where git > NUL 2>&1', shell=True) == 0:
