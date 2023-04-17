@@ -74,6 +74,7 @@ except (ModuleNotFoundError, ImportError, OSError) as error:
 diabloExecuted = False
 updateChecked = False
 forceReboot = False
+releaseMode = False
 
 rebootWaitTime = 10
 loadWaitTime = 10
@@ -234,6 +235,12 @@ def InterruptProgram(sig, frame):
 
 def UpdateProgram():
     global updateChecked
+
+    if releaseMode:
+        logformat(errorLevel.INFO, 'Portable DiabloLauncher release does not supported auto-update function yet. downloading master.zip')
+        webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/archive/refs/heads/master.zip')
+        messagebox.showwarning('디아블로 런처', 'EXE 파일로 배포된 디아블로 런처는 자동 업데이트를 아직 사용할 수 없습니다. 다운로드 된 master.zip 파일 압축을 풀어 설치된 경로에 덮어쓰기해 주세요.')
+        return
 
     if call('where git > NUL 2>&1', shell=True) == 0:
         localCommit = os.popen('git rev-parse HEAD').read().strip()
@@ -1448,17 +1455,21 @@ def init():
     root.mainloop()
 
 if __name__ == '__main__':
-    logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-    if logLevel is not None and logLevel == "verbose":
-        multiprocessing.log_to_stderr()
-        logger = multiprocessing.get_logger()
-        logger.setLevel(logging.INFO)
+    releaseMode = not os.path.isdir(f"{check_terminal_output('echo %cd%')}/.git")
+    if not releaseMode:
+        logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
+        if logLevel is not None and logLevel == "verbose":
+            multiprocessing.log_to_stderr()
+            logger = multiprocessing.get_logger()
+            logger.setLevel(logging.INFO)
 
-    mainThread = multiprocessing.Process(target=init)
-    updateThread = multiprocessing.Process(target=UpdateProgram)
+        mainThread = multiprocessing.Process(target=init)
+        updateThread = multiprocessing.Process(target=UpdateProgram)
 
-    mainThread.start()
-    updateThread.start()
+        mainThread.start()
+        updateThread.start()
 
-    mainThread.join()
-    updateThread.join()
+        mainThread.join()
+        updateThread.join()
+    else:
+        init()

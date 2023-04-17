@@ -6,6 +6,7 @@ userLocalApp: str | None
 diabloExecuted: bool
 updateChecked: bool
 forceReboot: bool
+releaseMode: bool
 
 rebootWaitTime: bytes
 loadWaitTime: bytes
