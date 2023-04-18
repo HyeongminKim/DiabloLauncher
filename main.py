@@ -1084,7 +1084,7 @@ def init():
 
     def OpenDevIssues(*args):
         logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-        if logLevel is None or logLevel != "verbose": return
+        if logLevel is None or logLevel != "verbose" or releaseMode: return
 
         now = datetime.now()
         cnt_time = now.strftime("%H:%M:%S")
@@ -1353,7 +1353,7 @@ def init():
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled', accelerator='Ctrl+O')
 
     fileMenu.add_separator()
-    fileMenu.add_command(label='종료', command=ExitProgram, accelerator='Ctrl+W')
+    fileMenu.add_command(label='디아블로 런처 종료', command=ExitProgram, accelerator='Ctrl+W')
 
     menubar.add_cascade(label='파일', menu=fileMenu)
 
@@ -1398,7 +1398,7 @@ def init():
     aboutMenu.add_separator()
 
     logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-    if logLevel is not None and logLevel == "verbose":
+    if logLevel is not None and logLevel == "verbose" and not releaseMode:
         aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='normal', accelerator='F12')
     else:
         aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='disabled', accelerator='F12')
