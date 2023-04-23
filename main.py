@@ -62,7 +62,6 @@ try:
     from tkinter import messagebox
     from tkinter import Entry
     from tkinter import Frame
-    from idlelib.tooltip import Hovertip
 
     from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, LoadGameRunningTime, ClearGameRunningTime, ignoreTime
@@ -519,7 +518,6 @@ def BootAgent(poweroff: str):
         Popen('shutdown -s -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 종료] 기능으로 인해 종료 됩니다."', shell=True)
     logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
     statusbar['text'] = '로드할 수 없음'
-    Hovertip(statusbar, text='', hover_delay=500)
     statusbar['anchor'] = W
     switchButton['state'] = "disabled"
     toolsMenu.entryconfig(3, state='disabled')
@@ -994,22 +992,18 @@ def ReloadStatusBar():
         statusbar['text'] = f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     elif count > 2:
         statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     elif count > 0:
-        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균: 데이터 부족 | 합계: {sumTime}"
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균 표시까지 {3 - count}개 세션 남음 | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}", hover_delay=500)
     else:
-        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션 통계를 로드할 수 없음"
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 기록된 게임 플레이 데이터가 없습니다"
         statusbar['anchor'] = W
         toolsMenu.entryconfig(7, state='disabled')
-        Hovertip(statusbar, text=f"rev: {check_terminal_output('git rev-parse --short HEAD')} | RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')} | 세션 통계를 로드할 수 없음", hover_delay=500)
 
 def init():
     global welcome
@@ -1134,12 +1128,18 @@ def init():
         def OpenDevSite():
             webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher')
 
-        if resolutionProgram:
+        if resolutionProgram and releaseMode:
             logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
-            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
-        else:
+            text = Label(about, text=f"{platform.system()} {platform.release()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher [Executable]\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+        elif not resolutionProgram and releaseMode:
             logformat(errorLevel.INFO, "Resolution change program does not detected")
-            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+            text = Label(about, text=f"{platform.system()} {platform.release()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher [Executable]\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+        elif resolutionProgram and not releaseMode:
+            logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
+            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher (rev: {check_terminal_output('git rev-parse --short HEAD')}, RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')})\nCopyright (c) 2022-2023 Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
+        elif not resolutionProgram and not releaseMode:
+            logformat(errorLevel.INFO, "Resolution change program does not detected")
+            text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV\n(c) 2022 BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher (rev: {check_terminal_output('git rev-parse --short HEAD')}, RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')})\nCopyright (c) 2022-2023 Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), 블리자드(Blizzard)는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
 
         blizzard = Button(about, text='블리자드 라이선스', command=openBlizzardLegalSite)
         apple = Button(about, text='애플 라이선스', command=openAppleLegalSite)
