@@ -997,7 +997,7 @@ def ReloadStatusBar():
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
     elif count > 0:
-        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균 표시까지 {3 - count}개 세션 남음 | 합계: {sumTime}"
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균 표시까지 {3 - count}개 남음 | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
     else:
