@@ -99,6 +99,7 @@ alteredFR = None
 
 root = None
 launch = None
+envWindow = None
 
 welcome = None
 switchButton = None
@@ -134,18 +135,19 @@ def HideWindow():
 def CheckResProgram():
     global resolutionProgram
     logformat(errorLevel.INFO, 'QRes install check')
+    toolsMenu.entryconfig(3, state='normal')
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
         if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and call('where QRes > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
-            toolsMenu.entryconfig(3, state='disabled')
+            toolsMenu.entryconfig(3, label='고급 시스템 설정...', command=openEnvSetting)
             resolutionProgram = False
         else:
             logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
-            toolsMenu.entryconfig(3, state='normal')
+            toolsMenu.entryconfig(3, label='해상도 벡터 편집기...', command=SetResolutionValue)
             resolutionProgram = True
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
-        toolsMenu.entryconfig(3, state='disabled')
+        toolsMenu.entryconfig(3, label='고급 시스템 설정...', command=openEnvSetting)
         resolutionProgram = False
 
 def CheckDarkMode():
@@ -356,8 +358,8 @@ def LaunchGameAgent():
         root.protocol("WM_DELETE_WINDOW", ExitProgram)
         gameEndTime = time.time()
         switchButton['text'] = '디아블로 실행...'
+        toolsMenu.entryconfig(3, state='normal')
         if resolutionProgram:
-            toolsMenu.entryconfig(3, state='normal')
             if call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0:
                 logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
                 messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
@@ -530,8 +532,7 @@ def EmgergencyReboot():
         emergencyButton['text'] = '긴급 전원 작업\n(게임 저장 후 실행 요망)'
         logformat(errorLevel.INFO, 'Aborting Emergency agent...')
         switchButton['state'] = "normal"
-        if resolutionProgram:
-            toolsMenu.entryconfig(3, state='normal')
+        toolsMenu.entryconfig(3, state='normal')
         Popen('shutdown -a', shell=True)
         logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
         statusbar['anchor'] = CENTER
@@ -764,7 +765,27 @@ def GetResolutionValue():
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
+def openEnvSetting():
+    msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
+    if msg_box is not None and msg_box:
+        logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
+        Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
+        messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
+        logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
+        ExitProgram()
+    elif msg_box is not None and not msg_box:
+        logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
+        Popen('sysdm.cpl ,3', shell=True)
+        messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
+        logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
+        ExitProgram()
+    else:
+        if envWindow is not None:
+            envWindow.after(1, envWindow.focus_force())
+
 def SetResolutionValue(*args):
+    global envWindow
+
     if not resolutionProgram: return
 
     messagebox.showinfo('해상도 벡터 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
@@ -833,23 +854,6 @@ def SetResolutionValue(*args):
         except AttributeError as error:
             logformat(errorLevel.ERR, f"could not save env value: {error}")
             UpdateStatusValue()
-
-    def openEnvSetting():
-        msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
-        if msg_box is not None and msg_box:
-            logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
-            Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
-            messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
-            logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
-            ExitProgram()
-        elif msg_box is not None and not msg_box:
-            logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
-            Popen('sysdm.cpl ,3', shell=True)
-            messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
-            logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
-            ExitProgram()
-        else:
-            envWindow.after(1, envWindow.focus_force())
 
     envSet = Button(envWindow, text='고급 시스템 설정', command=openEnvSetting)
     commitBtn = Button(envWindow, text='적용', command=commit)
@@ -1367,10 +1371,7 @@ def init():
     toolsMenu.add_command(label='새로 고침', command=ForceReload, accelerator='F5')
     toolsMenu.add_command(label='런처 업데이트 확인...', command=UpdateProgram)
     toolsMenu.add_separator()
-    if resolutionProgram:
-        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='normal', accelerator='Ctrl+,')
-    else:
-        toolsMenu.add_command(label='해상도 벡터 편집기...', command=SetResolutionValue, state='disabled', accelerator='Ctrl+,')
+    toolsMenu.add_command(label='고급 시스템 설정...', state='disabled', accelerator='Ctrl+,')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')
@@ -1415,8 +1416,13 @@ def init():
     root.bind_all("<F1>", AboutThisApp)
     root.bind_all("<F12>", OpenDevIssues)
     root.bind_all("<Control-w>", ExitProgram)
-    root.bind_all("<Control-,>", SetResolutionValue)
     root.bind_all("<Control-o>", OpenBattleNet)
+
+    CheckResProgram()
+    if resolutionProgram:
+        root.bind_all("<Control-,>", SetResolutionValue)
+    else:
+        root.bind_all("<Control-,>", openEnvSetting)
 
     welcome = Label(root, text='')
     switchButton = Button(rootFrame, text='디아블로 실행...', command=LaunchGameAgent, width=35, height=5, state='disabled')
@@ -1428,7 +1434,6 @@ def init():
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
 
-    CheckResProgram()
     FindGameInstalled()
     GetResolutionValue()
     RequirementCheck()
