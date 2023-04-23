@@ -99,7 +99,6 @@ alteredFR = None
 
 root = None
 launch = None
-envWindow = None
 
 welcome = None
 switchButton = None
@@ -779,13 +778,8 @@ def openEnvSetting():
         messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
         logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
         ExitProgram()
-    else:
-        if envWindow is not None:
-            envWindow.after(1, envWindow.focus_force())
 
 def SetResolutionValue(*args):
-    global envWindow
-
     if not resolutionProgram: return
 
     messagebox.showinfo('해상도 벡터 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
