@@ -988,22 +988,25 @@ def ReloadStatusBar():
     logformat(errorLevel.INFO, f'Previous game time for avg session: {avgTime}')
     logformat(errorLevel.INFO, f'Previous game time for sum session: {sumTime}')
 
-    if count > 10:
+    if count >= 10:
         statusbar['text'] = f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-    elif count > 2:
+    elif count >= 3:
         statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-    elif count > 0:
+    elif count >= 2:
         statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 최고: {maxTime} | 평균 표시까지 {3 - count}개 남음 | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
-    else:
-        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 기록된 게임 플레이 데이터가 없습니다"
+    elif count >= 0:
+        statusbar['text'] = f"{check_terminal_output('git rev-parse --short HEAD')} | 세션: {count}개 | 통계를 표시하려면 {2 - count}개의 세션이 더 필요합니다"
         statusbar['anchor'] = W
-        toolsMenu.entryconfig(7, state='disabled')
+        if count > 0:
+            toolsMenu.entryconfig(7, state='normal')
+        else:
+            toolsMenu.entryconfig(7, state='disabled')
 
 def init():
     global welcome
