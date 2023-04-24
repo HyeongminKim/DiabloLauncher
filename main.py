@@ -63,9 +63,9 @@ try:
     from tkinter import Entry
     from tkinter import Frame
 
-    from src.data.registry import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
+    from src.data.check_app_installed import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, LoadGameRunningTime, ClearGameRunningTime, ignoreTime
-    from src.data.json_parse import loadConfigurationFile, dumpConfigurationFile
+    from src.data.mods_settings import loadConfigurationFile, dumpConfigurationFile
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
