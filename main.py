@@ -66,6 +66,7 @@ try:
     from src.data.check_app_installed import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, LoadGameRunningTime, ClearGameRunningTime, ignoreTime
     from src.data.mods_settings import loadConfigurationFile, dumpConfigurationFile
+    from src.data.app_settings import loadSettings, dumpSettings, parentLocation
 except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
@@ -81,7 +82,6 @@ loadWaitTime = 10
 gameStartTime = None
 gameEndTime = None
 
-envData = None
 diablo2Path = None
 diablo3Path = None
 diablo4Path = None
@@ -137,15 +137,15 @@ def CheckResProgram():
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
         if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and call('where QRes > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
-            toolsMenu.entryconfig(3, label='고급 시스템 설정...', command=openEnvSetting)
+            toolsMenu.entryconfig(3, label='디아블로 런처 설정', command=SetLauncherConfigurationValues)
             resolutionProgram = False
         else:
             logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
-            toolsMenu.entryconfig(3, label='해상도 벡터 편집기...', command=SetResolutionValue)
+            toolsMenu.entryconfig(3, label='디아블로 런처 설정', command=SetLauncherConfigurationValues)
             resolutionProgram = True
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
-        toolsMenu.entryconfig(3, label='고급 시스템 설정...', command=openEnvSetting)
+        toolsMenu.entryconfig(3, label='디아블로 런처 설정', command=SetLauncherConfigurationValues)
         resolutionProgram = False
 
 def CheckDarkMode():
@@ -438,12 +438,13 @@ def LaunchGameAgent():
             if os.path.isdir(diablo2Path + '/mods'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 GetModDetails()
-                envModState = os.environ.get('D2R_MOD_MUTE')
-                if definedMod is not None and isinstance(definedMod, list) and envModState is None:
+                envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+                envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
+                if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
                     logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
                     diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
-                elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState == "true":
-                    logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to D2R_MOD_MUTE env value are set.")
+                elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
+                    logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
                     diablo2['text'] = 'Diablo II Resurrected'
                 elif definedMod is not None and isinstance(definedMod, str):
                     if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
@@ -577,8 +578,8 @@ def GetModDetails():
     global definedMod
     envValue = os.listdir(f'{diablo2Path}/mods')
     if isinstance(envValue, list) and len(envValue) > 1:
-        logformat(errorLevel.INFO, f"Detected mods: {envValue}. checking D2R_MOD_SET env value...")
-        envMod = os.environ.get('D2R_MOD_SET')
+        logformat(errorLevel.INFO, f"Detected mods: {envValue}. checking PreferMods setting...")
+        envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
         if envMod is not None:
             for mod in envValue:
                 logformat(errorLevel.INFO, f"checking mods.. listed: {mod}, preferMod: {envMod}")
@@ -614,21 +615,9 @@ def SearchModInGitHub():
     webbrowser.open(f'https://github.com/search?q={definedMod}')
 
 def ModsPreferSelector():
-    msg_box = messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드를 병합하지 않고 선호하는 모드를 불러오시려면 시스템 환경변수에서 "D2R_MOD_SET" 변수에 선호하는 모드 이름을 작성하시기 바랍니다. 지금 시스템 환경변수를 설정하시겠습니까?')
+    msg_box = messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드를 병합하지 않고 선호하는 모드를 직접 선택 하시겠습니까?')
     if msg_box:
-        msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
-        if msg_box is not None and msg_box:
-            logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
-            Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
-            messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
-            logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
-            ExitProgram()
-        elif msg_box is not None and not msg_box:
-            logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
-            Popen('sysdm.cpl ,3', shell=True)
-            messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
-            logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
-            ExitProgram()
+        pass
 
 def FindGameInstalled():
     global diablo2Path
@@ -648,15 +637,16 @@ def FindGameInstalled():
             modMenu.entryconfig(1, state='disabled')
             logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
             GetModDetails()
-            envModState = os.environ.get('D2R_MOD_MUTE')
+            envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+            envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
 
-            if definedMod is not None and isinstance(definedMod, list) and envModState is None:
+            if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
                 logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
                 modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=ModsPreferSelector)
-            elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState == "true":
-                logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to D2R_MOD_MUTE env value are set.")
+            elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
+                logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
                 modMenu.entryconfig(1, label='새로운 모드 탐색')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=DownloadModsLink)
@@ -715,9 +705,7 @@ def FindGameInstalled():
     else:
         switchButton['state'] = "normal"
 
-def GetResolutionValue():
-    global envData
-
+def GetLauncherConfigurationValues():
     CheckResProgram()
     if resolutionProgram:
         global originX
@@ -728,12 +716,14 @@ def GetResolutionValue():
         global alteredFR
 
     try:
-        envData = os.environ.get('DiabloLauncher')
-        logformat(errorLevel.INFO, f'{envData}')
-        temp = None
         if resolutionProgram:
-            logformat(errorLevel.INFO, 'QRes detected. parameter count should be 6')
-            originX, originY, originFR, alteredX, alteredY, alteredFR, temp = envData.split(';')
+            originX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
+            originY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
+            originFR = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
+
+            alteredX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"])
+            alteredY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
+            alteredFR = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"])
             logformat(errorLevel.INFO, 'parameter conversion succeed')
         else:
             logformat(errorLevel.INFO, 'QRes not detected. Skipping parameter conversion.')
@@ -746,10 +736,8 @@ def GetResolutionValue():
                 logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
 
     except (ValueError, TypeError, AttributeError) as error:
-        messagebox.showerror('디아블로 런처', f'해상도 벡터 파싱중 예외가 발생하였습니다. 필수 파라미터가 누락되지 않았는지, 또는 잘못된 타입을 제공하지 않았는지 확인하시기 바랍니다. Exception code: {error}')
-        logformat(errorLevel.ERR, f'Unknown data or parameter style: {envData}\n\t{error}')
+        messagebox.showerror('디아블로 런처', f'해상도 벡터 파싱중 예외가 발생하였습니다. 해상도 벡터가 올바르게 설정 되어있는지 다시 한번 확인해 주세요. Exception code: {error}')
         switchButton['state'] = "disabled"
-        envData = None
         originX = None
         originY = None
         originFR = None
@@ -757,36 +745,19 @@ def GetResolutionValue():
         alteredY = None
         alteredFR = None
     finally:
-        logformat(errorLevel.INFO, f'{envData}')
         if resolutionProgram:
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
-def openEnvSetting(*args):
-    msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
-    if msg_box is not None and msg_box:
-        logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
-        Popen('rundll32.exe sysdm.cpl,EditEnvironmentVariables')
-        messagebox.showwarning('디아블로 런처', '사용자 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
-        logformat(errorLevel.INFO, 'advanced user env editor launched. DiabloLauncher now exiting...')
-        ExitProgram()
-    elif msg_box is not None and not msg_box:
-        logformat(errorLevel.INFO, 'starting advanced system env editor... This action will required UAC')
-        Popen('sysdm.cpl ,3', shell=True)
-        messagebox.showwarning('디아블로 런처', '시스템 환경변수 수정을 모두 완료한 후 다시 실행해 주세요.')
-        logformat(errorLevel.INFO, 'advanced system env editor launched. DiabloLauncher now exiting...')
-        ExitProgram()
-
-def SetResolutionValue(*args):
-    if not resolutionProgram: return
-
-    messagebox.showinfo('해상도 벡터 편집기', '이 편집기는 본 프로그램에서만 적용되며 디아블로 런처를 종료 시 모든 변경사항이 유실됩니다. 변경사항을 영구적으로 적용하시려면 "고급 시스템 설정"을 이용해 주세요. ')
+def SetLauncherConfigurationValues(*args):
     envWindow = Tk()
-    envWindow.title('해상도 벡터 편집기')
-    envWindow.geometry(f"265x70+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 265 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 70 / 2)}")
+    envWindow.title('디아블로 런처 설정')
+    envWindow.geometry(f"500x300+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 500 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 300 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
     envWindow.attributes('-topmost', 'true')
+
+    resolutionText = Label(envWindow, text='')
 
     originXtext = Label(envWindow, text='기본 X')
     originYtext = Label(envWindow, text=' Y')
@@ -802,32 +773,42 @@ def SetResolutionValue(*args):
     envAlteredY = Entry(envWindow, width=5)
     envAlteredFR = Entry(envWindow, width=4)
 
-    originXtext.grid(row=0, column=0)
-    envOriginX.grid(row=0, column=1)
-    originYtext.grid(row=0, column=2)
-    envOriginY.grid(row=0, column=3)
-    originFRtext.grid(row=0, column=4)
-    envOriginFR.grid(row=0, column=5)
+    resolutionText.grid(row=0, column=1, columnspan=4)
+    originXtext.grid(row=1, column=0)
+    envOriginX.grid(row=1, column=1)
+    originYtext.grid(row=1, column=2)
+    envOriginY.grid(row=1, column=3)
+    originFRtext.grid(row=1, column=4)
+    envOriginFR.grid(row=1, column=5)
 
-    alteredXtext.grid(row=1, column=0)
-    envAlteredX.grid(row=1, column=1)
-    alteredYtext.grid(row=1, column=2)
-    envAlteredY.grid(row=1, column=3)
-    alteredFRtext.grid(row=1, column=4)
-    envAlteredFR.grid(row=1, column=5)
+    alteredXtext.grid(row=2, column=0)
+    envAlteredX.grid(row=2, column=1)
+    alteredYtext.grid(row=2, column=2)
+    envAlteredY.grid(row=2, column=3)
+    alteredFRtext.grid(row=2, column=4)
+    envAlteredFR.grid(row=2, column=5)
 
-    if envData is not None:
+    if resolutionProgram:
+        resolutionText['text'] = '해상도 벡터'
         envOriginX.insert(0, originX)
         envOriginY.insert(0, originY)
         envOriginFR.insert(0, originFR)
         envAlteredX.insert(0, alteredX)
         envAlteredY.insert(0, alteredY)
         envAlteredFR.insert(0, alteredFR)
+    else:
+        resolutionText['text'] = '해상도 변경 프로그램 미감지'
+        envOriginX['state'] = 'disabled'
+        envOriginY['state'] = 'disabled'
+        envOriginFR['state'] = 'disabled'
+        envAlteredX['state'] = 'disabled'
+        envAlteredY['state'] = 'disabled'
+        envAlteredFR['state'] = 'disabled'
 
-    def commit():
+    def commitResolutionValue():
         if envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
-            messagebox.showwarning('해상도 벡터 편집기', '일부 환경변수가 누락되었습니다.')
-            logformat(errorLevel.WARN, 'some env can not be None.')
+            messagebox.showwarning('디아블로 설정', '일부 해상도 값이 누락되었습니다.')
+            logformat(errorLevel.WARN, 'some screen resolution value can not be None.')
             envWindow.after(1, envWindow.focus_force())
             return
 
@@ -838,24 +819,25 @@ def SetResolutionValue(*args):
             return
 
         try:
-            os.environ['DiabloLauncher'] = f'{envOriginX.get().replace(";", "")};{envOriginY.get().replace(";", "")};{envOriginFR.get().replace(";", "")};{envAlteredX.get().replace(";", "")};{envAlteredY.get().replace(";", "")};{envAlteredFR.get().replace(";", "")};'
-            logformat(errorLevel.INFO, f"resolutionVector = {os.environ.get('DiabloLauncher')}")
+            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginX"], envOriginX.get())
+            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginY"], envOriginY.get())
+            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"], envOriginFR.get())
+
+            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"], envAlteredX.get())
+            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"], envAlteredY.get())
+            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"], envAlteredFR.get())
             UpdateStatusValue()
             ReloadStatusBar()
             envWindow.destroy()
         except AttributeError as error:
-            logformat(errorLevel.ERR, f"could not save env value: {error}")
+            logformat(errorLevel.ERR, f"could not save screen resolution value: {error}")
             UpdateStatusValue()
 
-    envSet = Button(envWindow, text='고급 시스템 설정', command=openEnvSetting)
-    commitBtn = Button(envWindow, text='적용', command=commit)
-
     if resolutionProgram:
-        envSet.grid(row=3, column=1, columnspan=2)
-        commitBtn.grid(row=3, column=4)
+        commitBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue)
     else:
-        envSet.pack(side=LEFT, padx=10)
-        commitBtn.pack(side=RIGHT, padx=10)
+        commitBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue, state='disabled')
+    commitBtn.grid(row=3, column=2, columnspan=3)
 
     if(CheckDarkMode()):
         envWindow['background'] = '#272727'
@@ -883,10 +865,6 @@ def SetResolutionValue(*args):
         alteredFRtext['foreground'] = '#FFFFFF'
         envAlteredFR['background'] = '#272727'
         envAlteredFR['foreground'] = '#FFFFFF'
-        envSet['background'] = '#272727'
-        envSet['activebackground'] = '#272727'
-        envSet['foreground'] = '#FFFFFF'
-        envSet['activeforeground'] = '#FFFFFF'
         commitBtn['background'] = '#272727'
         commitBtn['activebackground'] = '#272727'
         commitBtn['foreground'] = '#FFFFFF'
@@ -917,10 +895,6 @@ def SetResolutionValue(*args):
         alteredFRtext['foreground'] = '#000000'
         envAlteredFR['background'] = '#F0F0F0'
         envAlteredFR['foreground'] = '#000000'
-        envSet['background'] = '#F0F0F0'
-        envSet['activebackground'] = '#F0F0F0'
-        envSet['foreground'] = '#000000'
-        envSet['activeforeground'] = '#000000'
         commitBtn['background'] = '#F0F0F0'
         commitBtn['activebackground'] = '#F0F0F0'
         commitBtn['foreground'] = '#000000'
@@ -931,29 +905,26 @@ def SetResolutionValue(*args):
 def RequirementCheck():
     if not resolutionProgram:
         logformat(errorLevel.WARN, f'QRes not installed or not in...\n\t- C:\\Windows\\System32\n\t- {userLocalApp}/Program/Common/QRes.exe')
-        if os.environ.get('IGN_RES_ALERT') != 'true':
+        res_alert = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) or loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"])
+        if res_alert is None or res_alert is False:
             msg_box = messagebox.askquestion('디아블로 런처', '해상도를 변경하려면 QRes를 먼저 설치하여야 합니다. 지금 QRes를 다운로드 하시겠습니까?', icon='question')
             if msg_box == 'yes':
                 webbrowser.open('https://www.softpedia.com/get/Multimedia/Video/Other-VIDEO-Tools/QRes.shtml')
         else:
-            logformat(errorLevel.WARN, 'QRes install check dialog rejected due to "IGN_RES_ALERT" env prameter is true.\n\tPlease install QRes if would you like change display resolution.')
+            logformat(errorLevel.WARN, 'QRes install check dialog rejected due to IgnoreResProgramInstallDialog setting is true.\n\tPlease install QRes if would you like change display resolution.')
             print(f"\t{color.YELLOW.value}URL:{color.BLUE.value} https://www.softpedia.com/get/Multimedia/Video/Other-VIDEO-Tools/QRes.shtml{color.RESET.value}")
-    elif envData is None:
-        logformat(errorLevel.WARN, 'parameter does not set.')
-        messagebox.showwarning('디아블로 런처', '해상도 벡터가 설정되어 있지 않습니다. "[도구]->[해상도 벡터 편집기]" 메뉴를 클릭하여 임시로 모든 기능을 사용해 보십시오.')
-
     if diablo2Path is None and diablo3Path is None and diablo4Path is None:
         logformat(errorLevel.WARN, 'The game does not exist in registry.')
         messagebox.showwarning('디아블로 런처', '이 컴퓨터에 디아블로 게임을 찾을 수 없습니다. 자세한 사항은 GitHub에 방문해 주세요.')
 
 def UpdateStatusValue():
     FindGameInstalled()
-    GetResolutionValue()
+    GetLauncherConfigurationValues()
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
 
     if resolutionProgram:
-        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
+        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
     else:
         status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
 
@@ -1084,8 +1055,8 @@ def init():
         Popen('control.exe appwiz.cpl', shell=True)
 
     def OpenDevIssues(*args):
-        logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-        if logLevel is None or logLevel != "verbose" or releaseMode: return
+        logLevel = loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"])
+        if logLevel is None or logLevel is False or releaseMode: return
 
         now = datetime.now()
         cnt_time = now.strftime("%H:%M:%S")
@@ -1093,12 +1064,11 @@ def init():
         if msg_box:
             logformat(errorLevel.INFO, f"=== Generated Report at {cnt_time} ===")
             logformat(errorLevel.INFO, f"Current agent: {platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}")
-            logformat(errorLevel.INFO, f"env data: {'configured' if envData is not None else 'None'}")
             if resolutionProgram:
                 logformat(errorLevel.INFO, f"QRes version: {check_terminal_output('QRes /S | findstr QRes')}")
+                logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}'}")
             else:
                 logformat(errorLevel.INFO, "QRes version: None")
-            logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None and resolutionProgram else 'Unknown'}")
 
             if diablo2Path is not None and diablo3Path is not None and diablo4Path is not None:
                 logformat(errorLevel.INFO, "Installed Diablo version: II, III, IV")
@@ -1283,7 +1253,8 @@ def init():
 
     def ModHelpWindow():
         global applyHelp
-        envModState = os.environ.get('D2R_MOD_MUTE')
+        envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+        envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
 
         launch.title('모드 도움말')
         note = Label(launch, text='사용가능한 도움말', height=2)
@@ -1293,12 +1264,12 @@ def init():
                 applyHelp = Button(launch, text=f'{definedMod} 모드\n적용해제', width=20, height=5, command=ModAutoApply, state='normal')
             else:
                 applyHelp = Button(launch, text=f'{definedMod} 모드\n적용하기', width=20, height=5, command=ModAutoApply, state='normal')
-        elif definedMod is None or definedMod == "" or (envModState is not None and envModState == "true"):
+        elif definedMod is None or definedMod == "" or (envModState is not None and envModState is True):
             applyHelp = Button(launch, text='모드\n적용방법', width=20, height=5, command=ModApplyHelp, state='normal')
         else:
             applyHelp = Button(launch, text='모드\n병합필요', width=20, height=5, command=ModApplyHelp, state='disabled')
 
-        if definedMod is not None and definedMod != "" and envModState is None:
+        if definedMod is not None and definedMod != "" and envModState is None or envModState is False:
             if isinstance(definedMod, str):
                 logformat(errorLevel.INFO, 'mods resolve problem button was enabled.')
                 generalHelp = Button(launch, text=f'{definedMod} 모드\n문제해결', width=20, height=2, command=ModGeneralHelp, state='normal')
@@ -1368,7 +1339,7 @@ def init():
     toolsMenu.add_command(label='새로 고침', command=ForceReload, accelerator='F5')
     toolsMenu.add_command(label='런처 업데이트 확인...', command=UpdateProgram)
     toolsMenu.add_separator()
-    toolsMenu.add_command(label='고급 시스템 설정...', state='disabled', accelerator='Ctrl+,')
+    toolsMenu.add_command(label='디아블로 런처 설정', state='disabled', accelerator='Ctrl+,')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')
@@ -1401,8 +1372,8 @@ def init():
     aboutMenu.add_command(label='디아블로 런처 디렉토리 열기', command=OpenProgramDir)
     aboutMenu.add_separator()
 
-    logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-    if logLevel is not None and logLevel == "verbose" and not releaseMode:
+    logLevel = loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"])
+    if logLevel is not None and logLevel is True and not releaseMode:
         aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='normal', accelerator='F12')
     else:
         aboutMenu.add_command(label='버그 신고...', command=OpenDevIssues, state='disabled', accelerator='F12')
@@ -1414,12 +1385,7 @@ def init():
     root.bind_all("<F12>", OpenDevIssues)
     root.bind_all("<Control-w>", ExitProgram)
     root.bind_all("<Control-o>", OpenBattleNet)
-
-    CheckResProgram()
-    if resolutionProgram:
-        root.bind_all("<Control-,>", SetResolutionValue)
-    else:
-        root.bind_all("<Control-,>", openEnvSetting)
+    root.bind_all("<Control-,>", SetLauncherConfigurationValues)
 
     welcome = Label(root, text='')
     switchButton = Button(rootFrame, text='디아블로 실행...', command=LaunchGameAgent, width=35, height=5, state='disabled')
@@ -1432,11 +1398,11 @@ def init():
     cnt_time = now.strftime("%H:%M:%S")
 
     FindGameInstalled()
-    GetResolutionValue()
+    GetLauncherConfigurationValues()
     RequirementCheck()
 
     if resolutionProgram:
-        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}' if envData is not None else '알 수 없음'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
+        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
     else:
         status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
 
@@ -1465,8 +1431,8 @@ def init():
 if __name__ == '__main__':
     releaseMode = not os.path.isdir(f"{check_terminal_output('echo %cd%')}/.git")
     if not releaseMode:
-        logLevel = os.environ.get('LOG_VERBOSE_LEVEL')
-        if logLevel is not None and logLevel == "verbose":
+        logLevel = loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"])
+        if logLevel is not None and logLevel is True:
             multiprocessing.log_to_stderr()
             logger = multiprocessing.get_logger()
             logger.setLevel(logging.INFO)
