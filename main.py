@@ -762,7 +762,7 @@ def GetResolutionValue():
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
-def openEnvSetting():
+def openEnvSetting(*args):
     msg_box = messagebox.askyesnocancel('디아블로 런처', '시스템 또는 계정의 환경변수 편집 시 업데이트된 환경변수를 반영하기 위해 프로그램을 종료해야 합니다. 시스템 환경변수를 수정할 경우 관리자 권한이 필요합니다. 대신 사용자 환경변수를 편집하시겠습니까?', icon='question')
     if msg_box is not None and msg_box:
         logformat(errorLevel.INFO, 'starting advanced user env editor... This action will not required UAC')
