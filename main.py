@@ -53,15 +53,16 @@ try:
     from datetime import datetime
     import time
 
-    from tkinter import Tk
+    from tkinter import Tk, Toplevel
     from tkinter import Label
-    from tkinter import Button
+    from tkinter import Button, Checkbutton
     from tkinter import (LEFT, RIGHT, BOTTOM)
     from tkinter import (W, CENTER)
-    from tkinter import Menu
+    from tkinter import Menu, OptionMenu
     from tkinter import messagebox
     from tkinter import Entry
     from tkinter import Frame
+    from tkinter import StringVar, IntVar
 
     from src.data.check_app_installed import ReturnRegistryQuery, OpenProgramUsingRegistry, TestRegistryValueAsFile, TestRegistryValueAsRaw
     from src.data.game_data import FormatTime, SaveGameRunningTime, LoadGameRunningTime, ClearGameRunningTime, ignoreTime
@@ -87,6 +88,9 @@ diablo3Path = None
 diablo4Path = None
 
 definedMod = None
+modsPreferPreviousSetting = None
+modsInstalledList = None
+
 resolutionProgram = False
 
 originX = None
@@ -95,6 +99,14 @@ originFR = None
 alteredX = None
 alteredY = None
 alteredFR = None
+
+testResOriginX = None
+testResOriginY = None
+testResOriginFR = None
+testResAlteredX = None
+testResAlteredY = None
+testResAlteredFR = None
+modsMuteSettings = False
 
 root = None
 launch = None
@@ -137,15 +149,12 @@ def CheckResProgram():
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
         if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and call('where QRes > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
-            toolsMenu.entryconfig(3, label='디아블로 런처 설정', command=SetLauncherConfigurationValues)
             resolutionProgram = False
         else:
             logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
-            toolsMenu.entryconfig(3, label='디아블로 런처 설정', command=SetLauncherConfigurationValues)
             resolutionProgram = True
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
-        toolsMenu.entryconfig(3, label='디아블로 런처 설정', command=SetLauncherConfigurationValues)
         resolutionProgram = False
 
 def CheckDarkMode():
@@ -617,7 +626,7 @@ def SearchModInGitHub():
 def ModsPreferSelector():
     msg_box = messagebox.askyesno(title='디아블로 모드', message='Diablo II Resurrected 모드를 병합하지 않고 선호하는 모드를 직접 선택 하시겠습니까?')
     if msg_box:
-        pass
+        SetLauncherConfigurationValues()
 
 def FindGameInstalled():
     global diablo2Path
@@ -759,15 +768,29 @@ def GetLauncherConfigurationValues():
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
 def SetLauncherConfigurationValues(*args):
-    envWindow = Tk()
+    global modsPreferPreviousSetting
+    global modsInstalledList
+
+    global testResOriginX
+    global testResOriginY
+    global testResOriginFR
+    global testResAlteredX
+    global testResAlteredY
+    global testResAlteredFR
+    global modsMuteSettings
+
+    envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
-    envWindow.geometry(f"500x300+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 500 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 300 / 2)}")
+    envWindow.geometry(f"400x300+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 400 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 300 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
     envWindow.attributes('-topmost', 'true')
 
+    currentTarget = parentLocation.UserLocalAppData
+
     resolutionText = Label(envWindow, text='')
 
+    modsCurrentSelectMenu = StringVar()
     originXtext = Label(envWindow, text='기본 X')
     originYtext = Label(envWindow, text=' Y')
     originFRtext = Label(envWindow, text=' FR')
@@ -782,7 +805,9 @@ def SetLauncherConfigurationValues(*args):
     envAlteredY = Entry(envWindow, width=5)
     envAlteredFR = Entry(envWindow, width=4)
 
-    resolutionText.grid(row=0, column=1, columnspan=4)
+    modsMuteSettings = IntVar()
+
+    resolutionText.grid(row=0, column=0, columnspan=5)
     originXtext.grid(row=1, column=0)
     envOriginX.grid(row=1, column=1)
     originYtext.grid(row=1, column=2)
@@ -797,16 +822,47 @@ def SetLauncherConfigurationValues(*args):
     alteredFRtext.grid(row=2, column=4)
     envAlteredFR.grid(row=2, column=5)
 
+    def updateResSettings():
+        global testResOriginX
+        global testResOriginY
+        global testResOriginFR
+        global testResAlteredX
+        global testResAlteredY
+        global testResAlteredFR
+
+        testResOriginX = loadSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
+        testResOriginY = loadSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
+        testResOriginFR = loadSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
+        testResAlteredX = loadSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"])
+        testResAlteredY = loadSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
+        testResAlteredFR = loadSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"])
+
     if resolutionProgram:
         resolutionText['text'] = '해상도 벡터'
-        envOriginX.insert(0, originX)
-        envOriginY.insert(0, originY)
-        envOriginFR.insert(0, originFR)
-        envAlteredX.insert(0, alteredX)
-        envAlteredY.insert(0, alteredY)
-        envAlteredFR.insert(0, alteredFR)
+        updateResSettings()
+        if(testResOriginX is None or testResOriginY is None or testResOriginFR is None or testResAlteredX is None or testResAlteredY is None or testResAlteredFR is None):
+            currentTarget = parentLocation.ProgramData
+            updateResSettings()
+            if(testResOriginX is None or testResOriginY is None or testResOriginFR is None or testResAlteredX is None or testResAlteredY is None or testResAlteredFR is None):
+                msg_box = messagebox.askyesno('해상도 벡터 편집기', '시스템에서 해상도 벡터 설정을 확인할 수 없습니다. 대신 시스템 설정 대신 사용자 설정을 편집할까요?')
+                if msg_box:
+                    currentTarget = parentLocation.UserLocalAppData
+
+        envOriginX.insert(0, testResOriginX)
+        envOriginY.insert(0, testResOriginY)
+        envOriginFR.insert(0, testResOriginFR)
+        envAlteredX.insert(0, testResAlteredX)
+        envAlteredY.insert(0, testResAlteredY)
+        envAlteredFR.insert(0, testResAlteredFR)
+
+        envOriginX['state'] = 'normal'
+        envOriginY['state'] = 'normal'
+        envOriginFR['state'] = 'normal'
+        envAlteredX['state'] = 'normal'
+        envAlteredY['state'] = 'normal'
+        envAlteredFR['state'] = 'normal'
     else:
-        resolutionText['text'] = '해상도 변경 프로그램 미감지'
+        resolutionText['text'] = '해상도 변경 프로그램 미설치'
         envOriginX['state'] = 'disabled'
         envOriginY['state'] = 'disabled'
         envOriginFR['state'] = 'disabled'
@@ -815,26 +871,15 @@ def SetLauncherConfigurationValues(*args):
         envAlteredFR['state'] = 'disabled'
 
     def commitResolutionValue():
-        if envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
-            messagebox.showwarning('디아블로 설정', '일부 해상도 값이 누락되었습니다.')
-            logformat(errorLevel.WARN, 'some screen resolution value can not be None.')
-            envWindow.after(1, envWindow.focus_force())
-            return
-
-        if (call(f'QRes /L | findstr /r "{envOriginX.get()}x" |findstr /r "{envOriginY.get()}," | findstr /r "\\<{envOriginFR.get()}\\>" > NUL 2>&1', shell=True) != 0) or (call(f'QRes /L | findstr /r "{envAlteredX.get()}x" |findstr /r "{envAlteredY.get()}," | findstr /r "\\<{envAlteredFR.get()}\\>" > NUL 2>&1', shell=True) != 0):
-            messagebox.showwarning('해상도 벡터 편집기', '일부 해상도가 이 디스플레이와 호환되지 않습니다. 현재 디스플레이와 호환되는 다른 해상도를 입력해 주세요.')
-            logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
-            envWindow.after(1, envWindow.focus_force())
-            return
-
+        if not testResolutionValue(): return
         try:
-            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginX"], envOriginX.get())
-            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginY"], envOriginY.get())
-            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"], envOriginFR.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginX"], envOriginX.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginY"], envOriginY.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginFR"], envOriginFR.get())
 
-            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"], envAlteredX.get())
-            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"], envAlteredY.get())
-            dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"], envAlteredFR.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"], envAlteredX.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"], envAlteredY.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"], envAlteredFR.get())
             UpdateStatusValue()
             ReloadStatusBar()
             envWindow.destroy()
@@ -842,16 +887,140 @@ def SetLauncherConfigurationValues(*args):
             logformat(errorLevel.ERR, f"could not save screen resolution value: {error}")
             UpdateStatusValue()
 
+    def screenResolutionSwitcher():
+        if not testResolutionValue(): return
+        envOriginX['state'] = 'disabled'
+        envOriginY['state'] = 'disabled'
+        envOriginFR['state'] = 'disabled'
+        envAlteredX['state'] = 'disabled'
+        envAlteredY['state'] = 'disabled'
+        envAlteredFR['state'] = 'disabled'
+        Popen(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1', shell=True)
+        time.sleep(5)
+        Popen(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1', shell=True)
+        envOriginX['state'] = 'normal'
+        envOriginY['state'] = 'normal'
+        envOriginFR['state'] = 'normal'
+        envAlteredX['state'] = 'normal'
+        envAlteredY['state'] = 'normal'
+        envAlteredFR['state'] = 'normal'
+
+    def testResolutionValue():
+        if envOriginX.get() == '' or envOriginY.get() == '' or envOriginFR.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '' or envAlteredFR.get() == '':
+            messagebox.showwarning('디아블로 설정', '일부 해상도 값이 누락되었습니다.')
+            logformat(errorLevel.WARN, 'some screen resolution value can not be None.')
+            envWindow.after(1, envWindow.focus_force())
+            return False
+
+        if (call(f'QRes /L | findstr /r "{envOriginX.get()}x" |findstr /r "{envOriginY.get()}," | findstr /r "\\<{envOriginFR.get()}\\>" > NUL 2>&1', shell=True) != 0) or (call(f'QRes /L | findstr /r "{envAlteredX.get()}x" |findstr /r "{envAlteredY.get()}," | findstr /r "\\<{envAlteredFR.get()}\\>" > NUL 2>&1', shell=True) != 0):
+            messagebox.showwarning('해상도 벡터 편집기', '일부 해상도가 이 디스플레이와 호환되지 않습니다. 현재 디스플레이와 호환되는 다른 해상도를 입력해 주세요.')
+            logformat(errorLevel.WARN, 'Some resolution scale does not compatibility this display. Please enter another resolution scale.')
+            envWindow.after(1, envWindow.focus_force())
+            return False
+
+        return True
+
     if resolutionProgram:
-        commitBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue)
+        resCommitBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='normal')
+        resTestBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue, state='normal')
+
     else:
-        commitBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue, state='disabled')
-    commitBtn.grid(row=3, column=2, columnspan=3)
+        resCommitBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='disabled')
+        resTestBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue, state='disabled')
+
+    resTestBtn.grid(row=3, column=0, columnspan=2, padx=5, pady=10)
+    resCommitBtn.grid(row=3, column=3, columnspan=2, padx=5, pady=10)
+
+    def applyPreferMods():
+        dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"], modsCurrentSelectMenu.get())
+        FindGameInstalled()
+        GetModDetails()
+        if isinstance(definedMod, list) and modsCurrentSelectMenu.get() != "":
+            messagebox.showwarning('모드 관리자', f'현재 입력한 {modsCurrentSelectMenu.get()} 모드에 오타가 있거나 정상적으로 설치되지 않은 것 같습니다. 입력된 선호모드를 다시 한번 확인해 주세요.')
+        updateModsData()
+        testModsApply()
+
+    def testModsApply(*args):
+        modsMuteConfig = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+        if modsMuteConfig and modsPreferPreviousSetting is None or modsCurrentSelectMenu.get() == modsPreferPreviousSetting:
+            modsPreferApply['state'] = 'disabled'
+        else:
+            modsPreferApply['state'] = 'normal'
+
+        if modsMuteConfig and modsPreferPreviousSetting is None:
+            modsPreferOptionMenu['state'] = 'disabled'
+            modsPreferText['state'] = 'disabled'
+        else:
+            modsPreferOptionMenu['state'] = 'normal'
+            modsPreferText['state'] = 'normal'
+
+    def updateModsData():
+        global modsPreferPreviousSetting
+        global modsInstalledList
+
+        modsPreferPreviousSetting = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
+        modsInstalledList = os.listdir(f'{diablo2Path}/mods')
+        if modsPreferPreviousSetting is not None:
+            for value in modsInstalledList:
+                if modsPreferPreviousSetting == value:
+                    modsCurrentSelectMenu.set(value)
+                    break
+        else:
+            modsCurrentSelectMenu.set('-- 선택 --')
+
+    modsPreferText = Label(envWindow, text='선호하는 모드명')
+    modsPreferApply = Button(envWindow, text='선호모드 적용', command=applyPreferMods)
+
+    updateModsData()
+
+    modsPreferOptionMenu = OptionMenu(envWindow, modsCurrentSelectMenu, *modsInstalledList, command=testModsApply)
+    modsPreferOptionMenu.config(width=15)
+
+    modsPreferText.grid(row=4, column=0, padx=5, pady=10)
+    modsPreferOptionMenu.grid(row=4, column=1, columnspan=3, padx=5, pady=10)
+    modsPreferApply.grid(row=4, column=4, padx=5, pady=10)
+
+    testModsApply()
+
+    def modsMuteSettingsApply():
+        dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"], modsMuteSettings.get() == 1)
+        modsMuteSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"]) else 0)
+
+    modsMuteSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"]) else 0)
+    modsMuteCheckBox = Checkbutton(envWindow, text="모드 병합 알림 뮤트", variable=modsMuteSettings, onvalue=True, offvalue=False, command=modsMuteSettingsApply)
+    modsMuteCheckBox.grid(row=5, column=0, columnspan=2, padx=5, pady=5)
+
+    def additionalCommandsCommit():
+        if additionalCommandsEntry.get() is not None and additionalCommandsEntry.get() != "":
+            msg_box = messagebox.askyesno('디아블로 런처', f'유효하지 않은 명령행 인수를 적용할 경우 Diablo II Resurrected가 불안정해질 수 있습니다. 이 알림창이 무엇을 의미하는지 모를 경우 "아니요" 버튼을 누르십시오.\n이 알림창은 "{additionalCommandsEntry.get()}" 인수를 추가로 적용하는 것이 확실한지 여부를 확인하고자 이 메시지가 표시되었습니다.', icon='warning')
+            if msg_box:
+                dumpSettings(parentLocation.UserLocalAppData, ["General", "AdditionalLaunchArguments"], additionalCommandsEntry.get())
+            else:
+                additionalCommandsEntry.delete(0, len(additionalCommandsEntry.get()))
+        else:
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "AdditionalLaunchArguments"], None)
+
+    additionalCommands = Label(envWindow, text='추가 명령행 인수')
+
+    additionalCommandsEntry = Entry(envWindow, width=30)
+    previousAdditionalCommands = loadSettings(parentLocation.UserLocalAppData, ["General", "AdditionalLaunchArguments"])
+    if previousAdditionalCommands is not None and previousAdditionalCommands != "":
+        additionalCommandsEntry.insert(0, previousAdditionalCommands)
+
+    additionalCommandsApply = Button(envWindow, text='적용', command=additionalCommandsCommit)
+
+    additionalCommands.grid(row=6, column=0)
+    additionalCommandsEntry.grid(row=6, column=1, columnspan=4)
+    additionalCommandsApply.grid(row=6, column=5)
 
     if(CheckDarkMode()):
         envWindow['background'] = '#272727'
         originXtext['background'] = '#272727'
         originXtext['foreground'] = '#FFFFFF'
+        resolutionText['background'] = '#272727'
+        resolutionText['foreground'] = '#FFFFFF'
+        additionalCommands['background'] = '#272727'
+        additionalCommands['foreground'] = '#FFFFFF'
         envOriginX['background'] = '#272727'
         envOriginX['foreground'] = '#FFFFFF'
         originYtext['background'] = '#272727'
@@ -874,14 +1043,43 @@ def SetLauncherConfigurationValues(*args):
         alteredFRtext['foreground'] = '#FFFFFF'
         envAlteredFR['background'] = '#272727'
         envAlteredFR['foreground'] = '#FFFFFF'
-        commitBtn['background'] = '#272727'
-        commitBtn['activebackground'] = '#272727'
-        commitBtn['foreground'] = '#FFFFFF'
-        commitBtn['activeforeground'] = '#FFFFFF'
+        additionalCommandsEntry['background'] = '#272727'
+        additionalCommandsEntry['foreground'] = '#FFFFFF'
+        modsPreferText['background'] = '#272727'
+        modsPreferText['foreground'] = '#FFFFFF'
+        resCommitBtn['background'] = '#272727'
+        resCommitBtn['activebackground'] = '#272727'
+        resCommitBtn['foreground'] = '#FFFFFF'
+        resCommitBtn['activeforeground'] = '#FFFFFF'
+        resTestBtn['background'] = '#272727'
+        resTestBtn['activebackground'] = '#272727'
+        resTestBtn['foreground'] = '#FFFFFF'
+        resTestBtn['activeforeground'] = '#FFFFFF'
+        modsPreferApply['background'] = '#272727'
+        modsPreferApply['activebackground'] = '#272727'
+        modsPreferApply['foreground'] = '#FFFFFF'
+        modsPreferApply['activeforeground'] = '#FFFFFF'
+        modsPreferOptionMenu['background'] = '#272727'
+        modsPreferOptionMenu['activebackground'] = '#272727'
+        modsPreferOptionMenu['foreground'] = '#FFFFFF'
+        modsPreferOptionMenu['activeforeground'] = '#FFFFFF'
+        additionalCommandsApply['background'] = '#272727'
+        additionalCommandsApply['activebackground'] = '#272727'
+        additionalCommandsApply['foreground'] = '#FFFFFF'
+        additionalCommandsApply['activeforeground'] = '#FFFFFF'
+        modsMuteCheckBox['background'] = '#272727'
+        modsMuteCheckBox['activebackground'] = '#272727'
+        modsMuteCheckBox['selectcolor'] = '#272727'
+        modsMuteCheckBox['foreground'] = '#FFFFFF'
+        modsMuteCheckBox['activeforeground'] = '#FFFFFF'
     else:
         envWindow['background'] = '#F0F0F0'
         originXtext['background'] = '#F0F0F0'
         originXtext['foreground'] = '#000000'
+        resolutionText['background'] = '#F0F0F0'
+        resolutionText['foreground'] = '#000000'
+        additionalCommands['background'] = '#F0F0F0'
+        additionalCommands['foreground'] = '#000000'
         envOriginX['background'] = '#F0F0F0'
         envOriginX['foreground'] = '#000000'
         originYtext['background'] = '#F0F0F0'
@@ -904,10 +1102,35 @@ def SetLauncherConfigurationValues(*args):
         alteredFRtext['foreground'] = '#000000'
         envAlteredFR['background'] = '#F0F0F0'
         envAlteredFR['foreground'] = '#000000'
-        commitBtn['background'] = '#F0F0F0'
-        commitBtn['activebackground'] = '#F0F0F0'
-        commitBtn['foreground'] = '#000000'
-        commitBtn['activeforeground'] = '#000000'
+        modsPreferText['background'] = '#F0F0F0'
+        modsPreferText['foreground'] = '#000000'
+        additionalCommandsEntry['background'] = '#F0F0F0'
+        additionalCommandsEntry['foreground'] = '#000000'
+        resCommitBtn['background'] = '#F0F0F0'
+        resCommitBtn['activebackground'] = '#F0F0F0'
+        resCommitBtn['foreground'] = '#000000'
+        resCommitBtn['activeforeground'] = '#000000'
+        additionalCommandsApply['background'] = '#F0F0F0'
+        additionalCommandsApply['activebackground'] = '#F0F0F0'
+        additionalCommandsApply['foreground'] = '#000000'
+        additionalCommandsApply['activeforeground'] = '#000000'
+        resTestBtn['background'] = '#F0F0F0'
+        resTestBtn['activebackground'] = '#F0F0F0'
+        resTestBtn['foreground'] = '#000000'
+        resTestBtn['activeforeground'] = '#000000'
+        modsPreferApply['background'] = '#F0F0F0'
+        modsPreferApply['activebackground'] = '#F0F0F0'
+        modsPreferApply['foreground'] = '#000000'
+        modsPreferApply['activeforeground'] = '#000000'
+        modsPreferOptionMenu['background'] = '#F0F0F0'
+        modsPreferOptionMenu['activebackground'] = '#F0F0F0'
+        modsPreferOptionMenu['foreground'] = '#000000'
+        modsPreferOptionMenu['activeforeground'] = '#000000'
+        modsMuteCheckBox['background'] = '#F0F0F0'
+        modsMuteCheckBox['activebackground'] = '#F0F0F0'
+        modsMuteCheckBox['selectcolor'] = '#F0F0F0'
+        modsMuteCheckBox['foreground'] = '#000000'
+        modsMuteCheckBox['activeforeground'] = '#000000'
 
     envWindow.mainloop()
 
@@ -1348,7 +1571,7 @@ def init():
     toolsMenu.add_command(label='새로 고침', command=ForceReload, accelerator='F5')
     toolsMenu.add_command(label='런처 업데이트 확인...', command=UpdateProgram)
     toolsMenu.add_separator()
-    toolsMenu.add_command(label='디아블로 런처 설정', state='disabled', accelerator='Ctrl+,')
+    toolsMenu.add_command(label='디아블로 런처 설정', state='disabled', command=SetLauncherConfigurationValues, accelerator='Ctrl+,')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
         toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')

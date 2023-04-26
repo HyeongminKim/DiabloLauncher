@@ -19,6 +19,9 @@ diablo3Path: None | str
 diablo4Path: None | str
 
 definedMod: None | str
+modsPreferPreviousSetting = None | str
+modsInstalledList = None | list[str]
+
 resolutionProgram: bool
 
 originX: None | str
