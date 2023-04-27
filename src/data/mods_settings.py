@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 
 from os import environ
-from json import load, dump
+from json import load, dump, JSONDecodeError
 from src.utility.logcat import logformat, errorLevel
 
 userAppData = environ.get('AppData')
@@ -14,6 +14,9 @@ def loadConfigurationFile():
         target = data['Games']['osi']['AdditionalLaunchArguments']
         logformat(errorLevel.INFO, f'Current configured external command is "{target}".')
         return target
+    except (JSONDecodeError):
+        logformat(errorLevel.FATL, "Unable to load configure file. reason: contains illegal JSON structures type or syntax.")
+        return None
     except (FileNotFoundError, KeyError):
         logformat(errorLevel.WARN, 'external command does not configured yet.')
         return None
@@ -45,5 +48,8 @@ def checkConfigurationStructure():
         data['Games']['osi']['AdditionalLaunchArguments'] = ''
         with open(f'{userAppData}/Battle.net/Battle.net.config', 'w', encoding='utf-8') as file:
             dump(data, file, indent=4)
+    except (JSONDecodeError):
+        logformat(errorLevel.FATL, "Unable to load configure file. reason: contains illegal JSON structures type or syntax.")
+        return None
     except FileNotFoundError:
         logformat(errorLevel.WARN, 'external command does not configured yet.')

@@ -4,7 +4,7 @@
 
 from os import environ, path, mkdir
 from enum import Enum
-from json import load, dump
+from json import load, dump, JSONDecodeError
 from src.utility.logcat import logformat, errorLevel
 
 class parentLocation(Enum):
@@ -24,6 +24,9 @@ def loadSettings(scope: parentLocation, target_key: list[str]):
 
         logformat(errorLevel.INFO, f'Current configured {target_key} settings is "{target}".')
         return target
+    except (JSONDecodeError):
+        logformat(errorLevel.FATL, f"Unable to load {scope} settings. reason: contains illegal JSON structures type or syntax.")
+        return None
     except (FileNotFoundError, KeyError):
         logformat(errorLevel.WARN, f'The current {target_key} settings does not configured yet.')
         return None
@@ -100,6 +103,9 @@ def makeConfigurationFileStructures(scope: parentLocation):
             logformat(errorLevel.INFO, f'Successfullty Generated configured settings in {scope}.')
         else:
             logformat(errorLevel.INFO, f'configured settings already exist in {scope}.')
+    except (JSONDecodeError):
+        logformat(errorLevel.FATL, f"Unable to load {scope} settings. reason: contains illegal JSON structures type or syntax.")
+        return None
     except (TypeError, FileExistsError, ValueError, RecursionError):
         logformat(errorLevel.ERR, f'Unable to Generated configured settings in {scope}. Internal Error!')
 
@@ -125,5 +131,8 @@ def checkConfigurationStructure(scope: parentLocation, target_key: list[str]):
 
         with open(f'{scope.value}/DiabloLauncher/DiabloLauncher.config', 'w', encoding='utf-8') as file:
             dump(data, file, indent=4)
+    except (JSONDecodeError):
+        logformat(errorLevel.FATL, f"Unable to load {scope} settings. reason: contains illegal JSON structures type or syntax.")
+        return None
     except FileNotFoundError:
         logformat(errorLevel.WARN, f'The current {target_key} settings does not configured yet.')
