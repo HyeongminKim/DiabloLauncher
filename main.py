@@ -109,6 +109,7 @@ testResAlteredFR = None
 
 modsMuteSettings = False
 verboseSettings = False
+resIgnoreAlert = False
 
 root = None
 launch = None
@@ -782,6 +783,7 @@ def SetLauncherConfigurationValues(*args):
     global testResAlteredFR
     global modsMuteSettings
     global verboseSettings
+    global resIgnoreAlert
 
     envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
@@ -811,6 +813,7 @@ def SetLauncherConfigurationValues(*args):
 
     modsMuteSettings = IntVar()
     verboseSettings = IntVar()
+    resIgnoreAlert = IntVar()
 
     resolutionText.grid(row=0, column=0, columnspan=5)
     originXtext.grid(row=1, column=0)
@@ -925,16 +928,31 @@ def SetLauncherConfigurationValues(*args):
 
         return True
 
+    def changeIgnoreResAlert():
+        dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "IgnoreResProgramInstallDialog"], resIgnoreAlert.get() == 1)
+        resIgnoreAlert.set(1 if loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) or loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) else 0)
+        if loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]):
+            resDialogIgnoreCheckbox['state'] = 'disabled'
+        else:
+            resDialogIgnoreCheckbox['state'] = 'normal'
+
     if resolutionProgram:
-        resCommitBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='normal')
-        resTestBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue, state='normal')
+        resTestBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='normal')
+        resCommitBtn = Button(envWindow, text='적용', command=commitResolutionValue, state='normal')
 
     else:
-        resCommitBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='disabled')
-        resTestBtn = Button(envWindow, text='해상도 벡터 적용', command=commitResolutionValue, state='disabled')
+        resTestBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='disabled')
+        resCommitBtn = Button(envWindow, text='적용', command=commitResolutionValue, state='disabled')
 
-    resTestBtn.grid(row=3, column=0, columnspan=2, padx=5, pady=10)
-    resCommitBtn.grid(row=3, column=3, columnspan=2, padx=5, pady=10)
+    resIgnoreAlert.set(1 if loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) or loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) else 0)
+    if loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]):
+        resDialogIgnoreCheckbox = Checkbutton(envWindow, text='설치 알림 뮤트', variable=resIgnoreAlert, onvalue=True, offvalue=False, command=changeIgnoreResAlert, state='disabled')
+    else:
+        resDialogIgnoreCheckbox = Checkbutton(envWindow, text='설치 알림 뮤트', variable=resIgnoreAlert, onvalue=True, offvalue=False, command=changeIgnoreResAlert, state='normal')
+
+    resTestBtn.grid(row=3, column=0, pady=10)
+    resCommitBtn.grid(row=3, column=1, pady=10)
+    resDialogIgnoreCheckbox.grid(row=3, column=3, columnspan=2, pady=10)
 
     def applyPreferMods():
         dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"], modsCurrentSelectMenu.get())
@@ -1109,6 +1127,11 @@ def SetLauncherConfigurationValues(*args):
         verboseCheckbox['selectcolor'] = '#272727'
         verboseCheckbox['foreground'] = '#FFFFFF'
         verboseCheckbox['activeforeground'] = '#FFFFFF'
+        resDialogIgnoreCheckbox['background'] = '#272727'
+        resDialogIgnoreCheckbox['activebackground'] = '#272727'
+        resDialogIgnoreCheckbox['selectcolor'] = '#272727'
+        resDialogIgnoreCheckbox['foreground'] = '#FFFFFF'
+        resDialogIgnoreCheckbox['activeforeground'] = '#FFFFFF'
     else:
         envWindow['background'] = '#F0F0F0'
         originXtext['background'] = '#F0F0F0'
@@ -1181,6 +1204,11 @@ def SetLauncherConfigurationValues(*args):
         verboseCheckbox['selectcolor'] = '#F0F0F0'
         verboseCheckbox['foreground'] = '#000000'
         verboseCheckbox['activeforeground'] = '#000000'
+        resDialogIgnoreCheckbox['background'] = '#F0F0F0'
+        resDialogIgnoreCheckbox['activebackground'] = '#F0F0F0'
+        resDialogIgnoreCheckbox['selectcolor'] = '#F0F0F0'
+        resDialogIgnoreCheckbox['foreground'] = '#000000'
+        resDialogIgnoreCheckbox['activeforeground'] = '#000000'
 
     envWindow.mainloop()
 
