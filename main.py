@@ -1666,6 +1666,7 @@ if __name__ == '__main__':
     if not releaseMode:
         logLevel = loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"])
         if logLevel is not None and logLevel is True:
+            os.environ['LOG_VERBOSE_LEVEL'] = 'verbose'
             multiprocessing.log_to_stderr()
             logger = multiprocessing.get_logger()
             logger.setLevel(logging.INFO)
