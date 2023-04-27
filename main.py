@@ -106,7 +106,9 @@ testResOriginFR = None
 testResAlteredX = None
 testResAlteredY = None
 testResAlteredFR = None
+
 modsMuteSettings = False
+verboseSettings = False
 
 root = None
 launch = None
@@ -779,10 +781,11 @@ def SetLauncherConfigurationValues(*args):
     global testResAlteredY
     global testResAlteredFR
     global modsMuteSettings
+    global verboseSettings
 
     envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
-    envWindow.geometry(f"400x300+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 400 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 300 / 2)}")
+    envWindow.geometry(f"380x270+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 380 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 270 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
     envWindow.attributes('-topmost', 'true')
@@ -807,6 +810,7 @@ def SetLauncherConfigurationValues(*args):
     envAlteredFR = Entry(envWindow, width=4)
 
     modsMuteSettings = IntVar()
+    verboseSettings = IntVar()
 
     resolutionText.grid(row=0, column=0, columnspan=5)
     originXtext.grid(row=1, column=0)
@@ -970,16 +974,16 @@ def SetLauncherConfigurationValues(*args):
             modsCurrentSelectMenu.set('-- 선택 --')
 
     modsPreferText = Label(envWindow, text='선호하는 모드명')
-    modsPreferApply = Button(envWindow, text='선호모드 적용', command=applyPreferMods)
+    modsPreferApply = Button(envWindow, text='적용', command=applyPreferMods)
 
     updateModsData()
 
     modsPreferOptionMenu = OptionMenu(envWindow, modsCurrentSelectMenu, *modsInstalledList, command=testModsApply)
-    modsPreferOptionMenu.config(width=15)
+    modsPreferOptionMenu.config(width=20)
 
-    modsPreferText.grid(row=4, column=0, padx=5, pady=10)
-    modsPreferOptionMenu.grid(row=4, column=1, columnspan=3, padx=5, pady=10)
-    modsPreferApply.grid(row=4, column=4, padx=5, pady=10)
+    modsPreferText.grid(row=4, column=0, pady=10)
+    modsPreferOptionMenu.grid(row=4, column=1, columnspan=4, pady=10)
+    modsPreferApply.grid(row=4, column=5, pady=10)
 
     testModsApply()
 
@@ -1012,7 +1016,26 @@ def SetLauncherConfigurationValues(*args):
 
     additionalCommands.grid(row=6, column=0)
     additionalCommandsEntry.grid(row=6, column=1, columnspan=4)
-    additionalCommandsApply.grid(row=6, column=5)
+    additionalCommandsApply.grid(row=6, column=5, padx=6)
+
+    def changeVerboseLogSettingsApply():
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"], verboseSettings.get() == 1)
+        verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
+        if verboseSettings.get() == 1:
+            os.environ['LOG_VERBOSE_LEVEL'] = 'verbose'
+        else:
+            os.environ.pop('LOG_VERBOSE_LEVEL')
+
+    verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
+    verboseCheckbox = Checkbutton(envWindow, text="디버그 메시지", variable=verboseSettings, onvalue=True, offvalue=False, command=changeVerboseLogSettingsApply)
+    verboseCheckbox.grid(row=7, column=0, columnspan=1, padx=5, pady=10)
+
+    systemConfigFileEdit = Button(envWindow, text='전역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'))
+    systemConfigFileEdit.grid(row=7, column=1, columnspan=2, pady=10)
+
+    localConfigFileEdit = Button(envWindow, text='지역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("LocalAppData")}/DiabloLauncher/DiabloLauncher.config'))
+    localConfigFileEdit.grid(row=7, column=3, columnspan=2, pady=10)
+
 
     if(CheckDarkMode()):
         envWindow['background'] = '#272727'
@@ -1068,11 +1091,24 @@ def SetLauncherConfigurationValues(*args):
         additionalCommandsApply['activebackground'] = '#272727'
         additionalCommandsApply['foreground'] = '#FFFFFF'
         additionalCommandsApply['activeforeground'] = '#FFFFFF'
+        systemConfigFileEdit['background'] = '#272727'
+        systemConfigFileEdit['activebackground'] = '#272727'
+        systemConfigFileEdit['foreground'] = '#FFFFFF'
+        systemConfigFileEdit['activeforeground'] = '#FFFFFF'
+        localConfigFileEdit['background'] = '#272727'
+        localConfigFileEdit['activebackground'] = '#272727'
+        localConfigFileEdit['foreground'] = '#FFFFFF'
+        localConfigFileEdit['activeforeground'] = '#FFFFFF'
         modsMuteCheckBox['background'] = '#272727'
         modsMuteCheckBox['activebackground'] = '#272727'
         modsMuteCheckBox['selectcolor'] = '#272727'
         modsMuteCheckBox['foreground'] = '#FFFFFF'
         modsMuteCheckBox['activeforeground'] = '#FFFFFF'
+        verboseCheckbox['background'] = '#272727'
+        verboseCheckbox['activebackground'] = '#272727'
+        verboseCheckbox['selectcolor'] = '#272727'
+        verboseCheckbox['foreground'] = '#FFFFFF'
+        verboseCheckbox['activeforeground'] = '#FFFFFF'
     else:
         envWindow['background'] = '#F0F0F0'
         originXtext['background'] = '#F0F0F0'
@@ -1123,6 +1159,14 @@ def SetLauncherConfigurationValues(*args):
         modsPreferApply['activebackground'] = '#F0F0F0'
         modsPreferApply['foreground'] = '#000000'
         modsPreferApply['activeforeground'] = '#000000'
+        systemConfigFileEdit['background'] = '#F0F0F0'
+        systemConfigFileEdit['activebackground'] = '#F0F0F0'
+        systemConfigFileEdit['foreground'] = '#000000'
+        systemConfigFileEdit['activeforeground'] = '#000000'
+        localConfigFileEdit['background'] = '#F0F0F0'
+        localConfigFileEdit['activebackground'] = '#F0F0F0'
+        localConfigFileEdit['foreground'] = '#000000'
+        localConfigFileEdit['activeforeground'] = '#000000'
         modsPreferOptionMenu['background'] = '#F0F0F0'
         modsPreferOptionMenu['activebackground'] = '#F0F0F0'
         modsPreferOptionMenu['foreground'] = '#000000'
@@ -1132,6 +1176,11 @@ def SetLauncherConfigurationValues(*args):
         modsMuteCheckBox['selectcolor'] = '#F0F0F0'
         modsMuteCheckBox['foreground'] = '#000000'
         modsMuteCheckBox['activeforeground'] = '#000000'
+        verboseCheckbox['background'] = '#F0F0F0'
+        verboseCheckbox['activebackground'] = '#F0F0F0'
+        verboseCheckbox['selectcolor'] = '#F0F0F0'
+        verboseCheckbox['foreground'] = '#000000'
+        verboseCheckbox['activeforeground'] = '#000000'
 
     envWindow.mainloop()
 

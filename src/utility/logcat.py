@@ -6,7 +6,6 @@ from datetime import datetime
 from enum import Enum
 
 call('', shell=True)
-logLevel = environ.get('LOG_VERBOSE_LEVEL')
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -26,6 +25,8 @@ class errorLevel(Enum):
     FATL = 3
 
 def logformat(level: errorLevel, text: str):
+    logLevel = environ.get('LOG_VERBOSE_LEVEL')
+
     if level == errorLevel.INFO:
         if logLevel is not None and logLevel == "verbose":
             print(f"{color.GRAY.value}[INFO: {datetime.now().strftime(TIMESTAMP_FORMAT)}] {text}{color.RESET.value}")
