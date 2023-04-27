@@ -845,7 +845,7 @@ def SetLauncherConfigurationValues(*args):
             currentTarget = parentLocation.ProgramData
             updateResSettings()
             if(testResOriginX is None or testResOriginY is None or testResOriginFR is None or testResAlteredX is None or testResAlteredY is None or testResAlteredFR is None):
-                msg_box = messagebox.askyesno('해상도 벡터 편집기', '시스템에서 해상도 벡터 설정을 확인할 수 없습니다. 대신 시스템 설정 대신 사용자 설정을 편집할까요?')
+                msg_box = messagebox.askyesno('해상도 벡터 편집기', '시스템에서 해상도 벡터 설정을 확인할 수 없습니다. 시스템 전역 설정 대신 사용자 설정을 편집할까요?')
                 if msg_box:
                     currentTarget = parentLocation.UserLocalAppData
 
@@ -896,9 +896,9 @@ def SetLauncherConfigurationValues(*args):
         envAlteredX['state'] = 'disabled'
         envAlteredY['state'] = 'disabled'
         envAlteredFR['state'] = 'disabled'
-        Popen(f'QRes -X {alteredX} -Y {alteredY} -R {alteredFR} > NUL 2>&1', shell=True)
+        Popen(f'QRes -X {envAlteredX.get()} -Y {envAlteredY.get()} -R {envAlteredFR.get()} > NUL 2>&1', shell=True)
         time.sleep(5)
-        Popen(f'QRes -X {originX} -Y {originY} -R {originFR} > NUL 2>&1', shell=True)
+        Popen(f'QRes -X {envOriginX.get()} -Y {envOriginY.get()} -R {envOriginFR.get()} > NUL 2>&1', shell=True)
         envOriginX['state'] = 'normal'
         envOriginY['state'] = 'normal'
         envOriginFR['state'] = 'normal'
