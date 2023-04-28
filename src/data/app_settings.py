@@ -82,9 +82,9 @@ def makeConfigurationFileStructures(scope: parentLocation):
             "ScreenResolution": {
                 "IgnoreResProgramInstallDialog": False,
                 "OriginResolutionVector": {
-                    "originX": None,
-                    "originY": None,
-                    "originFR": None,
+                    "OriginX": None,
+                    "OriginY": None,
+                    "OriginFR": None,
                 },
                 "AlteredResolutionVector": {
                     "AlteredX": None,
