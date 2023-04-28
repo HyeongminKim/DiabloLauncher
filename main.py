@@ -730,21 +730,22 @@ def GetLauncherConfigurationValues():
 
     try:
         if resolutionProgram:
-            originX = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
-            originY = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
-            originFR = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
+            originX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
+            originY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
+            originFR = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
 
-            alteredX = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"])
-            alteredY = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
-            alteredFR = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"])
+            alteredX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"])
+            alteredY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
+            alteredFR = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"])
 
             if originX is None or originY is None or originFR is None or alteredX is None or alteredY is None or alteredFR is None:
-                originX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
-                originY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
-                originFR = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
+                originX = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
+                originY = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
+                originFR = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
 
-                alteredX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"])
-                alteredY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
+                alteredX = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"])
+                alteredY = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
+                alteredFR = loadSettings(parentLocation.ProgramData, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"])
 
             logformat(errorLevel.INFO, 'parameter conversion succeed')
         else:
@@ -853,6 +854,7 @@ def SetLauncherConfigurationValues(*args):
             updateResSettings()
             if(testResOriginX is None or testResOriginY is None or testResOriginFR is None or testResAlteredX is None or testResAlteredY is None or testResAlteredFR is None):
                 messagebox.showwarning('해상도 벡터 편집기', '현재 해상도 벡터가 설정되어 있지 않습니다. 해상도 벡터를 설정해 주세요.')
+                currentTarget = parentLocation.UserLocalAppData
             else:
                 envOriginX.insert(0, testResOriginX)
                 envOriginY.insert(0, testResOriginY)
