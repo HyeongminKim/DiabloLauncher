@@ -852,16 +852,21 @@ def SetLauncherConfigurationValues(*args):
             currentTarget = parentLocation.ProgramData
             updateResSettings()
             if(testResOriginX is None or testResOriginY is None or testResOriginFR is None or testResAlteredX is None or testResAlteredY is None or testResAlteredFR is None):
-                msg_box = messagebox.askyesno('해상도 벡터 편집기', '시스템에서 해상도 벡터 설정을 확인할 수 없습니다. 시스템 전역 설정 대신 사용자 설정을 편집할까요?')
-                if msg_box:
-                    currentTarget = parentLocation.UserLocalAppData
-
-        envOriginX.insert(0, testResOriginX)
-        envOriginY.insert(0, testResOriginY)
-        envOriginFR.insert(0, testResOriginFR)
-        envAlteredX.insert(0, testResAlteredX)
-        envAlteredY.insert(0, testResAlteredY)
-        envAlteredFR.insert(0, testResAlteredFR)
+                messagebox.showwarning('해상도 벡터 편집기', '현재 해상도 벡터가 설정되어 있지 않습니다. 해상도 벡터를 설정해 주세요.')
+            else:
+                envOriginX.insert(0, testResOriginX)
+                envOriginY.insert(0, testResOriginY)
+                envOriginFR.insert(0, testResOriginFR)
+                envAlteredX.insert(0, testResAlteredX)
+                envAlteredY.insert(0, testResAlteredY)
+                envAlteredFR.insert(0, testResAlteredFR)
+        else:
+            envOriginX.insert(0, testResOriginX)
+            envOriginY.insert(0, testResOriginY)
+            envOriginFR.insert(0, testResOriginFR)
+            envAlteredX.insert(0, testResAlteredX)
+            envAlteredY.insert(0, testResAlteredY)
+            envAlteredFR.insert(0, testResAlteredFR)
 
         envOriginX['state'] = 'normal'
         envOriginY['state'] = 'normal'
