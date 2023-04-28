@@ -1023,12 +1023,12 @@ def SetLauncherConfigurationValues(*args):
 
     additionalCommands = Label(envWindow, text='추가 명령행 인수')
 
-    additionalCommandsEntry = Entry(envWindow, width=30)
+    additionalCommandsEntry = Entry(envWindow, width=30, state='disabled')
     previousAdditionalCommands = loadSettings(parentLocation.UserLocalAppData, ["General", "AdditionalLaunchArguments"])
     if previousAdditionalCommands is not None and previousAdditionalCommands != "":
         additionalCommandsEntry.insert(0, previousAdditionalCommands)
 
-    additionalCommandsApply = Button(envWindow, text='적용', command=additionalCommandsCommit)
+    additionalCommandsApply = Button(envWindow, text='적용', command=additionalCommandsCommit, state='disabled')
 
     additionalCommands.grid(row=6, column=0)
     additionalCommandsEntry.grid(row=6, column=1, columnspan=4)
