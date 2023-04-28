@@ -90,6 +90,7 @@ diablo4Path = None
 definedMod = None
 modsPreferPreviousSetting = None
 modsInstalledList = None
+modsPreferOptionMenu = None
 
 resolutionProgram = False
 
@@ -775,6 +776,7 @@ def GetLauncherConfigurationValues():
 def SetLauncherConfigurationValues(*args):
     global modsPreferPreviousSetting
     global modsInstalledList
+    global modsPreferOptionMenu
 
     global testResOriginX
     global testResOriginY
@@ -987,28 +989,38 @@ def SetLauncherConfigurationValues(*args):
         global modsInstalledList
 
         modsPreferPreviousSetting = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
-        modsInstalledList = os.listdir(f'{diablo2Path}/mods')
-        if modsPreferPreviousSetting is not None:
-            for value in modsInstalledList:
-                if modsPreferPreviousSetting == value:
-                    modsCurrentSelectMenu.set(value)
-                    break
+        if os.path.isdir(f'{diablo2Path}/mods'):
+            modsInstalledList = os.listdir(f'{diablo2Path}/mods')
+            if len(modsInstalledList) == 0:
+                return False
+            if modsPreferPreviousSetting is not None:
+                for value in modsInstalledList:
+                    if modsPreferPreviousSetting == value:
+                        modsCurrentSelectMenu.set(value)
+                        break
+            else:
+                modsCurrentSelectMenu.set('-- 선택 --')
+            return True
         else:
-            modsCurrentSelectMenu.set('-- 선택 --')
+            return False
 
     modsPreferText = Label(envWindow, text='선호하는 모드명')
     modsPreferApply = Button(envWindow, text='적용', command=applyPreferMods)
 
-    updateModsData()
+    if updateModsData():
+        modsPreferOptionMenu = OptionMenu(envWindow, modsCurrentSelectMenu, *modsInstalledList, command=testModsApply)
+        modsPreferOptionMenu.configure(state='normal')
+        testModsApply()
+    else:
+        modsPreferOptionMenu = OptionMenu(envWindow, modsCurrentSelectMenu, [], command=testModsApply)
+        modsPreferOptionMenu.configure(state='disabled')
+        modsPreferApply['state'] = 'disabled'
 
-    modsPreferOptionMenu = OptionMenu(envWindow, modsCurrentSelectMenu, *modsInstalledList, command=testModsApply)
     modsPreferOptionMenu.config(width=20)
 
     modsPreferText.grid(row=4, column=0, pady=10)
     modsPreferOptionMenu.grid(row=4, column=1, columnspan=4, pady=10)
     modsPreferApply.grid(row=4, column=5, pady=10)
-
-    testModsApply()
 
     def modsMuteSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"], modsMuteSettings.get() == 1)
