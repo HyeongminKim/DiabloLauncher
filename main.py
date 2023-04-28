@@ -958,24 +958,22 @@ def SetLauncherConfigurationValues(*args):
         dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"], modsCurrentSelectMenu.get())
         FindGameInstalled()
         GetModDetails()
-        if isinstance(definedMod, list) and modsCurrentSelectMenu.get() != "":
-            messagebox.showwarning('모드 관리자', f'현재 입력한 {modsCurrentSelectMenu.get()} 모드에 오타가 있거나 정상적으로 설치되지 않은 것 같습니다. 입력된 선호모드를 다시 한번 확인해 주세요.')
+        if isinstance(definedMod, list) and modsCurrentSelectMenu.get() != "-- 선택 --":
+            messagebox.showwarning('모드 관리자', f'현재 입력한 {modsCurrentSelectMenu.get()} 모드에 접근 권한이 없거나 정상적으로 설치되지 않은 것 같습니다.')
         updateModsData()
         testModsApply()
 
     def testModsApply(*args):
         modsMuteConfig = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
-        if modsMuteConfig and modsPreferPreviousSetting is None or modsCurrentSelectMenu.get() == modsPreferPreviousSetting:
+        if modsMuteConfig and modsPreferPreviousSetting is None or modsCurrentSelectMenu.get() == modsPreferPreviousSetting or modsCurrentSelectMenu.get() == "-- 선택 --":
             modsPreferApply['state'] = 'disabled'
         else:
             modsPreferApply['state'] = 'normal'
 
         if modsMuteConfig and modsPreferPreviousSetting is None:
             modsPreferOptionMenu['state'] = 'disabled'
-            modsPreferText['state'] = 'disabled'
         else:
             modsPreferOptionMenu['state'] = 'normal'
-            modsPreferText['state'] = 'normal'
 
     def updateModsData():
         global modsPreferPreviousSetting
