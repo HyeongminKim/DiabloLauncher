@@ -992,8 +992,6 @@ def SetLauncherConfigurationValues(*args):
         if os.path.isdir(f'{diablo2Path}/mods'):
             listDir = os.listdir(f'{diablo2Path}/mods')
             modsInstalledList = []
-            if len(listDir) == 0:
-                return False
 
             for modsName in listDir:
                 if os.path.isdir(f'{diablo2Path}/mods/{modsName}/{modsName}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{modsName}/{modsName}.mpq'):
@@ -1002,6 +1000,9 @@ def SetLauncherConfigurationValues(*args):
                     logformat(errorLevel.WARN, f"The mod {modsName} does not followed by path:")
                     logformat(errorLevel.WARN, f"\t- {modsName}/mods/{modsName}/{modsName}.mpq")
                     logformat(errorLevel.WARN, f"\t- {modsName}/mods/{modsName}/{modsName}.mpq/data")
+
+            if len(modsInstalledList) == 0:
+                return False
 
             if modsPreferPreviousSetting is not None:
                 for value in modsInstalledList:
