@@ -443,13 +443,13 @@ def LaunchGameAgent():
             diablo4['foreground'] = '#000000'
             diablo4['activeforeground'] = '#000000'
 
-        if diablo2Path is None or not os.path.isfile(diablo2Path + '/Diablo II Resurrected Launcher.exe'):
+        if diablo2Path is None or not os.path.isfile(f'{diablo2Path}/Diablo II Resurrected Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
             diablo2['state'] = "disabled"
         else:
             logformat(errorLevel.INFO, 'Diablo II Resurrected launch button enabled.')
             diablo2['state'] = "normal"
-            if os.path.isdir(diablo2Path + '/mods'):
+            if os.path.isdir(f'{diablo2Path}/mods'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
                 GetModDetails()
                 envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
@@ -461,7 +461,7 @@ def LaunchGameAgent():
                     logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
                     diablo2['text'] = 'Diablo II Resurrected'
                 elif definedMod is not None and isinstance(definedMod, str):
-                    if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
+                    if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
                         external_conf = loadConfigurationFile()
                         if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
                             diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
@@ -470,8 +470,8 @@ def LaunchGameAgent():
                     else:
                         messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
                         logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                        logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq'}")
-                        logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq/data'}")
+                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
+                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
                         diablo2['text'] = 'Diablo II Resurrected'
                 else:
                     logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
@@ -480,7 +480,7 @@ def LaunchGameAgent():
                 logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
                 diablo2['text'] = 'Diablo II Resurrected'
 
-        if diablo3Path is None or not os.path.isfile(diablo3Path + '/Diablo III Launcher.exe'):
+        if diablo3Path is None or not os.path.isfile(f'{diablo3Path}/Diablo III Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo III launch button disabled, because launcher is not detected.')
             diablo3['state'] = "disabled"
         else:
@@ -488,7 +488,7 @@ def LaunchGameAgent():
             diablo3['state'] = "normal"
             diablo3['text'] = 'Diablo III'
 
-        if diablo4Path is None or not os.path.isfile(diablo4Path + '/Diablo IV Launcher.exe'):
+        if diablo4Path is None or not os.path.isfile(f'{diablo4Path}/Diablo IV Launcher.exe'):
             logformat(errorLevel.INFO, 'Diablo IV launch button disabled, because launcher is not detected.')
             diablo4['state'] = "disabled"
         else:
@@ -645,7 +645,7 @@ def FindGameInstalled():
         modMenu.entryconfig(3, state='normal')
 
         diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
-        if os.path.isdir(diablo2Path + '/mods'):
+        if os.path.isdir(f'{diablo2Path}/mods'):
             modMenu.entryconfig(0, state='normal')
             modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
             modMenu.entryconfig(1, state='disabled')
@@ -666,7 +666,7 @@ def FindGameInstalled():
                 modMenu.entryconfig(1, command=DownloadModsLink)
                 definedMod = None
             elif definedMod is not None and isinstance(definedMod, str):
-                if os.path.isdir(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq/data') or os.path.isfile(diablo2Path + '/mods/' + definedMod + f'/{definedMod}.mpq'):
+                if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
                     external_conf = loadConfigurationFile()
                     if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
                         modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
@@ -677,8 +677,8 @@ def FindGameInstalled():
                 else:
                     messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
                     logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                    logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq'}")
-                    logformat(errorLevel.WARN, f"\t- {diablo2Path + '/mods/' + definedMod + f'{definedMod}.mpq/data'}")
+                    logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
+                    logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
                     modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
             else:
                 logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
@@ -990,9 +990,19 @@ def SetLauncherConfigurationValues(*args):
 
         modsPreferPreviousSetting = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
         if os.path.isdir(f'{diablo2Path}/mods'):
-            modsInstalledList = os.listdir(f'{diablo2Path}/mods')
-            if len(modsInstalledList) == 0:
+            listDir = os.listdir(f'{diablo2Path}/mods')
+            modsInstalledList = []
+            if len(listDir) == 0:
                 return False
+
+            for modsName in listDir:
+                if os.path.isdir(f'{diablo2Path}/mods/{modsName}/{modsName}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{modsName}/{modsName}.mpq'):
+                    modsInstalledList.append(modsName)
+                else:
+                    logformat(errorLevel.WARN, f"The mod {modsName} does not followed by path:")
+                    logformat(errorLevel.WARN, f"\t- {modsName}/mods/{modsName}/{modsName}.mpq")
+                    logformat(errorLevel.WARN, f"\t- {modsName}/mods/{modsName}/{modsName}.mpq/data")
+
             if modsPreferPreviousSetting is not None:
                 for value in modsInstalledList:
                     if modsPreferPreviousSetting == value:
