@@ -57,7 +57,7 @@ def makeConfigurationFileStructures(scope: parentLocation):
         config_init = {
             "General": {
                 "LoggingInfoLevel": False,
-                "AdditionalLaunchArguments": None
+                "DiabloBetaAccess": 0
             },
             "ScreenResolution": {
                 "IgnoreResProgramInstallDialog": False,
@@ -125,9 +125,9 @@ def checkConfigurationStructure(scope: parentLocation, target_key: list[str]):
         logformat(errorLevel.WARN, f'The current {target_key} settings does not configured yet. Making configuration structures.')
 
         if len(target_key) == 2:
-            data[target_key[0]][target_key[1]] = ''
+            data[target_key[0]][target_key[1]] = None
         elif len(target_key) == 3:
-            data[target_key[0]][target_key[1]][target_key[2]] = ''
+            data[target_key[0]][target_key[1]][target_key[2]] = None
 
         with open(f'{scope.value}/DiabloLauncher/DiabloLauncher.config', 'w', encoding='utf-8') as file:
             dump(data, file, indent=4)
