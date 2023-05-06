@@ -56,8 +56,7 @@ def makeConfigurationFileStructures(scope: parentLocation):
     if scope == parentLocation.UserLocalAppData:
         config_init = {
             "General": {
-                "LoggingInfoLevel": False,
-                "DiabloBetaAccess": 0
+                "LoggingInfoLevel": False
             },
             "ScreenResolution": {
                 "IgnoreResProgramInstallDialog": False,

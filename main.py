@@ -90,9 +90,7 @@ diablo4Path = None
 definedMod = None
 modsPreferPreviousSetting = None
 modsInstalledList = None
-releaseChannelList = ['정식 사용', '사전 출시만', '베타 사용']
 modsPreferOptionMenu = None
-releaseChannelOptionMenu = None
 
 resolutionProgram = False
 
@@ -779,7 +777,6 @@ def SetLauncherConfigurationValues(*args):
     global modsPreferPreviousSetting
     global modsInstalledList
     global modsPreferOptionMenu
-    global releaseChannelOptionMenu
 
     global testResOriginX
     global testResOriginY
@@ -793,7 +790,7 @@ def SetLauncherConfigurationValues(*args):
 
     envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
-    envWindow.geometry(f"380x290+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 380 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 290 / 2)}")
+    envWindow.geometry(f"380x230+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 380 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 230 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
     envWindow.attributes('-topmost', 'true')
@@ -803,7 +800,6 @@ def SetLauncherConfigurationValues(*args):
     resolutionText = Label(envWindow, text='')
 
     modsCurrentSelectMenu = StringVar()
-    releaseChannel = StringVar()
     originXtext = Label(envWindow, text='기본 X')
     originYtext = Label(envWindow, text=' Y')
     originFRtext = Label(envWindow, text=' FR')
@@ -1045,19 +1041,6 @@ def SetLauncherConfigurationValues(*args):
     modsMuteCheckBox = Checkbutton(envWindow, text="모드 병합 알림 뮤트", variable=modsMuteSettings, onvalue=True, offvalue=False, command=modsMuteSettingsApply)
     modsMuteCheckBox.grid(row=5, column=0, columnspan=2, padx=5)
 
-    changeReleaseChannel = Label(envWindow, text='배포 채널')
-    releaseChannelOptionMenu = OptionMenu(envWindow, releaseChannel, *releaseChannelList)
-    changeReleaseChannelApply = Button(envWindow, text='변경', command=applyPreferMods)
-
-    releaseChannelOptionMenu.config(width=20)
-
-    changeReleaseChannelApply['state'] = 'disabled'
-    releaseChannelOptionMenu['state'] = 'disabled'
-
-    changeReleaseChannel.grid(row=6, column=0, pady=10)
-    releaseChannelOptionMenu.grid(row=6, column=1, columnspan=4, pady=10)
-    changeReleaseChannelApply.grid(row=6, column=5, pady=10)
-
     def changeVerboseLogSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"], verboseSettings.get() == 1)
         verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
@@ -1081,8 +1064,6 @@ def SetLauncherConfigurationValues(*args):
         envWindow['background'] = '#272727'
         originXtext['background'] = '#272727'
         originXtext['foreground'] = '#FFFFFF'
-        changeReleaseChannel['background'] = '#272727'
-        changeReleaseChannel['foreground'] = '#FFFFFF'
         resolutionText['background'] = '#272727'
         resolutionText['foreground'] = '#FFFFFF'
         envOriginX['disabledbackground'] = '#272727'
@@ -1127,18 +1108,10 @@ def SetLauncherConfigurationValues(*args):
         modsPreferApply['activebackground'] = '#272727'
         modsPreferApply['foreground'] = '#FFFFFF'
         modsPreferApply['activeforeground'] = '#FFFFFF'
-        changeReleaseChannelApply['background'] = '#272727'
-        changeReleaseChannelApply['activebackground'] = '#272727'
-        changeReleaseChannelApply['foreground'] = '#FFFFFF'
-        changeReleaseChannelApply['activeforeground'] = '#FFFFFF'
         modsPreferOptionMenu['background'] = '#272727'
         modsPreferOptionMenu['activebackground'] = '#272727'
         modsPreferOptionMenu['foreground'] = '#FFFFFF'
         modsPreferOptionMenu['activeforeground'] = '#FFFFFF'
-        releaseChannelOptionMenu['background'] = '#272727'
-        releaseChannelOptionMenu['activebackground'] = '#272727'
-        releaseChannelOptionMenu['foreground'] = '#FFFFFF'
-        releaseChannelOptionMenu['activeforeground'] = '#FFFFFF'
         systemConfigFileEdit['background'] = '#272727'
         systemConfigFileEdit['activebackground'] = '#272727'
         systemConfigFileEdit['foreground'] = '#FFFFFF'
@@ -1168,8 +1141,6 @@ def SetLauncherConfigurationValues(*args):
         originXtext['foreground'] = '#000000'
         resolutionText['background'] = '#F0F0F0'
         resolutionText['foreground'] = '#000000'
-        changeReleaseChannel['background'] = '#F0F0F0'
-        changeReleaseChannel['foreground'] = '#000000'
         envOriginX['disabledbackground'] = '#F0F0F0'
         envOriginX['background'] = '#F0F0F0'
         envOriginX['foreground'] = '#000000'
@@ -1212,10 +1183,6 @@ def SetLauncherConfigurationValues(*args):
         modsPreferApply['activebackground'] = '#F0F0F0'
         modsPreferApply['foreground'] = '#000000'
         modsPreferApply['activeforeground'] = '#000000'
-        changeReleaseChannelApply['background'] = '#F0F0F0'
-        changeReleaseChannelApply['activebackground'] = '#F0F0F0'
-        changeReleaseChannelApply['foreground'] = '#000000'
-        changeReleaseChannelApply['activeforeground'] = '#000000'
         systemConfigFileEdit['background'] = '#F0F0F0'
         systemConfigFileEdit['activebackground'] = '#F0F0F0'
         systemConfigFileEdit['foreground'] = '#000000'
@@ -1228,10 +1195,6 @@ def SetLauncherConfigurationValues(*args):
         modsPreferOptionMenu['activebackground'] = '#F0F0F0'
         modsPreferOptionMenu['foreground'] = '#000000'
         modsPreferOptionMenu['activeforeground'] = '#000000'
-        releaseChannelOptionMenu['background'] = '#F0F0F0'
-        releaseChannelOptionMenu['activebackground'] = '#F0F0F0'
-        releaseChannelOptionMenu['foreground'] = '#000000'
-        releaseChannelOptionMenu['activeforeground'] = '#000000'
         modsMuteCheckBox['background'] = '#F0F0F0'
         modsMuteCheckBox['activebackground'] = '#F0F0F0'
         modsMuteCheckBox['selectcolor'] = '#F0F0F0'
