@@ -3,6 +3,7 @@
 from enum import Enum
 
 class parentLocation(Enum):
+    UserAppData: (str | None)
     UserLocalAppData: (str | None)
     ProgramData: (str | None)
 

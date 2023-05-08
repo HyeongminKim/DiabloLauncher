@@ -8,6 +8,7 @@ from json import load, dump, JSONDecodeError
 from src.utility.logcat import logformat, errorLevel
 
 class parentLocation(Enum):
+    UserAppData = environ.get('AppData')
     UserLocalAppData = environ.get('LocalAppData')
     ProgramData = environ.get('ProgramData')
 
@@ -53,7 +54,14 @@ def dumpSettings(scope: parentLocation, target_key: list[str], target_value: any
         return False
 
 def makeConfigurationFileStructures(scope: parentLocation):
-    if scope == parentLocation.UserLocalAppData:
+    if scope == parentLocation.UserAppData:
+        config_init = {
+            "General": {
+                "AgentLaunched": False,
+                "LastWindowPosition": [100, 100]
+            }
+        }
+    elif scope == parentLocation.UserLocalAppData:
         config_init = {
             "General": {
                 "LoggingInfoLevel": False

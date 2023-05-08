@@ -237,6 +237,8 @@ def ExitProgram(*args):
         for widget in root.winfo_children():
             logformat(errorLevel.INFO, f'Shutting down and abandoning module {widget}')
             widget.destroy()
+        dumpSettings(parentLocation.UserAppData, ["General", "LastWindowPosition"], [root.winfo_x(), root.winfo_y()])
+        dumpSettings(parentLocation.UserAppData, ["General", "AgentLaunched"], False)
         root.destroy()
     exit(0)
 
@@ -1312,7 +1314,11 @@ def init():
     launch.withdraw()
 
     root.title("디아블로 런처")
-    root.geometry("520x360+100+100")
+    previousWindowPosition = loadSettings(parentLocation.UserAppData, ["General", "LastWindowPosition"])
+    if previousWindowPosition is not None:
+        root.geometry(f"520x360+{previousWindowPosition[0]}+{previousWindowPosition[1]}")
+    else:
+        root.geometry("520x360+100+100")
     root.deiconify()
     root.resizable(False, False)
     root.attributes('-toolwindow', True)
@@ -1327,6 +1333,15 @@ def init():
     launch.protocol("WM_DELETE_WINDOW", HideWindow)
     root.protocol("WM_DELETE_WINDOW", ExitProgram)
     signal.signal(signal.SIGINT, InterruptProgram)
+
+    agentLaunched = loadSettings(parentLocation.UserAppData, ["General", "AgentLaunched"])
+    if agentLaunched is not None and agentLaunched is False:
+        dumpSettings(parentLocation.UserAppData, ["General", "AgentLaunched"], True)
+    elif agentLaunched is not None and agentLaunched is True:
+        msg_box = messagebox.askyesno(title='디아블로 런처', message='여러개의 디아블로 런처를 실행시 불안정해질 수 있습니다. 그래도 디아블로 런처를 실행 하시겠습니까?')
+        if not msg_box:
+            logformat(errorLevel.FATL, 'Unable to launch DiabloLauncher. reason: User abort DiabloLauncher process.')
+            exit(1)
 
     def ResetGameStatus():
         count, stat_max, stat_sum, stat_avg = LoadGameRunningTime()
