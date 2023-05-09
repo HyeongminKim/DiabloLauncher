@@ -1011,8 +1011,14 @@ def SetLauncherConfigurationValues(*args):
                     if modsPreferPreviousSetting == value:
                         modsCurrentSelectMenu.set(value)
                         break
+
+                currentModsConfiguration = loadConfigurationFile()
+                if currentModsConfiguration is not None and definedMod is not None and currentModsConfiguration == f' -mod {definedMod} -txt':
+                    logformat(errorLevel.WARN, f'Prefer mods OptionMenu was disabled. reason: {definedMod} mod was already defined Battle.net external command parameter.')
+                    return False
             else:
                 modsCurrentSelectMenu.set('-- 선택 --')
+
             return True
         else:
             return False
