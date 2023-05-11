@@ -534,6 +534,7 @@ def BootAgent(poweroff: str):
     elif poweroff == 's':
         Popen('shutdown -s -f -t 10 -c "Windows가 DiabloLauncher의 [긴급 종료] 기능으로 인해 종료 됩니다."', shell=True)
     logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
+    dumpSettings(parentLocation.UserAppData, ["General", "AgentLaunched"], False)
     statusbar['text'] = '로드할 수 없음'
     statusbar['anchor'] = W
     switchButton['state'] = "disabled"
@@ -549,6 +550,14 @@ def EmgergencyReboot():
         toolsMenu.entryconfig(3, state='normal')
         Popen('shutdown -a', shell=True)
         logformat(errorLevel.INFO, 'Successfully executed Windows shutdown.exe')
+        currentAgent = loadSettings(parentLocation.UserAppData, ["General", "AgentLaunched"])
+        if currentAgent is not None and currentAgent is False:
+            dumpSettings(parentLocation.UserAppData, ["General", "AgentLaunched"], True)
+        else:
+            msg_box = messagebox.askyesno(title='디아블로 런처', message='타 디아블로 런처가 다중 실행 잠금 설정을 수정하였으므로 해당 프로퍼티를 편집할 수 없습니다. 대신 이 디아블로 런처를 종료하시겠습니까?\n디아블로 런처를 종료하지 않을 경우 불안정해질 수 있습니다.', icon='warning')
+            if msg_box:
+                logformat(errorLevel.FATL, 'DiabloLauncher was killed. reason: User abort DiabloLauncher process.')
+                exit(1)
         statusbar['anchor'] = CENTER
         UpdateStatusValue()
         ReloadStatusBar()
