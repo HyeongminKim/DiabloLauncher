@@ -407,7 +407,7 @@ def LaunchGameAgent():
         diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
         # diablo4 = Button(launch, text='Diablo IV EA\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
         # diablo4 = Button(launch, text='Diablo IV\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
-        diablo4 = Button(launch, text='Diablo IV 베타\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
+        diablo4 = Button(launch, text='Diablo IV 서버 슬램\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
 
         note.grid(row=0, column=0, columnspan=2)
         diablo2.grid(row=1, column=0, rowspan=2)
@@ -498,12 +498,12 @@ def LaunchGameAgent():
             diablo4['state'] = "normal"
             # diablo4['text'] = 'Diablo IV EA'
             # diablo4['text'] = 'Diablo IV'
-            diablo4['text'] = 'Diablo IV 베타\n5월 15일 만료 예정'
+            diablo4['text'] = 'Diablo IV 서버 슬램\n5월 15일 만료 예정'
 
         diablo4['state'] = "disabled"
         # diablo4['text'] = 'Diablo IV EA\n6월 2일 출시 예정'
         # diablo4['text'] = 'Diablo IV\n6월 6일 출시 예정'
-        diablo4['text'] = 'Diablo IV 베타\n5월 13일 출시 예정'
+        diablo4['text'] = 'Diablo IV 서버 슬램\n5월 13일 출시 예정'
 
         ShowWindow()
         launch.mainloop()
@@ -710,8 +710,8 @@ def FindGameInstalled():
     else:
         gameMenu.entryconfig(1, state='disabled')
 
-    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')):
-        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV Beta')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV - Server Slam')):
+        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV - Server Slam')
         gameMenu.entryconfig(2, state='normal')
     else:
         gameMenu.entryconfig(2, state='disabled')
