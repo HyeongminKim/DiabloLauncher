@@ -500,10 +500,10 @@ def LaunchGameAgent():
             # diablo4['text'] = 'Diablo IV'
             diablo4['text'] = 'Diablo IV 서버 슬램\n5월 15일 만료 예정'
 
-        diablo4['state'] = "disabled"
+        # diablo4['state'] = "disabled"
         # diablo4['text'] = 'Diablo IV EA\n6월 2일 출시 예정'
         # diablo4['text'] = 'Diablo IV\n6월 6일 출시 예정'
-        diablo4['text'] = 'Diablo IV 서버 슬램\n5월 13일 출시 예정'
+        # diablo4['text'] = 'Diablo IV 서버 슬램\n5월 13일 출시 예정'
 
         ShowWindow()
         launch.mainloop()
