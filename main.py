@@ -722,10 +722,19 @@ def FindGameInstalled():
     else:
         gameMenu.entryconfig(2, state='disabled')
 
+    if(diabloExecuted): return
     if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
-        switchButton['state'] = "disabled"
+        switchButton['state'] = "normal"
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')):
+            switchButton['text'] = '디아블로 설치...'
+            switchButton['command'] = OpenBattleNet
+        else:
+            switchButton['text'] = 'Battile.net 검색'
+            switchButton['command'] = ForceReload
     else:
         switchButton['state'] = "normal"
+        switchButton['text'] = '디아블로 실행...'
+        switchButton['command'] = LaunchGameAgent
 
 def GetLauncherConfigurationValues():
     CheckResProgram()
@@ -1304,6 +1313,20 @@ def ReloadStatusBar():
         else:
             toolsMenu.entryconfig(7, state='disabled')
 
+def OpenBattleNet(*args):
+    result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
+    if result is None:
+        OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
+    else:
+        logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
+        messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다. 예기치 않은 오류를 최소화 하기위해 먼저 Battle.net을 종료한 후 다시 시도해 주세요.')
+
+def ForceReload(*args):
+    UpdateStatusValue()
+    ReloadStatusBar()
+    FindGameInstalled()
+    CheckDarkMode()
+
 def init():
     global welcome
     global info
@@ -1362,12 +1385,6 @@ def init():
             if msg_box:
                 ClearGameRunningTime()
                 ForceReload()
-
-    def ForceReload(*args):
-        UpdateStatusValue()
-        ReloadStatusBar()
-        FindGameInstalled()
-        CheckDarkMode()
 
     def OpenGameStatusDir():
         if os.path.isdir(f'{userApp}/DiabloLauncher'):
@@ -1523,15 +1540,6 @@ def init():
                 contents['background'] = '#F0F0F0'
                 contents['foreground'] = '#000000'
             soundRecover.mainloop()
-
-    def OpenBattleNet(*args):
-        result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
-        if result is None:
-            OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
-        else:
-            logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
-            messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다. 예기치 않은 오류를 최소화 하기위해 먼저 Battle.net을 종료한 후 다시 시도해 주세요.')
-
 
     def OpenD2RModDir():
         if diablo2Path is not None:
