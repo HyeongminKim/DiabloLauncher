@@ -693,7 +693,8 @@ def FindGameInstalled():
                                 dumpConfigurationFile('')
                                 logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
                     except RequestError.URLError:
-                        messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n문제가 해결될 경우 [도구]->[새로 고침] 기능을 사용하여 런처를 새로고침해 주세요.')
+                        resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
+                        if resolveTool: Popen('msdt.exe -id NetworkDiagnosticsNetworkAdapter')
                     logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
