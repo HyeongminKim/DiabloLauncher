@@ -41,6 +41,7 @@ try:
     import multiprocessing
     import sys
     import webbrowser
+    from urllib import request, error as RequestError
 
     if multiprocessing.cpu_count() >= 2 and sys.maxsize > 2**32:
         logformat(errorLevel.INFO, f'supported {platform.processor()} CPU detected. creating GUI...')
@@ -683,7 +684,16 @@ def FindGameInstalled():
                     modMenu.entryconfig(1, state='normal')
                     modMenu.entryconfig(1, command=SearchModInGitHub)
                 else:
-                    messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
+                    try:
+                        request.urlopen('https://kr.shop.battle.net/ko-kr?from=root', timeout=1)
+                        external_conf = loadConfigurationFile()
+                        if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
+                            unloadMods = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n게임 실행 시 모드가 적용되지 않거나 제대로 작동하지 않을 수 있습니다. 모드를 적용해제 하시겠습니까?', icon='warning')
+                            if unloadMods:
+                                dumpConfigurationFile('')
+                                logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                    except RequestError.URLError:
+                        messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n문제가 해결될 경우 [도구]->[새로 고침] 기능을 사용하여 런처를 새로고침해 주세요.')
                     logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
