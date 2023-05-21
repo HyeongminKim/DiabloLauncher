@@ -1679,13 +1679,26 @@ def init():
         ShowWindow()
         launch.mainloop()
 
+    def FlushBattleNetCache():
+        result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
+        if result is None:
+            dialog = messagebox.askyesno('디아블로 런처', 'Battle.net 캐시를 제거하시겠습니까? Battle.net 로그인이 해제될 수 있으며 이는 되돌릴 수 없습니다.')
+            if dialog:
+                check_terminal_output(f'rmdir /s /q "{userApp}\\Battle.net"')
+                check_terminal_output(f'rmdir /s /q "{userLocalApp}\\Battle.net"')
+                check_terminal_output(f'rmdir /s /q "{userLocalApp}\\Blizzard Entertainment"')
+        else:
+            messagebox.showerror('디아블로 런처', 'Battle.net 캐시를 제거할 수 없습니다. Battle.net을 종료한 후 다시 시도해 주세요.')
+
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
 
     if TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal', accelerator='Ctrl+O')
+        fileMenu.add_command(label='Battle.net 캐시 제거...', command=FlushBattleNetCache, state='normal')
     else:
         fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled', accelerator='Ctrl+O')
+        fileMenu.add_command(label='Battle.net 캐시 제거...', command=FlushBattleNetCache, state='disabled')
 
     fileMenu.add_separator()
     fileMenu.add_command(label='디아블로 런처 종료', command=ExitProgram, accelerator='Ctrl+W')
