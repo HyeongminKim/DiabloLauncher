@@ -1682,7 +1682,7 @@ def init():
     def FlushBattleNetCache():
         result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
         if result is None:
-            dialog = messagebox.askyesno('디아블로 런처', 'Battle.net 캐시를 제거하시겠습니까? Battle.net 로그인이 해제될 수 있으며 이는 되돌릴 수 없습니다.')
+            dialog = messagebox.askyesno('디아블로 런처', 'Battle.net 로그인이 해제될 수 있으며 설정이 초기화 될 수 있습니다. Battle.net 캐시는 영구적으로 삭제되며 되돌릴 수 없습니다. 계속하시겠습니까?')
             if dialog:
                 check_terminal_output(f'rmdir /s /q "{userApp}\\Battle.net"')
                 check_terminal_output(f'rmdir /s /q "{userLocalApp}\\Battle.net"')
