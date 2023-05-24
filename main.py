@@ -739,13 +739,24 @@ def FindGameInstalled():
         if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')):
             switchButton['text'] = '디아블로 설치...'
             switchButton['command'] = OpenBattleNet
+            fileMenu.entryconfig(0, state='normal')
         else:
             switchButton['text'] = 'Battile.net 검색'
             switchButton['command'] = ForceReload
+            fileMenu.entryconfig(0, state='disabled')
     else:
         switchButton['state'] = "normal"
         switchButton['text'] = '디아블로 실행...'
         switchButton['command'] = LaunchGameAgent
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')):
+            fileMenu.entryconfig(0, state='normal')
+        else:
+            fileMenu.entryconfig(0, state='disabled')
+
+    if os.path.isdir(f'{userApp}\\Battle.net') and os.path.isdir(f'{userLocalApp}\\Battle.net') and os.path.isdir(f'{userLocalApp}\\Blizzard Entertainment'):
+        fileMenu.entryconfig(1, state='normal')
+    else:
+        fileMenu.entryconfig(1, state='disabled')
 
 def GetLauncherConfigurationValues():
     CheckResProgram()
@@ -1683,23 +1694,18 @@ def init():
         result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
         if result is None:
             dialog = messagebox.askyesno('디아블로 런처', 'Battle.net 로그인이 해제될 수 있으며 설정이 초기화 될 수 있습니다. Battle.net 캐시는 영구적으로 삭제되며 되돌릴 수 없습니다. 계속하시겠습니까?')
-            if dialog:
-                check_terminal_output(f'rmdir /s /q "{userApp}\\Battle.net"')
-                check_terminal_output(f'rmdir /s /q "{userLocalApp}\\Battle.net"')
-                check_terminal_output(f'rmdir /s /q "{userLocalApp}\\Blizzard Entertainment"')
+            if not dialog: return
+
+            if call(f'rmdir /s /q "{userApp}\\Battle.net" > NUL 2>&1', shell=True) != 0 or call(f'rmdir /s /q "{userLocalApp}\\Battle.net" > NUL 2>&1', shell=True) != 0 or call(f'rmdir /s /q "{userLocalApp}\\Blizzard Entertainment" > NUL 2>&1', shell=True) != 0:
+                messagebox.showerror('디아블로 런처', 'Battle.net 캐시를 제거할 수 없습니다. 디렉터리 쓰기 권한을 가지고 있는지 확인해 주세요.')
         else:
             messagebox.showerror('디아블로 런처', 'Battle.net 캐시를 제거할 수 없습니다. Battle.net을 종료한 후 다시 시도해 주세요.')
 
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
 
-    if TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net'):
-        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='normal', accelerator='Ctrl+O')
-        fileMenu.add_command(label='Battle.net 캐시 제거...', command=FlushBattleNetCache, state='normal')
-    else:
-        fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled', accelerator='Ctrl+O')
-        fileMenu.add_command(label='Battle.net 캐시 제거...', command=FlushBattleNetCache, state='disabled')
-
+    fileMenu.add_command(label='Battle.net 실행', command=OpenBattleNet, state='disabled', accelerator='Ctrl+O')
+    fileMenu.add_command(label='Battle.net 캐시 제거...', command=FlushBattleNetCache, state='disabled')
     fileMenu.add_separator()
     fileMenu.add_command(label='디아블로 런처 종료', command=ExitProgram, accelerator='Ctrl+W')
 
