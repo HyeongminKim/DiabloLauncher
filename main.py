@@ -764,7 +764,7 @@ def FindGameInstalled():
         else:
             fileMenu.entryconfig(0, state='disabled')
 
-    if os.path.isdir(f'{userApp}\\Battle.net') and os.path.isdir(f'{userLocalApp}\\Battle.net') and os.path.isdir(f'{userLocalApp}\\Blizzard Entertainment'):
+    if os.path.isdir(f'{userApp}\\Battle.net') or os.path.isdir(f'{userLocalApp}\\Battle.net') or os.path.isdir(f'{userLocalApp}\\Blizzard Entertainment'):
         fileMenu.entryconfig(1, state='normal')
     else:
         fileMenu.entryconfig(1, state='disabled')
@@ -1350,9 +1350,11 @@ def OpenBattleNet(*args):
     result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
     if result is None:
         OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
+        time.sleep(5)
     else:
         logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
         messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다. 예기치 않은 오류를 최소화 하기위해 먼저 Battle.net을 종료한 후 다시 시도해 주세요.')
+    FindGameInstalled()
 
 def ForceReload(*args):
     UpdateStatusValue()
@@ -1708,9 +1710,10 @@ def init():
             if not dialog: return
 
             if call(f'rmdir /s /q "{userApp}\\Battle.net" > NUL 2>&1', shell=True) != 0 or call(f'rmdir /s /q "{userLocalApp}\\Battle.net" > NUL 2>&1', shell=True) != 0 or call(f'rmdir /s /q "{userLocalApp}\\Blizzard Entertainment" > NUL 2>&1', shell=True) != 0:
-                messagebox.showerror('디아블로 런처', 'Battle.net 캐시를 제거할 수 없습니다. 디렉터리 쓰기 권한을 가지고 있는지 확인해 주세요.')
+                messagebox.showerror('디아블로 런처', 'Battle.net 캐시가 완전히 제거되지 않았습니다. 디렉터리가 존재하지 않거나 쓰기 권한이 없을 경우 해당 문제가 발생할 수 있습니다.')
         else:
             messagebox.showerror('디아블로 런처', 'Battle.net 캐시를 제거할 수 없습니다. Battle.net을 종료한 후 다시 시도해 주세요.')
+        FindGameInstalled()
 
     menubar = Menu(root)
     fileMenu = Menu(menubar, tearoff=0)
