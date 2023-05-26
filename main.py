@@ -40,6 +40,7 @@ try:
 
     import multiprocessing
     import sys
+    from winsound import Beep
     import webbrowser
     from urllib import request, error as RequestError
 
@@ -300,6 +301,16 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
         messagebox.showerror(title='디아블로 런처', message='Battle.net이 이미 실행 중 입니다. 디아블로를 안정적으로 플레이하기 위해 먼저 Battle.net을 종료해 주시기 바랍니다.')
         root.protocol("WM_DELETE_WINDOW", ExitProgram)
+        HideWindow()
+        UpdateStatusValue()
+        ReloadStatusBar()
+        return
+
+    try:
+        Beep(200, 500)
+    except RuntimeError:
+        logformat(errorLevel.ERR, 'No sound output device detected. Check your speaker connection.')
+        messagebox.showerror(title='디아블로 런처', message='사운드 장치를 찾을 수 없습니다. 디아블로를 안정적으로 플레이하기 위해 먼저 스피커가 제대로 연결되어 있는지 확인해 주시기 바랍니다.')
         HideWindow()
         UpdateStatusValue()
         ReloadStatusBar()
