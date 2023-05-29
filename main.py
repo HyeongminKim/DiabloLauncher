@@ -752,7 +752,7 @@ def FindGameInstalled():
             switchButton['command'] = OpenBattleNet
             fileMenu.entryconfig(0, state='normal')
         else:
-            switchButton['text'] = 'Battile.net 검색'
+            switchButton['text'] = 'Battle.net 검색'
             switchButton['command'] = ForceReload
             fileMenu.entryconfig(0, state='disabled')
     else:
