@@ -64,7 +64,8 @@ def makeConfigurationFileStructures(scope: parentLocation):
     elif scope == parentLocation.UserLocalAppData:
         config_init = {
             "General": {
-                "LoggingInfoLevel": False
+                "LoggingInfoLevel": False,
+                "TestSpeakerSoundPlay": False
             },
             "ScreenResolution": {
                 "IgnoreResProgramInstallDialog": False,
