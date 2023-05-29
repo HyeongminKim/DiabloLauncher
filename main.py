@@ -111,6 +111,7 @@ testResAlteredY = None
 testResAlteredFR = None
 
 modsMuteSettings = False
+soundSettings = False
 verboseSettings = False
 resIgnoreAlert = False
 
@@ -306,15 +307,19 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         ReloadStatusBar()
         return
 
-    try:
-        Beep(200, 500)
-    except RuntimeError:
-        logformat(errorLevel.ERR, 'No sound output device detected. Check your speaker connection.')
-        messagebox.showerror(title='디아블로 런처', message='사운드 장치를 찾을 수 없습니다. 디아블로를 안정적으로 플레이하기 위해 먼저 스피커가 제대로 연결되어 있는지 확인해 주시기 바랍니다.')
-        HideWindow()
-        UpdateStatusValue()
-        ReloadStatusBar()
-        return
+    currentSoundSettings = loadSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"])
+    if currentSoundSettings:
+        try:
+            Beep(200, 500)
+        except RuntimeError:
+            logformat(errorLevel.ERR, 'No sound output device detected. Check your speaker connection.')
+            messagebox.showerror(title='디아블로 런처', message='사운드 장치를 찾을 수 없습니다. 디아블로를 안정적으로 플레이하기 위해 먼저 스피커가 제대로 연결되어 있는지 확인해 주시기 바랍니다.')
+            HideWindow()
+            UpdateStatusValue()
+            ReloadStatusBar()
+            return
+    else:
+        logformat(errorLevel.INFO, f'Skipping Test sound device function due to Speaker test setting is {currentSoundSettings}.')
 
     diabloExecuted = True
     logformat(errorLevel.INFO, f'Launching {gameName}...')
@@ -835,6 +840,7 @@ def SetLauncherConfigurationValues(*args):
     global testResAlteredY
     global testResAlteredFR
     global modsMuteSettings
+    global soundSettings
     global verboseSettings
     global resIgnoreAlert
 
@@ -865,6 +871,7 @@ def SetLauncherConfigurationValues(*args):
     envAlteredFR = Entry(envWindow, width=4)
 
     modsMuteSettings = IntVar()
+    soundSettings = IntVar()
     verboseSettings = IntVar()
     resIgnoreAlert = IntVar()
 
@@ -1097,6 +1104,14 @@ def SetLauncherConfigurationValues(*args):
     modsMuteCheckBox = Checkbutton(envWindow, text="모드 병합 알림 뮤트", variable=modsMuteSettings, onvalue=True, offvalue=False, command=modsMuteSettingsApply)
     modsMuteCheckBox.grid(row=5, column=0, columnspan=2, padx=5)
 
+    def soundSettingsApply():
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"], soundSettings.get() == 1)
+        soundSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"]) else 0)
+
+    soundSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"]) else 0)
+    soundCheckBox = Checkbutton(envWindow, text="스피커 테스트", variable=soundSettings, onvalue=True, offvalue=False, command=soundSettingsApply)
+    soundCheckBox.grid(row=5, column=2, columnspan=2, padx=5)
+
     def changeVerboseLogSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"], verboseSettings.get() == 1)
         verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
@@ -1181,6 +1196,11 @@ def SetLauncherConfigurationValues(*args):
         modsMuteCheckBox['selectcolor'] = '#272727'
         modsMuteCheckBox['foreground'] = '#FFFFFF'
         modsMuteCheckBox['activeforeground'] = '#FFFFFF'
+        soundCheckBox['background'] = '#272727'
+        soundCheckBox['activebackground'] = '#272727'
+        soundCheckBox['selectcolor'] = '#272727'
+        soundCheckBox['foreground'] = '#FFFFFF'
+        soundCheckBox['activeforeground'] = '#FFFFFF'
         verboseCheckbox['background'] = '#272727'
         verboseCheckbox['activebackground'] = '#272727'
         verboseCheckbox['selectcolor'] = '#272727'
@@ -1256,6 +1276,11 @@ def SetLauncherConfigurationValues(*args):
         modsMuteCheckBox['selectcolor'] = '#F0F0F0'
         modsMuteCheckBox['foreground'] = '#000000'
         modsMuteCheckBox['activeforeground'] = '#000000'
+        soundCheckBox['background'] = '#F0F0F0'
+        soundCheckBox['activebackground'] = '#F0F0F0'
+        soundCheckBox['selectcolor'] = '#F0F0F0'
+        soundCheckBox['foreground'] = '#000000'
+        soundCheckBox['activeforeground'] = '#000000'
         verboseCheckbox['background'] = '#F0F0F0'
         verboseCheckbox['activebackground'] = '#F0F0F0'
         verboseCheckbox['selectcolor'] = '#F0F0F0'
