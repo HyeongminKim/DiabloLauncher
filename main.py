@@ -268,7 +268,7 @@ def UpdateProgram():
         if call(f'git pull --rebase origin {cnt_branch} > NUL 2>&1', shell=True) == 0:
             updatedCommit = os.popen('git rev-parse HEAD').read().strip()
             remoteVersion = os.popen('git rev-parse --short HEAD').read().strip()
-            result = check_terminal_output(f"git log --no-merges --pretty=format:'%s' {updatedCommit}...{localCommit}")
+            result = check_terminal_output(f'git log --no-merges --pretty=format:"- %s" {updatedCommit}...{localCommit}')
 
             if localVersion != remoteVersion:
                 messagebox.showinfo('디아블로 런처', f"디아블로 런처가 성공적으로 업데이트 되었습니다.\n\n\t-- 새로운 기능 ({localVersion} → {remoteVersion}) --\n{result}\n\n업데이트를 반영하시려면 프로그램을 다시 시작해 주세요.")
