@@ -12,7 +12,7 @@ def ReturnRegistryQuery(regAddress: str, queryName: str = 'InstallLocation'):
             value, type = reg.QueryValueEx(target, queryName)
 
         if path.isfile(value) or path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
+            logformat(errorLevel.INFO, f'{regAddress} is exist in system.')
             return value
         else:
             raise FileNotFoundError
@@ -27,7 +27,7 @@ def OpenProgramUsingRegistry(regAddress: str, queryName: str = 'DisplayIcon'):
             value, type = reg.QueryValueEx(target, queryName)
 
         if path.isfile(value) or path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
+            logformat(errorLevel.INFO, f'{regAddress} is exist in system.')
             startfile(value)
         else:
             logformat(errorLevel.ERR, 'Unable to launch target file or directory: no such file or directory.')
@@ -41,7 +41,7 @@ def TestRegistryValueAsFile(regAddress: str, queryName: str = 'DisplayIcon'):
             value, type = reg.QueryValueEx(target, queryName)
 
         if path.isfile(value) or path.isdir(value):
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
+            logformat(errorLevel.INFO, f'{regAddress} is exist in system.')
             return True
         else:
             raise FileNotFoundError
@@ -56,7 +56,7 @@ def TestRegistryValueAsRaw(regAddress: str, queryName: str):
             value, type = reg.QueryValueEx(target, queryName)
 
         if value == 0:
-            logformat(errorLevel.INFO, f'{value} is exist in system.')
+            logformat(errorLevel.INFO, f'{regAddress} is exist in system.')
             return True
         else:
             raise OSError
