@@ -1117,8 +1117,10 @@ def SetLauncherConfigurationValues(*args):
         verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
         if verboseSettings.get() == 1:
             os.environ['LOG_VERBOSE_LEVEL'] = 'verbose'
+            aboutMenu.entryconfig(6, state='normal')
         else:
             os.environ.pop('LOG_VERBOSE_LEVEL')
+            aboutMenu.entryconfig(6, state='disabled')
 
     verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
     verboseCheckbox = Checkbutton(envWindow, text="디버그 메시지", variable=verboseSettings, onvalue=True, offvalue=False, command=changeVerboseLogSettingsApply)
