@@ -514,6 +514,10 @@ def LaunchGameAgent():
             diablo4['state'] = "normal"
             diablo4['text'] = 'Diablo IV EA'
             # diablo4['text'] = 'Diablo IV'
+
+        diablo4['state'] = "disabled"
+        diablo4['text'] = 'Diablo IV EA\n6월 2일 출시 예정'
+
         ShowWindow()
         launch.mainloop()
 
