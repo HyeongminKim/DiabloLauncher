@@ -514,11 +514,6 @@ def LaunchGameAgent():
             diablo4['state'] = "normal"
             diablo4['text'] = 'Diablo IV EA'
             # diablo4['text'] = 'Diablo IV'
-
-        diablo4['state'] = "disabled"
-        diablo4['text'] = 'Diablo IV EA\n6월 2일 출시 예정'
-        # diablo4['text'] = 'Diablo IV\n6월 6일 출시 예정'
-
         ShowWindow()
         launch.mainloop()
 
@@ -743,8 +738,8 @@ def FindGameInstalled():
     else:
         gameMenu.entryconfig(1, state='disabled')
 
-    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV - Server Slam')):
-        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV - Server Slam')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')):
+        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')
         gameMenu.entryconfig(2, state='normal')
     else:
         gameMenu.entryconfig(2, state='disabled')
