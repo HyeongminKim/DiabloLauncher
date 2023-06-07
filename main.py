@@ -1120,7 +1120,12 @@ def SetLauncherConfigurationValues(*args):
     verboseCheckbox = Checkbutton(envWindow, text="디버그 메시지", variable=verboseSettings, onvalue=True, offvalue=False, command=changeVerboseLogSettingsApply)
     verboseCheckbox.grid(row=7, column=0, columnspan=1, padx=5, pady=10)
 
-    systemConfigFileEdit = Button(envWindow, text='전역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'))
+    if os.access(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config', os.W_OK):
+        systemConfigFileEdit = Button(envWindow, text='전역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'), state='normal')
+    elif os.access(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config', os.R_OK):
+        systemConfigFileEdit = Button(envWindow, text='전역 설정 보기', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'), state='normal')
+    else:
+        systemConfigFileEdit = Button(envWindow, text='전역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'), state='disabled')
     systemConfigFileEdit.grid(row=7, column=1, columnspan=2, pady=10)
 
     localConfigFileEdit = Button(envWindow, text='지역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("LocalAppData")}/DiabloLauncher/DiabloLauncher.config'))
