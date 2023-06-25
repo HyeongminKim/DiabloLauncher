@@ -297,6 +297,15 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     global diabloExecuted
     global gameStartTime
 
+    if call('ping -n 1 -w 1 kr.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 us.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 eu.actual.battle.net > NUL 2>&1', shell=True) != 0:
+        logformat(errorLevel.ERR, "Unable to open Battle.net. reason: Battle.net server not respond.")
+        messagebox.showerror(title='디아블로 런처', message='Battle.net 서버가 응답하지 않습니다. 네트워크가 제대로 연결되어 있는지 확인해 주세요.')
+        root.protocol("WM_DELETE_WINDOW", ExitProgram)
+        HideWindow()
+        UpdateStatusValue()
+        ReloadStatusBar()
+        return
+
     result = check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True)
     if result is not None:
         logformat(errorLevel.ERR, "Unable to open Battle.net. reason: another Battle.net agent detected.")
@@ -696,19 +705,21 @@ def FindGameInstalled():
                 else:
                     try:
                         request.urlopen('https://kr.shop.battle.net/ko-kr?from=root', timeout=1)
+                        modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
                         external_conf = loadConfigurationFile()
                         if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
                             unloadMods = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n게임 실행 시 모드가 적용되지 않거나 제대로 작동하지 않을 수 있습니다. 모드를 적용해제 하시겠습니까?', icon='warning')
                             if unloadMods:
                                 dumpConfigurationFile('')
                                 logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                                FindGameInstalled()
                     except RequestError.URLError:
+                        modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
                         resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
                         if resolveTool: Popen('msdt.exe -id NetworkDiagnosticsNetworkAdapter')
                     logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
-                    modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
             else:
                 logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
                 modMenu.entryconfig(1, label='새로운 모드 탐색')
@@ -1371,6 +1382,12 @@ def ReloadStatusBar():
             toolsMenu.entryconfig(7, state='disabled')
 
 def OpenBattleNet(*args):
+    if call('ping -n 1 -w 1 kr.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 us.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 eu.actual.battle.net > NUL 2>&1', shell=True) != 0:
+        logformat(errorLevel.ERR, "Unable to open Battle.net. reason: Battle.net server not respond.")
+        messagebox.showerror(title='디아블로 런처', message='Battle.net 서버가 응답하지 않습니다. 네트워크가 제대로 연결되어 있는지 확인해 주세요.')
+        FindGameInstalled()
+        return
+
     result = check_terminal_output('tasklist | findstr "Battle.net.exe > NUL 2>&1', True)
     if result is None:
         OpenProgramUsingRegistry(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')
