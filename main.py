@@ -265,6 +265,12 @@ def UpdateProgram():
         localVersion = os.popen('git rev-parse --short HEAD').read().strip()
         cnt_branch = os.popen('git branch --show-current').read().strip()
         logformat(errorLevel.INFO, 'Checking program updates...')
+        RTSetting = call('netsh wlan show interface | findstr disconnected > NUL 2>&1', shell=True) == 0
+        if RTSetting:
+            logformat(errorLevel.INFO, 'WLAN device is down. network timeout time will configure 1,000 ms.')
+        else:
+            logformat(errorLevel.INFO, 'WLAN device is up. network timeout time will configure 60,000 ms.')
+
         if call(f'git pull --rebase origin {cnt_branch} > NUL 2>&1', shell=True) == 0:
             updatedCommit = os.popen('git rev-parse HEAD').read().strip()
             remoteVersion = os.popen('git rev-parse --short HEAD').read().strip()
@@ -277,7 +283,7 @@ def UpdateProgram():
                 if updateChecked:
                     messagebox.showinfo('디아블로 런처', '디아블로 런처가 최신 버전입니다.')
                 logformat(errorLevel.INFO, 'DiabloLauncher is Up to date.')
-        elif call('ping -n 1 -w 1 www.google.com > NUL 2>&1', shell=True) != 0:
+        elif call(f'ping -n 1 -w {1000 if RTSetting else 60000} www.google.com > NUL 2>&1', shell=True) != 0:
             messagebox.showwarning('디아블로 런처', '인터넷 연결이 오프라인인 상태에서는 디아블로 런처를 업데이트 할 수 없습니다. 나중에 다시 시도해 주세요.')
             logformat(errorLevel.ERR, 'Program update failed. Please check your internet connection.')
         else:
@@ -297,7 +303,13 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     global diabloExecuted
     global gameStartTime
 
-    if call('ping -n 1 -w 1 kr.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 us.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 eu.actual.battle.net > NUL 2>&1', shell=True) != 0:
+    RTSetting = call('netsh wlan show interface | findstr disconnected > NUL 2>&1', shell=True) == 0
+    if RTSetting:
+        logformat(errorLevel.INFO, 'WLAN device is down. network timeout time will configure 1,000 ms.')
+    else:
+        logformat(errorLevel.INFO, 'WLAN device is up. network timeout time will configure 60,000 ms.')
+
+    if call(f'ping -n 1 -w {1000 if RTSetting else 60000} kr.actual.battle.net > NUL 2>&1 && ping -n 1 -w {1000 if RTSetting else 60000} us.actual.battle.net > NUL 2>&1 && ping -n 1 -w {1000 if RTSetting else 60000} eu.actual.battle.net > NUL 2>&1', shell=True) != 0:
         logformat(errorLevel.ERR, "Unable to open Battle.net. reason: Battle.net server not respond.")
         messagebox.showerror(title='디아블로 런처', message='Battle.net 서버가 응답하지 않습니다. 네트워크가 제대로 연결되어 있는지 확인해 주세요.')
         root.protocol("WM_DELETE_WINDOW", ExitProgram)
@@ -1382,7 +1394,13 @@ def ReloadStatusBar():
             toolsMenu.entryconfig(7, state='disabled')
 
 def OpenBattleNet(*args):
-    if call('ping -n 1 -w 1 kr.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 us.actual.battle.net > NUL 2>&1 && ping -n 1 -w 1 eu.actual.battle.net > NUL 2>&1', shell=True) != 0:
+    RTSetting = call('netsh wlan show interface | findstr disconnected > NUL 2>&1', shell=True) == 0
+    if RTSetting:
+        logformat(errorLevel.INFO, 'WLAN device is down. network timeout time will configure 1,000 ms.')
+    else:
+        logformat(errorLevel.INFO, 'WLAN device is up. network timeout time will configure 60,000 ms.')
+
+    if call(f'ping -n 1 -w {1000 if RTSetting else 60000} kr.actual.battle.net > NUL 2>&1 && ping -n 1 -w {1000 if RTSetting else 60000} us.actual.battle.net > NUL 2>&1 && ping -n 1 -w {1000 if RTSetting else 60000} eu.actual.battle.net > NUL 2>&1', shell=True) != 0:
         logformat(errorLevel.ERR, "Unable to open Battle.net. reason: Battle.net server not respond.")
         messagebox.showerror(title='디아블로 런처', message='Battle.net 서버가 응답하지 않습니다. 네트워크가 제대로 연결되어 있는지 확인해 주세요.')
         FindGameInstalled()
