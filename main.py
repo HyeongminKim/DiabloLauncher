@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 
 # pylint: disable=W0104,W0603,W0621
-# pylint: disable=C0200,C0302,C0415,R1722,C0115,C0116
+# pylint: disable=C0200,C0302,C0321,C0415,R1722,C0115,C0116
 
 try:
     from subprocess import call, Popen
@@ -728,7 +728,7 @@ def FindGameInstalled():
                     except RequestError.URLError:
                         modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
                         resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
-                        if resolveTool: Popen('msdt.exe -id NetworkDiagnosticsNetworkAdapter')
+                        if resolveTool: webbrowser.open('ms-contact-support://smc-to-emerald/NetworkAndInternetTroubleshooter')
                     logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
                     logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
@@ -1640,6 +1640,9 @@ def init():
                 contents['foreground'] = '#000000'
             soundRecover.mainloop()
 
+    def SoundRecover():
+        webbrowser.open('ms-contact-support://smc-to-emerald/AudioTroubleshooter')
+
     def OpenD2RModDir():
         if diablo2Path is not None:
             logformat(errorLevel.INFO, f'The {diablo2Path}/mods directory exist. The target directory will now open.')
@@ -1796,9 +1799,9 @@ def init():
     toolsMenu.add_command(label='디아블로 런처 설정', state='disabled', command=SetLauncherConfigurationValues, accelerator='Ctrl+,')
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
-        toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='normal')
+        toolsMenu.add_command(label='BootCamp 소리 문제 해결...', command=BootCampSoundRecover)
     else:
-        toolsMenu.add_command(label='소리 문제 해결...', command=BootCampSoundRecover, state='disabled')
+        toolsMenu.add_command(label='소리 문제 해결...', command=SoundRecover)
 
     toolsMenu.add_separator()
     toolsMenu.add_command(label='프로그램 제거 및 변경', command=openControlPanel)
