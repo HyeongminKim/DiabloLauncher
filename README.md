@@ -2,15 +2,6 @@
 해상도를 반자동으로 변경해 주는 배틀넷 런처
 
 ### 요구 사항
-<style>
-  td {
-    text-align: center;
-  }
-  #leftRQ {
-    text-align: left
-  }
-</style>
-
 <table>
   <tr>
     <th>선택여부</th>
@@ -22,19 +13,19 @@
   </tr>
   <tr>
     <td>D2R 또는 Diablo IV</td>
-    <td id="leftRQ">Windows 10+</td>
+    <td>Windows 10+</td>
   </tr>
   <tr>
     <td>Diablo III 또는 WoW</td>
-    <td id="leftRQ">Windows 7+</td>
+    <td>Windows 7+</td>
   </tr>
   <tr>
     <td>D2R ~ Diablo IV</td>
-    <td id="leftRQ">64-bit CPU</td>
+    <td>64-bit CPU</td>
   </tr>
   <tr>
     <td>WoW</td>
-    <td id="leftRQ">32-bit CPU+</td>
+    <td>32-bit CPU+</td>
   </tr>
   <tr>
     <td>선택*</td>
