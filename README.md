@@ -1,28 +1,44 @@
-# DiabloLauncher
-해상도를 반자동으로 변경해 주는 디아블로 런처
+# Battle.net Launcher
+해상도를 반자동으로 변경해 주는 배틀넷 런처
 
 ### 요구 사항
+<style>
+  td {
+    text-align: center;
+  }
+  #leftRQ {
+    text-align: left
+  }
+</style>
+
 <table>
   <tr>
     <th>선택여부</th>
-    <th>내용</th>
+    <th colspan="2">내용</th>
   </tr>
   <tr>
-    <td rowspan="4">필수</td>
-    <td>tkinter 가 포함된 Python3.6+</td>
+    <td rowspan="5">필수</td>
+    <td colspan="2">tkinter 가 포함된 Python3.6+</td>
   </tr>
   <tr>
-    <td>D2R 또는 Diablo IV 플레이시 Windows 10+</td>
+    <td>D2R 또는 Diablo IV</td>
+    <td id="leftRQ">Windows 10+</td>
   </tr>
   <tr>
-    <td>Diablo III 플레이시 Windows 7+</td>
+    <td>Diablo III 또는 WoW</td>
+    <td id="leftRQ">Windows 7+</td>
   </tr>
   <tr>
-    <td>64-bit CPU</td>
+    <td>D2R ~ Diablo IV</td>
+    <td id="leftRQ">64-bit CPU</td>
+  </tr>
+  <tr>
+    <td>WoW</td>
+    <td id="leftRQ">32-bit CPU+</td>
   </tr>
   <tr>
     <td>선택*</td>
-    <td>해상도 조절 시 QRes 필요</td>
+    <td colspan="2">해상도 조절 시 QRes 필요</td>
   </tr>
 </table>
 
@@ -46,6 +62,6 @@
 - 테스팅 환경의 한계로 이 프로그램을 사용하여 발생하는 데이터 유실, 시스템 불안정, 플레이 경험이 침해될 수 있습니다.
 
 ### 타사 라이선스 안내
-- 디아블로(Diablo), 블리자드(Blizzard)는 [Blizzard Entertainment, Inc.](https://www.blizzard.com/en-us/legal/9c9cb70b-d1ed-4e17-998a-16c6df46be7b/copyright-notices) 의 등록 상표입니다.
+- 디아블로(Diablo), WoW(World of Warcraft), 블리자드(Blizzard)는 [Blizzard Entertainment, Inc.](https://www.blizzard.com/en-us/legal/9c9cb70b-d1ed-4e17-998a-16c6df46be7b/copyright-notices) 의 등록 상표입니다.
 - BootCamp, macOS는 [Apple, Inc.](https://www.apple.com/kr/legal/intellectual-property/guidelinesfor3rdparties.html) 의 등록 상표입니다.
-- 위 저작권 고지는 디아블로 런처 내 `[정보]->[이 디아블로 런처에 관하여...]` 에서 볼 수 있습니다.
+- 위 저작권 고지는 배틀넷 런처 내 `[정보]->[이 배틀넷 런처에 관하여...]` 에서 볼 수 있습니다.
