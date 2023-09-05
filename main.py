@@ -74,7 +74,7 @@ except (ModuleNotFoundError, ImportError, OSError) as error:
     print(f'\033[35m[FATL: 70-01-01 12:00] The DiabloLauncher stopped due to {error}\033[0m')
     exit(1)
 
-diabloExecuted = False
+gameExecuted = False
 updateChecked = False
 forceReboot = False
 releaseMode = False
@@ -85,14 +85,23 @@ loadWaitTime = 10
 gameStartTime = None
 gameEndTime = None
 
+bnetPath = None
+
 diablo2Path = None
 diablo3Path = None
 diablo4Path = None
+
+wowClassic = None
+wowHardcoreClassic = None
+wowLive = None
 
 definedMod = None
 modsPreferPreviousSetting = None
 modsInstalledList = None
 modsPreferOptionMenu = None
+
+gameChannelList = ["디아블로", "월드 오브 워크래프트"]
+filteredGame = None
 
 resolutionProgram = False
 
@@ -247,7 +256,7 @@ def ExitProgram(*args):
 
 def InterruptProgram(sig, frame):
     logformat(errorLevel.ERR, f'Keyboard Interrupt: {sig}')
-    if diabloExecuted:
+    if gameExecuted:
         LaunchGameAgent()
     ExitProgram()
 
@@ -300,7 +309,7 @@ def UpdateProgram():
         updateChecked = True
 
 def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
-    global diabloExecuted
+    global gameExecuted
     global gameStartTime
 
     RTSetting = call('netsh wlan show interface | findstr disconnected > NUL 2>&1', shell=True) == 0
@@ -342,13 +351,13 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     else:
         logformat(errorLevel.INFO, f'Skipping Test sound device function due to Speaker test setting is {currentSoundSettings}.')
 
-    diabloExecuted = True
+    gameExecuted = True
     logformat(errorLevel.INFO, f'Launching {gameName}...')
     if resolutionProgram:
         if int(alteredX) < supportedX or int(alteredY) < supportedY:
             logformat(errorLevel.ERR, f'The {gameName} does not supported display resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showerror('디아블로 런처', f'{alteredX}x{alteredY} {alteredFR}Hz 해상도는 {gameName} 가 지원하지 않습니다. 자세한 사항은 공식 홈페이지를 확인하시기 바랍니다. ')
-            diabloExecuted = False
+            gameExecuted = False
             root.protocol("WM_DELETE_WINDOW", ExitProgram)
             HideWindow()
             UpdateStatusValue()
@@ -362,7 +371,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         except (ValueError, TypeError):
             logformat(errorLevel.ERR, f'The {gameName} does not supported current OS {platform.system()} {platform.release()}')
             messagebox.showerror('디아블로 런처', f'{platform.system()} {platform.release()} 은(는) {gameName} 가 지원하지 않습니다. 자세한 사항은 공식 홈페이지를 확인하시기 바랍니다. ')
-            diabloExecuted = False
+            gameExecuted = False
             root.protocol("WM_DELETE_WINDOW", ExitProgram)
             HideWindow()
             UpdateStatusValue()
@@ -371,7 +380,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         if call(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showwarning('디아블로 런처', f'{alteredX}x{alteredY} {alteredFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
-            diabloExecuted = False
+            gameExecuted = False
             root.protocol("WM_DELETE_WINDOW", ExitProgram)
             HideWindow()
             UpdateStatusValue()
@@ -396,20 +405,27 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         os.popen(f'"{diablo3Path}/{gameName} Launcher.exe"')
     elif(gameName == 'Diablo IV'):
         os.popen(f'"{diablo4Path}/{gameName} Launcher.exe"')
+    elif(gameName == '_retail_'):
+        os.popen(f'"{bnetPath}" --productcode=wow_retail')
+    elif(gameName == '_classic_'):
+        os.popen(f'"{bnetPath}" --productcode=wow_classic')
+    elif(gameName == '_classic_era_'):
+        os.popen(f'"{bnetPath}" --productcode=wow_classic_era')
+
     toolsMenu.entryconfig(3, state='disabled')
     gameStartTime = time.time()
     UpdateStatusValue()
     ReloadStatusBar()
 
 def LaunchGameAgent():
-    global diabloExecuted
+    global gameExecuted
     global gameEndTime
-    if diabloExecuted:
-        diabloExecuted = False
+    if gameExecuted:
+        gameExecuted = False
         logformat(errorLevel.INFO, 'Setting game mode is false...')
         root.protocol("WM_DELETE_WINDOW", ExitProgram)
         gameEndTime = time.time()
-        switchButton['text'] = '디아블로 실행...'
+        switchButton['text'] = f'{"디아블로" if filteredGame == "Diablo" else "WoW"} 실행...'
         toolsMenu.entryconfig(3, state='normal')
         if resolutionProgram:
             if call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0:
@@ -438,101 +454,162 @@ def LaunchGameAgent():
         UpdateStatusValue()
         ReloadStatusBar()
     else:
-        launch.title('디아블로 버전 선택')
+        launch.title(f'{"디아블로" if filteredGame == "Diablo" else "WoW"} 버전 선택')
 
-        note = Label(launch, text='사용가능한 디아블로 버전만 활성화 됩니다', height=2)
-        diablo2 = Button(launch, text='Diablo II Resurrected\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('Diablo II Resurrected', 1280, 720, 10))
-        diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
-        diablo4 = Button(launch, text='Diablo IV\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
+        note = Label(launch, text=f'사용가능한 {"디아블로" if filteredGame == "Diablo" else "WoW"} 버전만 활성화 됩니다', height=2)
+        if filteredGame == "Diablo":
+            diablo2 = Button(launch, text='Diablo II Resurrected\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('Diablo II Resurrected', 1280, 720, 10))
+            diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
+            diablo4 = Button(launch, text='Diablo IV\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
+        else:
+            wow_live = Button(launch, text='월드 오브 워크래프트\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('_retail_', 1280, 720, 7))
+            wow_classic = Button(launch, text='불타는 성전 클래식\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('_classic_', 1024, 768, 7))
+            wow_hardcore = Button(launch, text='WoW 클래식\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('_classic_era_', 1024, 768, 7))
 
         note.grid(row=0, column=0, columnspan=2)
-        diablo2.grid(row=1, column=0, rowspan=2)
-        diablo3.grid(row=1, column=1)
-        diablo4.grid(row=2, column=1)
+
+        if filteredGame == "Diablo":
+            diablo2.grid(row=1, column=0, rowspan=2)
+            diablo3.grid(row=1, column=1)
+            diablo4.grid(row=2, column=1)
+        else:
+            wow_live.grid(row=1, column=0, rowspan=2)
+            wow_classic.grid(row=1, column=1)
+            wow_hardcore.grid(row=2, column=1)
 
         if(CheckDarkMode()):
             note['background'] = '#272727'
             note['foreground'] = '#FFFFFF'
-            diablo2['background'] = '#272727'
-            diablo2['activebackground'] = '#272727'
-            diablo2['foreground'] = '#FFFFFF'
-            diablo2['activeforeground'] = '#FFFFFF'
-            diablo3['background'] = '#272727'
-            diablo3['activebackground'] = '#272727'
-            diablo3['foreground'] = '#FFFFFF'
-            diablo3['activeforeground'] = '#FFFFFF'
-            diablo4['background'] = '#272727'
-            diablo4['activebackground'] = '#272727'
-            diablo4['foreground'] = '#FFFFFF'
-            diablo4['activeforeground'] = '#FFFFFF'
+            if filteredGame == "Diablo":
+                diablo2['background'] = '#272727'
+                diablo2['activebackground'] = '#272727'
+                diablo2['foreground'] = '#FFFFFF'
+                diablo2['activeforeground'] = '#FFFFFF'
+                diablo3['background'] = '#272727'
+                diablo3['activebackground'] = '#272727'
+                diablo3['foreground'] = '#FFFFFF'
+                diablo3['activeforeground'] = '#FFFFFF'
+                diablo4['background'] = '#272727'
+                diablo4['activebackground'] = '#272727'
+                diablo4['foreground'] = '#FFFFFF'
+                diablo4['activeforeground'] = '#FFFFFF'
+            else:
+                wow_live['background'] = '#272727'
+                wow_live['activebackground'] = '#272727'
+                wow_live['foreground'] = '#FFFFFF'
+                wow_live['activeforeground'] = '#FFFFFF'
+                wow_classic['background'] = '#272727'
+                wow_classic['activebackground'] = '#272727'
+                wow_classic['foreground'] = '#FFFFFF'
+                wow_classic['activeforeground'] = '#FFFFFF'
+                wow_hardcore['background'] = '#272727'
+                wow_hardcore['activebackground'] = '#272727'
+                wow_hardcore['foreground'] = '#FFFFFF'
+                wow_hardcore['activeforeground'] = '#FFFFFF'
         else:
             note['background'] = '#F0F0F0'
             note['foreground'] = '#000000'
-            diablo2['background'] = '#F0F0F0'
-            diablo2['activebackground'] = '#F0F0F0'
-            diablo2['foreground'] = '#000000'
-            diablo2['activeforeground'] = '#000000'
-            diablo3['background'] = '#F0F0F0'
-            diablo3['activebackground'] = '#F0F0F0'
-            diablo3['foreground'] = '#000000'
-            diablo3['activeforeground'] = '#000000'
-            diablo4['background'] = '#F0F0F0'
-            diablo4['activebackground'] = '#F0F0F0'
-            diablo4['foreground'] = '#000000'
-            diablo4['activeforeground'] = '#000000'
+            if filteredGame == "Diablo":
+                diablo2['background'] = '#F0F0F0'
+                diablo2['activebackground'] = '#F0F0F0'
+                diablo2['foreground'] = '#000000'
+                diablo2['activeforeground'] = '#000000'
+                diablo3['background'] = '#F0F0F0'
+                diablo3['activebackground'] = '#F0F0F0'
+                diablo3['foreground'] = '#000000'
+                diablo3['activeforeground'] = '#000000'
+                diablo4['background'] = '#F0F0F0'
+                diablo4['activebackground'] = '#F0F0F0'
+                diablo4['foreground'] = '#000000'
+                diablo4['activeforeground'] = '#000000'
+            else:
+                wow_live['background'] = '#F0F0F0'
+                wow_live['activebackground'] = '#F0F0F0'
+                wow_live['foreground'] = '#000000'
+                wow_live['activeforeground'] = '#000000'
+                wow_classic['background'] = '#F0F0F0'
+                wow_classic['activebackground'] = '#F0F0F0'
+                wow_classic['foreground'] = '#000000'
+                wow_classic['activeforeground'] = '#000000'
+                wow_hardcore['background'] = '#F0F0F0'
+                wow_hardcore['activebackground'] = '#F0F0F0'
+                wow_hardcore['foreground'] = '#000000'
+                wow_hardcore['activeforeground'] = '#000000'
 
-        if diablo2Path is None or not os.path.isfile(f'{diablo2Path}/Diablo II Resurrected Launcher.exe'):
-            logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
-            diablo2['state'] = "disabled"
-        else:
-            logformat(errorLevel.INFO, 'Diablo II Resurrected launch button enabled.')
-            diablo2['state'] = "normal"
-            if os.path.isdir(f'{diablo2Path}/mods'):
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
-                GetModDetails()
-                envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
-                envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
-                if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
-                    logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                    diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
-                elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
-                    logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
-                    diablo2['text'] = 'Diablo II Resurrected'
-                elif definedMod is not None and isinstance(definedMod, str):
-                    if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
-                        external_conf = loadConfigurationFile()
-                        if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                            diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
+        if filteredGame == "Diablo":
+            if diablo2Path is None or not os.path.isfile(f'{diablo2Path}/Diablo II Resurrected Launcher.exe'):
+                logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
+                diablo2['state'] = "disabled"
+            else:
+                logformat(errorLevel.INFO, 'Diablo II Resurrected launch button enabled.')
+                diablo2['state'] = "normal"
+                if os.path.isdir(f'{diablo2Path}/mods'):
+                    logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
+                    GetModDetails()
+                    envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+                    envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
+                    if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
+                        logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
+                        diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
+                    elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
+                        logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
+                        diablo2['text'] = 'Diablo II Resurrected'
+                    elif definedMod is not None and isinstance(definedMod, str):
+                        if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
+                            external_conf = loadConfigurationFile()
+                            if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
+                                diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
+                            else:
+                                diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 감지됨'
                         else:
-                            diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 감지됨'
+                            messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
+                            logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
+                            logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
+                            logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
+                            diablo2['text'] = 'Diablo II Resurrected'
                     else:
-                        messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
-                        logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
-                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
+                        logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
                         diablo2['text'] = 'Diablo II Resurrected'
                 else:
-                    logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
+                    logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
                     diablo2['text'] = 'Diablo II Resurrected'
+
+            if diablo3Path is None or not os.path.isfile(f'{diablo3Path}/Diablo III Launcher.exe'):
+                logformat(errorLevel.INFO, 'Diablo III launch button disabled, because launcher is not detected.')
+                diablo3['state'] = "disabled"
             else:
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
-                diablo2['text'] = 'Diablo II Resurrected'
+                logformat(errorLevel.INFO, 'Diablo III launch button enabled.')
+                diablo3['state'] = "normal"
+                diablo3['text'] = 'Diablo III'
 
-        if diablo3Path is None or not os.path.isfile(f'{diablo3Path}/Diablo III Launcher.exe'):
-            logformat(errorLevel.INFO, 'Diablo III launch button disabled, because launcher is not detected.')
-            diablo3['state'] = "disabled"
+            if diablo4Path is None or not os.path.isfile(f'{diablo4Path}/Diablo IV Launcher.exe'):
+                logformat(errorLevel.INFO, 'Diablo IV launch button disabled, because launcher is not detected.')
+                diablo4['state'] = "disabled"
+            else:
+                logformat(errorLevel.INFO, 'Diablo IV launch button enabled.')
+                diablo4['state'] = "normal"
+                diablo4['text'] = 'Diablo IV'
         else:
-            logformat(errorLevel.INFO, 'Diablo III launch button enabled.')
-            diablo3['state'] = "normal"
-            diablo3['text'] = 'Diablo III'
+            if wowLive is None or not os.path.isfile(f'{wowLive}/_retail_/World of Warcraft.exe'):
+                logformat(errorLevel.INFO, 'WoW _retail_ launch button disabled, because launcher is not detected.')
+                wow_live['state'] = "disabled"
+            else:
+                wow_live['state'] = "normal"
+                wow_live['text'] = "월드 오브 워크래프트"
 
-        if diablo4Path is None or not os.path.isfile(f'{diablo4Path}/Diablo IV Launcher.exe'):
-            logformat(errorLevel.INFO, 'Diablo IV launch button disabled, because launcher is not detected.')
-            diablo4['state'] = "disabled"
-        else:
-            logformat(errorLevel.INFO, 'Diablo IV launch button enabled.')
-            diablo4['state'] = "normal"
-            diablo4['text'] = 'Diablo IV'
+            if wowClassic is None or not os.path.isfile(f'{wowClassic}/_classic_/WoWClassic.exe'):
+                logformat(errorLevel.INFO, 'WoW _classic_ launch button disabled, because launcher is not detected.')
+                wow_classic['state'] = "disabled"
+            else:
+                wow_classic['state'] = "normal"
+                wow_classic['text'] = "불타는 성전 클래식"
+
+            if wowHardcoreClassic is None or not os.path.isfile(f'{wowHardcoreClassic}/_classic_era_/WoWClassic.exe'):
+                logformat(errorLevel.INFO, 'WoW _classic_era_ launch button disabled, because launcher is not detected.')
+                wow_hardcore['state'] = "disabled"
+            else:
+                wow_hardcore['state'] = "normal"
+                wow_hardcore['text'] = "WoW 클래식"
 
         ShowWindow()
         launch.mainloop()
@@ -542,7 +619,7 @@ def BootAgent(poweroff: str):
     global gameEndTime
     forceReboot = True
     gameEndTime = time.time()
-    if diabloExecuted:
+    if gameExecuted:
         SaveGameRunningTime(gameEndTime - gameStartTime)
     if poweroff == 'r':
         emergencyButton['text'] = '긴급 재시동 준비중...\n(재시동 취소)'
@@ -592,7 +669,7 @@ def EmgergencyReboot():
         ReloadStatusBar()
     else:
         launch.title('전원')
-        if resolutionProgram and diabloExecuted:
+        if resolutionProgram and gameExecuted:
             note = Label(launch, text=f'수행할 작업 시작전 {originX}x{originY} 해상도로 복구 후 계속')
         else:
             note = Label(launch, text='수행할 작업 선택')
@@ -677,114 +754,164 @@ def FindGameInstalled():
     global diablo2Path
     global diablo3Path
     global diablo4Path
+    global wowLive
+    global wowClassic
+    global wowHardcoreClassic
     global definedMod
+    global bnetPath
 
-    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
-        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
-        gameMenu.entryconfig(0, state='normal')
-        modMenu.entryconfig(3, state='normal')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')):
+        bnetPath = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net', 'DisplayIcon')
+    else:
+        bnetPath = None
 
-        diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
-        if os.path.isdir(f'{diablo2Path}/mods'):
-            modMenu.entryconfig(0, state='normal')
-            modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
-            modMenu.entryconfig(1, state='disabled')
-            logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
-            GetModDetails()
-            envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
-            envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
+    if filteredGame == "Diablo":
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
+            logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
+            gameMenu.entryconfig(0, state='normal')
+            modMenu.entryconfig(3, state='normal')
 
-            if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
-                logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
-                modMenu.entryconfig(1, state='normal')
-                modMenu.entryconfig(1, command=ModsPreferSelector)
-            elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
-                logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
-                modMenu.entryconfig(1, label='새로운 모드 탐색')
-                modMenu.entryconfig(1, state='normal')
-                modMenu.entryconfig(1, command=DownloadModsLink)
-                definedMod = None
-            elif definedMod is not None and isinstance(definedMod, str):
-                if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
-                    external_conf = loadConfigurationFile()
-                    if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                        modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
-                    else:
-                        modMenu.entryconfig(1, label=f'감지된 모드: {definedMod}')
+            diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
+            if os.path.isdir(f'{diablo2Path}/mods'):
+                modMenu.entryconfig(0, state='normal')
+                modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
+                modMenu.entryconfig(1, state='disabled')
+                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
+                GetModDetails()
+                envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+                envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
+
+                if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
+                    logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
+                    modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
                     modMenu.entryconfig(1, state='normal')
-                    modMenu.entryconfig(1, command=SearchModInGitHub)
-                else:
-                    try:
-                        request.urlopen('https://kr.shop.battle.net/ko-kr?from=root', timeout=1)
-                        modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
+                    modMenu.entryconfig(1, command=ModsPreferSelector)
+                elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
+                    logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
+                    modMenu.entryconfig(1, label='새로운 모드 탐색')
+                    modMenu.entryconfig(1, state='normal')
+                    modMenu.entryconfig(1, command=DownloadModsLink)
+                    definedMod = None
+                elif definedMod is not None and isinstance(definedMod, str):
+                    if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
                         external_conf = loadConfigurationFile()
                         if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                            unloadMods = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n게임 실행 시 모드가 적용되지 않거나 제대로 작동하지 않을 수 있습니다. 모드를 적용해제 하시겠습니까?', icon='warning')
-                            if unloadMods:
-                                dumpConfigurationFile('')
-                                logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
-                                FindGameInstalled()
-                    except RequestError.URLError:
-                        modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
-                        resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
-                        if resolveTool: webbrowser.open('ms-contact-support://smc-to-emerald/NetworkAndInternetTroubleshooter')
-                    logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                    logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
-                    logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
+                            modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
+                        else:
+                            modMenu.entryconfig(1, label=f'감지된 모드: {definedMod}')
+                        modMenu.entryconfig(1, state='normal')
+                        modMenu.entryconfig(1, command=SearchModInGitHub)
+                    else:
+                        try:
+                            request.urlopen('https://kr.shop.battle.net/ko-kr?from=root', timeout=1)
+                            modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
+                            external_conf = loadConfigurationFile()
+                            if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
+                                unloadMods = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n게임 실행 시 모드가 적용되지 않거나 제대로 작동하지 않을 수 있습니다. 모드를 적용해제 하시겠습니까?', icon='warning')
+                                if unloadMods:
+                                    dumpConfigurationFile('')
+                                    logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                                    FindGameInstalled()
+                        except RequestError.URLError:
+                            modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
+                            resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
+                            if resolveTool: webbrowser.open('ms-contact-support://smc-to-emerald/NetworkAndInternetTroubleshooter')
+                        logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
+                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
+                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
+                else:
+                    logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
+                    modMenu.entryconfig(1, label='새로운 모드 탐색')
+                    modMenu.entryconfig(1, state='normal')
+                    modMenu.entryconfig(1, command=DownloadModsLink)
+                    definedMod = None
             else:
-                logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
+                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
+                modMenu.entryconfig(0, state='disabled')
                 modMenu.entryconfig(1, label='새로운 모드 탐색')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=DownloadModsLink)
                 definedMod = None
         else:
-            logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
+            logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
+            gameMenu.entryconfig(0, state='disabled')
             modMenu.entryconfig(0, state='disabled')
-            modMenu.entryconfig(1, label='새로운 모드 탐색')
-            modMenu.entryconfig(1, state='normal')
-            modMenu.entryconfig(1, command=DownloadModsLink)
+            modMenu.entryconfig(1, state='disabled')
+            modMenu.entryconfig(3, state='disabled')
+            modMenu.entryconfig(1, label='게임이 설치되지 않음')
             definedMod = None
+
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
+            diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
+            gameMenu.entryconfig(1, state='normal')
+        else:
+            gameMenu.entryconfig(1, state='disabled')
+
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')):
+            diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')
+            gameMenu.entryconfig(2, state='normal')
+        else:
+            gameMenu.entryconfig(2, state='disabled')
     else:
-        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
-        gameMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(1, state='disabled')
         modMenu.entryconfig(3, state='disabled')
-        modMenu.entryconfig(1, label='게임이 설치되지 않음')
-        definedMod = None
+        modMenu.entryconfig(1, label='WoW 미지원')
 
-    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
-        diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
-        gameMenu.entryconfig(1, state='normal')
-    else:
-        gameMenu.entryconfig(1, state='disabled')
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Burning Crusade Classic')):
+            wowClassic = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Burning Crusade Classic')
 
-    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')):
-        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')
-        gameMenu.entryconfig(2, state='normal')
-    else:
-        gameMenu.entryconfig(2, state='disabled')
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft Classic Era')):
+            wowHardcoreClassic = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft Classic Era')
 
-    if(diabloExecuted): return
-    if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
-        switchButton['state'] = "normal"
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')):
-            switchButton['text'] = '디아블로 설치...'
-            switchButton['command'] = OpenBattleNet
-            fileMenu.entryconfig(0, state='normal')
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft')):
+            wowLive = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft')
+
+        if wowClassic is None and wowHardcoreClassic is None and wowLive is None:
+            gameMenu.entryconfig(3, state='disabled')
         else:
-            switchButton['text'] = 'Battle.net 검색'
-            switchButton['command'] = ForceReload
-            fileMenu.entryconfig(0, state='disabled')
-    else:
-        switchButton['state'] = "normal"
-        switchButton['text'] = '디아블로 실행...'
-        switchButton['command'] = LaunchGameAgent
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Battle.net')):
-            fileMenu.entryconfig(0, state='normal')
+            gameMenu.entryconfig(3, state='normal')
+
+    if gameExecuted: return
+    if(filteredGame == "Diablo"):
+        if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
+            switchButton['state'] = "normal"
+            if(bnetPath is not None):
+                switchButton['text'] = '디아블로 설치...'
+                switchButton['command'] = OpenBattleNet
+                fileMenu.entryconfig(0, state='normal')
+            else:
+                switchButton['text'] = 'Battle.net 검색'
+                switchButton['command'] = ForceReload
+                fileMenu.entryconfig(0, state='disabled')
         else:
-            fileMenu.entryconfig(0, state='disabled')
+            switchButton['state'] = "normal"
+            switchButton['text'] = '디아블로 실행...'
+            switchButton['command'] = LaunchGameAgent
+            if(bnetPath is not None):
+                fileMenu.entryconfig(0, state='normal')
+            else:
+                fileMenu.entryconfig(0, state='disabled')
+    else:
+        if(wowClassic is None and wowHardcoreClassic is None and wowLive is None):
+            switchButton['state'] = "normal"
+            if(bnetPath is not None):
+                switchButton['text'] = 'WoW 설치...'
+                switchButton['command'] = OpenBattleNet
+                fileMenu.entryconfig(0, state='normal')
+            else:
+                switchButton['text'] = 'Battle.net 검색'
+                switchButton['command'] = ForceReload
+                fileMenu.entryconfig(0, state='disabled')
+        else:
+            switchButton['state'] = "normal"
+            switchButton['text'] = 'WoW 실행...'
+            switchButton['command'] = LaunchGameAgent
+            if(bnetPath is not None):
+                fileMenu.entryconfig(0, state='normal')
+            else:
+                fileMenu.entryconfig(0, state='disabled')
+
 
     if os.path.isdir(f'{userApp}\\Battle.net') or os.path.isdir(f'{userLocalApp}\\Battle.net') or os.path.isdir(f'{userLocalApp}\\Blizzard Entertainment'):
         fileMenu.entryconfig(1, state='normal')
@@ -863,7 +990,7 @@ def SetLauncherConfigurationValues(*args):
 
     envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
-    envWindow.geometry(f"380x230+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 380 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 230 / 2)}")
+    envWindow.geometry(f"380x280+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 380 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 230 / 2)}")
     envWindow.resizable(False, False)
     envWindow.attributes('-toolwindow', True)
     envWindow.attributes('-topmost', 'true')
@@ -873,6 +1000,8 @@ def SetLauncherConfigurationValues(*args):
     resolutionText = Label(envWindow, text='')
 
     modsCurrentSelectMenu = StringVar()
+    currentGameChannelSelectMenu = StringVar()
+
     originXtext = Label(envWindow, text='기본 X')
     originYtext = Label(envWindow, text=' Y')
     originFRtext = Label(envWindow, text=' FR')
@@ -1113,13 +1242,70 @@ def SetLauncherConfigurationValues(*args):
     modsPreferOptionMenu.grid(row=4, column=1, columnspan=4, pady=10)
     modsPreferApply.grid(row=4, column=5, pady=10)
 
+    def updateChannelSetting():
+        global filteredGame
+
+        filteredGame = loadSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"])
+
+        if filteredGame == "Diablo":
+            currentGameChannelSelectMenu.set(gameChannelList[0])
+            return True
+        else:
+            currentGameChannelSelectMenu.set(gameChannelList[1])
+            return False
+
+    def testChannelSetting(*args):
+        currentChannel = loadSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"])
+        if currentChannel == "Diablo":
+            convertedChannel = "디아블로"
+        else:
+            convertedChannel = "월드 오브 워크래프트"
+
+        if currentGameChannelSelectMenu.get() == convertedChannel:
+            channelPreferApply['state'] = 'disabled'
+        else:
+            channelPreferApply['state'] = 'normal'
+
+        if gameExecuted:
+            channelPreferOptionMenu['state'] = 'disabled'
+        else:
+            channelPreferOptionMenu['state'] = 'normal'
+
+    def applyChannelSetting():
+        global filteredGame
+
+        if currentGameChannelSelectMenu.get() == "디아블로":
+            convertedChannel = "Diablo"
+        else:
+            convertedChannel = "WoW"
+
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"], convertedChannel)
+        filteredGame = convertedChannel
+        FindGameInstalled()
+        GetModDetails()
+        UpdateStatusValue()
+        testChannelSetting()
+
+    updateChannelSetting()
+    channelPreferOptionMenu = OptionMenu(envWindow, currentGameChannelSelectMenu, *gameChannelList, command=testChannelSetting)
+
+    channelPreferText = Label(envWindow, text='표시할 게임')
+    channelPreferApply = Button(envWindow, text='적용', command=applyChannelSetting)
+    testChannelSetting()
+
+    channelPreferOptionMenu.config(width=20)
+
+    channelPreferText.grid(row=5, column=0, pady=10)
+    channelPreferOptionMenu.grid(row=5, column=1, columnspan=4, pady=10)
+    channelPreferApply.grid(row=5, column=5, pady=10)
+
     def modsMuteSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"], modsMuteSettings.get() == 1)
         modsMuteSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"]) else 0)
 
     modsMuteSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"]) else 0)
     modsMuteCheckBox = Checkbutton(envWindow, text="모드 병합 알림 뮤트", variable=modsMuteSettings, onvalue=True, offvalue=False, command=modsMuteSettingsApply)
-    modsMuteCheckBox.grid(row=5, column=0, columnspan=2, padx=5)
+    modsMuteCheckBox.grid(row=6, column=0, columnspan=2, padx=5)
 
     def soundSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"], soundSettings.get() == 1)
@@ -1127,7 +1313,7 @@ def SetLauncherConfigurationValues(*args):
 
     soundSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"]) else 0)
     soundCheckBox = Checkbutton(envWindow, text="스피커 테스트", variable=soundSettings, onvalue=True, offvalue=False, command=soundSettingsApply)
-    soundCheckBox.grid(row=5, column=2, columnspan=2, padx=5)
+    soundCheckBox.grid(row=6, column=2, columnspan=2, padx=5)
 
     def changeVerboseLogSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"], verboseSettings.get() == 1)
@@ -1189,6 +1375,8 @@ def SetLauncherConfigurationValues(*args):
         envAlteredFR['foreground'] = '#FFFFFF'
         modsPreferText['background'] = '#272727'
         modsPreferText['foreground'] = '#FFFFFF'
+        channelPreferText['background'] = '#272727'
+        channelPreferText['foreground'] = '#FFFFFF'
         resCommitBtn['background'] = '#272727'
         resCommitBtn['activebackground'] = '#272727'
         resCommitBtn['foreground'] = '#FFFFFF'
@@ -1201,10 +1389,18 @@ def SetLauncherConfigurationValues(*args):
         modsPreferApply['activebackground'] = '#272727'
         modsPreferApply['foreground'] = '#FFFFFF'
         modsPreferApply['activeforeground'] = '#FFFFFF'
+        channelPreferApply['background'] = '#272727'
+        channelPreferApply['activebackground'] = '#272727'
+        channelPreferApply['foreground'] = '#FFFFFF'
+        channelPreferApply['activeforeground'] = '#FFFFFF'
         modsPreferOptionMenu['background'] = '#272727'
         modsPreferOptionMenu['activebackground'] = '#272727'
         modsPreferOptionMenu['foreground'] = '#FFFFFF'
         modsPreferOptionMenu['activeforeground'] = '#FFFFFF'
+        channelPreferOptionMenu['background'] = '#272727'
+        channelPreferOptionMenu['activebackground'] = '#272727'
+        channelPreferOptionMenu['foreground'] = '#FFFFFF'
+        channelPreferOptionMenu['activeforeground'] = '#FFFFFF'
         systemConfigFileEdit['background'] = '#272727'
         systemConfigFileEdit['activebackground'] = '#272727'
         systemConfigFileEdit['foreground'] = '#FFFFFF'
@@ -1269,6 +1465,8 @@ def SetLauncherConfigurationValues(*args):
         envAlteredFR['foreground'] = '#000000'
         modsPreferText['background'] = '#F0F0F0'
         modsPreferText['foreground'] = '#000000'
+        channelPreferText['background'] = '#F0F0F0'
+        channelPreferText['foreground'] = '#000000'
         resCommitBtn['background'] = '#F0F0F0'
         resCommitBtn['activebackground'] = '#F0F0F0'
         resCommitBtn['foreground'] = '#000000'
@@ -1281,6 +1479,10 @@ def SetLauncherConfigurationValues(*args):
         modsPreferApply['activebackground'] = '#F0F0F0'
         modsPreferApply['foreground'] = '#000000'
         modsPreferApply['activeforeground'] = '#000000'
+        channelPreferApply['background'] = '#F0F0F0'
+        channelPreferApply['activebackground'] = '#F0F0F0'
+        channelPreferApply['foreground'] = '#000000'
+        channelPreferApply['activeforeground'] = '#000000'
         systemConfigFileEdit['background'] = '#F0F0F0'
         systemConfigFileEdit['activebackground'] = '#F0F0F0'
         systemConfigFileEdit['foreground'] = '#000000'
@@ -1293,6 +1495,10 @@ def SetLauncherConfigurationValues(*args):
         modsPreferOptionMenu['activebackground'] = '#F0F0F0'
         modsPreferOptionMenu['foreground'] = '#000000'
         modsPreferOptionMenu['activeforeground'] = '#000000'
+        channelPreferOptionMenu['background'] = '#F0F0F0'
+        channelPreferOptionMenu['activebackground'] = '#F0F0F0'
+        channelPreferOptionMenu['foreground'] = '#000000'
+        channelPreferOptionMenu['activeforeground'] = '#000000'
         modsMuteCheckBox['background'] = '#F0F0F0'
         modsMuteCheckBox['activebackground'] = '#F0F0F0'
         modsMuteCheckBox['selectcolor'] = '#F0F0F0'
@@ -1327,9 +1533,6 @@ def RequirementCheck():
         else:
             logformat(errorLevel.WARN, 'QRes install check dialog rejected due to IgnoreResProgramInstallDialog setting is true.\n\tPlease install QRes if would you like change display resolution.')
             print(f"\t{color.YELLOW.value}URL:{color.BLUE.value} https://www.softpedia.com/get/Multimedia/Video/Other-VIDEO-Tools/QRes.shtml{color.RESET.value}")
-    if diablo2Path is None and diablo3Path is None and diablo4Path is None:
-        logformat(errorLevel.WARN, 'The game does not exist in registry.')
-        messagebox.showwarning('디아블로 런처', '이 컴퓨터에 디아블로 게임을 찾을 수 없습니다. 자세한 사항은 GitHub에 방문해 주세요.')
 
 def UpdateStatusValue():
     FindGameInstalled()
@@ -1338,9 +1541,9 @@ def UpdateStatusValue():
     cnt_time = now.strftime("%H:%M:%S")
 
     if resolutionProgram:
-        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
+        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if gameExecuted else f'{originX}x{originY} {originFR}Hz'}\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n"
     else:
-        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n"
+        status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n"
 
 def ReloadStatusBar():
     loadStart = time.time()
@@ -1436,6 +1639,7 @@ def init():
     global modMenu
     global root
     global launch
+    global filteredGame
 
     root = Tk()
     root.withdraw()
@@ -1463,6 +1667,7 @@ def init():
     root.protocol("WM_DELETE_WINDOW", ExitProgram)
     signal.signal(signal.SIGINT, InterruptProgram)
 
+    filteredGame = loadSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"])
     agentLaunched = loadSettings(parentLocation.UserAppData, ["General", "AgentLaunched"])
     if agentLaunched is not None and agentLaunched is False:
         dumpSettings(parentLocation.UserAppData, ["General", "AgentLaunched"], True)
@@ -1500,6 +1705,14 @@ def init():
             logformat(errorLevel.INFO, f'The {diablo4Path} directory exist. The target directory will now open.')
             os.startfile(f'"{diablo4Path}"')
 
+    def OpenWoWDir():
+        if wowLive is not None:
+            os.startfile(f'"{wowLive}"')
+        elif wowClassic is not None:
+            os.startfile(f'"{wowClassic}"')
+        else:
+            os.startfile(f'"{wowHardcoreClassic}"')
+
     def openControlPanel():
         Popen('control.exe appwiz.cpl', shell=True)
 
@@ -1528,7 +1741,7 @@ def init():
             else:
                 logformat(errorLevel.INFO, "Installed Diablo version: None")
 
-            logformat(errorLevel.INFO, f"Diablo Executed: {'True' if diabloExecuted else 'False'}")
+            logformat(errorLevel.INFO, f"Game Executed: {'True' if gameExecuted else 'False'}")
             logformat(errorLevel.INFO, "===== End Report ======")
             logformat(errorLevel.WARN, 'NOTE: Please attach the terminal output after the code-page log')
             webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/issues')
@@ -1657,7 +1870,7 @@ def init():
         ShowWindow()
 
     def ModAutoApply():
-        if diabloExecuted or check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True) is not None:
+        if gameExecuted or check_terminal_output('tasklist | findstr "Battle.net.exe" > NUL 2>&1', True) is not None:
             logformat(errorLevel.ERR, "Unable to open mods helper. reason: Battle.net or Diablo is now running.")
             messagebox.showerror(title='디아블로 모드', message='현재 디아블로 또는 Battle.net이 실행 중입니다. 예기치 않은 오류를 최소화하기 위해 먼저 해당 앱을 종료한 후 다시 시도해 주세요.')
             ShowWindow()
@@ -1823,6 +2036,7 @@ def init():
     gameMenu.add_command(label='D2R 디렉토리 열기', command=OpenD2RDir, state='disabled')
     gameMenu.add_command(label='Diablo III 디렉토리 열기', command=OpenD3Dir, state='disabled')
     gameMenu.add_command(label='Diablo IV 디렉토리 열기', command=OpenD4Dir, state='disabled')
+    gameMenu.add_command(label='WoW 디렉토리 열기', command=OpenWoWDir, state='disabled')
 
     aboutMenu.add_cascade(label='게임 디렉토리', menu=gameMenu)
     aboutMenu.add_command(label='통계 디렉토리 열기', command=OpenGameStatusDir, state='disabled')
@@ -1845,7 +2059,7 @@ def init():
     root.bind_all("<Control-,>", SetLauncherConfigurationValues)
 
     welcome = Label(root, text='')
-    switchButton = Button(rootFrame, text='디아블로 실행...', command=LaunchGameAgent, width=35, height=5, state='disabled')
+    switchButton = Button(rootFrame, text=f'{"디아블로" if filteredGame == "Diablo" else "WoW"} 실행...', command=LaunchGameAgent, width=35, height=5, state='disabled')
     emergencyButton = Button(rootFrame, text='긴급 전원 작업\n(게임 저장 후 실행 요망)', width=35, height=5, command=EmgergencyReboot)
 
     switchButton.grid(column=0, row=0)
@@ -1859,15 +2073,15 @@ def init():
     RequirementCheck()
 
     if resolutionProgram:
-        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if diabloExecuted else f'{originX}x{originY} {originFR}Hz'}\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
+        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if gameExecuted else f'{originX}x{originY} {originFR}Hz'}\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n")
     else:
-        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n디아블로 실행: {'예' if diabloExecuted else '아니요'}\n")
+        status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n")
 
     if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
-        info = Label(root, text='도움말\n디아블로를 원할히 플레이하려면 DiabloLauncher 환경 변수를 설정해 주세요.\n게임 디렉토리, 해상도를 변경하려면 DiabloLauncher 환경변수를 편집하세요.\nBootCamp 사운드 장치가 작동하지 않을 경우 소리 문제 해결 메뉴를 확인해 보세요.')
+        info = Label(root, text=f'도움말\n{"디아블로" if filteredGame == "Diablo" else "WoW"}를 원할히 플레이하려면 디아블로 런처 설정을 확인해 주세요.\n게임 디렉토리, 해상도를 변경하려면 디아블로 런처 설정을 수정하세요.\nBootCamp 사운드 장치가 작동하지 않을 경우 소리 문제 해결 메뉴를 확인해 보세요.')
     else:
-        info = Label(root, text='도움말\n디아블로를 원할히 플레이하려면 DiabloLauncher 환경 변수를 설정해 주세요.\n게임 디렉토리, 해상도를 변경하려면 DiabloLauncher 환경변수를 편집하세요.\n디아블로를 실행하기 전 사운드 장치가 제대로 설정 되어있는지 확인해 보세요.')
-    notice = Label(root, text="Blizzard 정책상 게임 실행은 직접 실행하여야 하며 실행시 알림창 지시를 따르시기 바랍니다.\n해당 프로그램을 사용함으로써 발생하는 모든 불이익은 전적으로 사용자에게 있습니다.\n지원되는 디아블로 버전은 Diablo II Resurrected, Diablo III, Diablo IV 입니다.")
+        info = Label(root, text=f'도움말\n{"디아블로" if filteredGame == "Diablo" else "WoW"}를 원할히 플레이하려면 디아블로 런처 설정을 확인해 주세요.\n게임 디렉토리, 해상도를 변경하려면 디아블로 런처 설정을 수정하세요.\n{"디아블로" if filteredGame == "Diablo" else "WoW"}를 실행하기 전 사운드 장치가 제대로 설정 되어있는지 확인해 보세요.')
+    notice = Label(root, text=f"Blizzard 정책상 게임 실행은 직접 실행하여야 하며 실행시 알림창 지시를 따르시기 바랍니다.\n해당 프로그램을 사용함으로써 발생하는 모든 불이익은 전적으로 사용자에게 있습니다.\n{'지원되는 디아블로 버전은 Diablo II Resurrected, Diablo III, Diablo IV 입니다.' if filteredGame == 'Diablo' else '지원되는 WoW 버전은 라이브, 클래식, 하드코어 입니다.'}")
 
     statusbar = Label(root, text='Initializing...', bd=1, relief='sunken')
 
