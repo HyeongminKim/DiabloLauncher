@@ -406,7 +406,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     elif(gameName == 'Diablo IV'):
         os.popen(f'"{diablo4Path}/{gameName} Launcher.exe"')
     elif(gameName == '_retail_'):
-        os.popen(f'"{bnetPath}" --productcode=wow_retail')
+        os.popen(f'"{bnetPath}" --productcode=wow')
     elif(gameName == '_classic_'):
         os.popen(f'"{bnetPath}" --productcode=wow_classic')
     elif(gameName == '_classic_era_'):
@@ -765,112 +765,106 @@ def FindGameInstalled():
     else:
         bnetPath = None
 
-    if filteredGame == "Diablo":
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
-            logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
-            gameMenu.entryconfig(0, state='normal')
-            modMenu.entryconfig(3, state='normal')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')):
+        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check enabled.')
+        gameMenu.entryconfig(0, state='normal')
+        modMenu.entryconfig(3, state='normal')
 
-            diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
-            if os.path.isdir(f'{diablo2Path}/mods'):
-                modMenu.entryconfig(0, state='normal')
-                modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
-                modMenu.entryconfig(1, state='disabled')
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
-                GetModDetails()
-                envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
-                envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
+        diablo2Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo II Resurrected')
+        if os.path.isdir(f'{diablo2Path}/mods'):
+            modMenu.entryconfig(0, state='normal')
+            modMenu.entryconfig(1, label='활성화된 모드: 검색중...')
+            modMenu.entryconfig(1, state='disabled')
+            logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory detected.')
+            GetModDetails()
+            envModState = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "IgnoreModsMergeDialog"])
+            envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
 
-                if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
-                    logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                    modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
+            if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
+                logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
+                modMenu.entryconfig(1, label=f'감지된 모드: {definedMod[0]} 외 {len(definedMod) - 1}개')
+                modMenu.entryconfig(1, state='normal')
+                modMenu.entryconfig(1, command=ModsPreferSelector)
+            elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
+                logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
+                modMenu.entryconfig(1, label='새로운 모드 탐색')
+                modMenu.entryconfig(1, state='normal')
+                modMenu.entryconfig(1, command=DownloadModsLink)
+                definedMod = None
+            elif definedMod is not None and isinstance(definedMod, str):
+                if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
+                    external_conf = loadConfigurationFile()
+                    if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
+                        modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
+                    else:
+                        modMenu.entryconfig(1, label=f'감지된 모드: {definedMod}')
                     modMenu.entryconfig(1, state='normal')
-                    modMenu.entryconfig(1, command=ModsPreferSelector)
-                elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
-                    logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
-                    modMenu.entryconfig(1, label='새로운 모드 탐색')
-                    modMenu.entryconfig(1, state='normal')
-                    modMenu.entryconfig(1, command=DownloadModsLink)
-                    definedMod = None
-                elif definedMod is not None and isinstance(definedMod, str):
-                    if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
+                    modMenu.entryconfig(1, command=SearchModInGitHub)
+                elif filteredGame == "Diablo":
+                    try:
+                        request.urlopen('https://kr.shop.battle.net/ko-kr?from=root', timeout=1)
+                        modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
                         external_conf = loadConfigurationFile()
                         if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                            modMenu.entryconfig(1, label=f'활성화된 모드: {definedMod}')
-                        else:
-                            modMenu.entryconfig(1, label=f'감지된 모드: {definedMod}')
-                        modMenu.entryconfig(1, state='normal')
-                        modMenu.entryconfig(1, command=SearchModInGitHub)
-                    else:
-                        try:
-                            request.urlopen('https://kr.shop.battle.net/ko-kr?from=root', timeout=1)
-                            modMenu.entryconfig(1, label='활성화된 모드: 검증 오류')
-                            external_conf = loadConfigurationFile()
-                            if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                                unloadMods = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n게임 실행 시 모드가 적용되지 않거나 제대로 작동하지 않을 수 있습니다. 모드를 적용해제 하시겠습니까?', icon='warning')
-                                if unloadMods:
-                                    dumpConfigurationFile('')
-                                    logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
-                                    FindGameInstalled()
-                        except RequestError.URLError:
-                            modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
-                            resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
-                            if resolveTool: webbrowser.open('ms-contact-support://smc-to-emerald/NetworkAndInternetTroubleshooter')
-                        logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
-                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
-                        logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
-                else:
-                    logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
-                    modMenu.entryconfig(1, label='새로운 모드 탐색')
-                    modMenu.entryconfig(1, state='normal')
-                    modMenu.entryconfig(1, command=DownloadModsLink)
-                    definedMod = None
+                            unloadMods = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n게임 실행 시 모드가 적용되지 않거나 제대로 작동하지 않을 수 있습니다. 모드를 적용해제 하시겠습니까?', icon='warning')
+                            if unloadMods:
+                                dumpConfigurationFile('')
+                                logformat(errorLevel.INFO, f'Successfully unloaded mods name: " -mod {definedMod} -txt" in {userApp}/Battle.net/Battle.net.config.')
+                                FindGameInstalled()
+                    except RequestError.URLError:
+                        modMenu.entryconfig(1, label='활성화된 모드: 알 수 없음')
+                        resolveTool = messagebox.askyesno(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다.\n이 문제는 주로 클라우드 스토리지에 저장된 모드에 접근할 수 없을 경우 발생할 수 있습니다. 디바이스가 인터넷에 연결되어 있는지 확인해 주세요.\n네트워크 문제해결 마법사를 실행하시겠습니까?', icon='warning')
+                        if resolveTool: webbrowser.open('ms-contact-support://smc-to-emerald/NetworkAndInternetTroubleshooter')
+                    logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
+                    logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
+                    logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
             else:
-                logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
-                modMenu.entryconfig(0, state='disabled')
+                logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
                 modMenu.entryconfig(1, label='새로운 모드 탐색')
                 modMenu.entryconfig(1, state='normal')
                 modMenu.entryconfig(1, command=DownloadModsLink)
                 definedMod = None
         else:
-            logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
-            gameMenu.entryconfig(0, state='disabled')
+            logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
             modMenu.entryconfig(0, state='disabled')
-            modMenu.entryconfig(1, state='disabled')
-            modMenu.entryconfig(3, state='disabled')
-            modMenu.entryconfig(1, label='게임이 설치되지 않음')
+            modMenu.entryconfig(1, label='새로운 모드 탐색')
+            modMenu.entryconfig(1, state='normal')
+            modMenu.entryconfig(1, command=DownloadModsLink)
             definedMod = None
-
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
-            diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
-            gameMenu.entryconfig(1, state='normal')
-        else:
-            gameMenu.entryconfig(1, state='disabled')
-
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')):
-            diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')
-            gameMenu.entryconfig(2, state='normal')
-        else:
-            gameMenu.entryconfig(2, state='disabled')
     else:
+        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo II Resurrected does not installed.')
+        gameMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(0, state='disabled')
         modMenu.entryconfig(1, state='disabled')
         modMenu.entryconfig(3, state='disabled')
-        modMenu.entryconfig(1, label='WoW 미지원')
+        modMenu.entryconfig(1, label='게임이 설치되지 않음')
+        definedMod = None
 
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Burning Crusade Classic')):
-            wowClassic = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Burning Crusade Classic')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')):
+        diablo3Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo III')
+        gameMenu.entryconfig(1, state='normal')
+    else:
+        gameMenu.entryconfig(1, state='disabled')
 
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft Classic Era')):
-            wowHardcoreClassic = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft Classic Era')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')):
+        diablo4Path = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Diablo IV')
+        gameMenu.entryconfig(2, state='normal')
+    else:
+        gameMenu.entryconfig(2, state='disabled')
 
-        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft')):
-            wowLive = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Burning Crusade Classic')):
+        wowClassic = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Burning Crusade Classic')
 
-        if wowClassic is None and wowHardcoreClassic is None and wowLive is None:
-            gameMenu.entryconfig(3, state='disabled')
-        else:
-            gameMenu.entryconfig(3, state='normal')
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft Classic Era')):
+        wowHardcoreClassic = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft Classic Era')
+
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft')):
+        wowLive = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\World of Warcraft')
+
+    if wowClassic is None and wowHardcoreClassic is None and wowLive is None:
+        gameMenu.entryconfig(3, state='disabled')
+    else:
+        gameMenu.entryconfig(3, state='normal')
 
     if gameExecuted: return
     if(filteredGame == "Diablo"):
@@ -893,6 +887,12 @@ def FindGameInstalled():
             else:
                 fileMenu.entryconfig(0, state='disabled')
     else:
+        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo game was filtered.')
+        modMenu.entryconfig(0, state='disabled')
+        modMenu.entryconfig(1, state='disabled')
+        modMenu.entryconfig(3, state='disabled')
+        modMenu.entryconfig(1, label='WoW 미지원')
+
         if(wowClassic is None and wowHardcoreClassic is None and wowLive is None):
             switchButton['state'] = "normal"
             if(bnetPath is not None):
@@ -1182,10 +1182,14 @@ def SetLauncherConfigurationValues(*args):
         else:
             modsPreferApply['state'] = 'normal'
 
-        if modsMuteConfig and modsPreferPreviousSetting is None:
-            modsPreferOptionMenu['state'] = 'disabled'
+        if filteredGame == "Diablo":
+            appliedexternalfiles = loadConfigurationFile()
+            if modsMuteConfig and modsPreferPreviousSetting is None or appliedexternalfiles is not None and appliedexternalfiles != "":
+                modsPreferOptionMenu['state'] = 'disabled'
+            else:
+                modsPreferOptionMenu['state'] = 'normal'
         else:
-            modsPreferOptionMenu['state'] = 'normal'
+            modsPreferOptionMenu['state'] = 'disabled'
 
     def updateModsData():
         global modsPreferPreviousSetting
@@ -1283,6 +1287,8 @@ def SetLauncherConfigurationValues(*args):
         filteredGame = convertedChannel
         FindGameInstalled()
         GetModDetails()
+        updateModsData()
+        testModsApply()
         UpdateStatusValue()
         testChannelSetting()
 
