@@ -1668,6 +1668,10 @@ def init():
     signal.signal(signal.SIGINT, InterruptProgram)
 
     filteredGame = loadSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"])
+    if filteredGame is None:
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"], "Diablo")
+        filteredGame = loadSettings(parentLocation.UserLocalAppData, ["General", "GameChannel"])
+
     agentLaunched = loadSettings(parentLocation.UserAppData, ["General", "AgentLaunched"])
     if agentLaunched is not None and agentLaunched is False:
         dumpSettings(parentLocation.UserAppData, ["General", "AgentLaunched"], True)

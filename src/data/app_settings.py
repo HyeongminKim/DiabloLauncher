@@ -18,6 +18,8 @@ def loadSettings(scope: parentLocation, target_key: list[str]):
         with open(f'{scope.value}/DiabloLauncher/DiabloLauncher.config', 'r', encoding='utf-8') as file:
             data = load(file)
 
+        checkConfigurationStructure(scope, target_key)
+
         if len(target_key) == 2:
             target = data[target_key[0]][target_key[1]]
         elif len(target_key) == 3:
