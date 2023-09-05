@@ -1,5 +1,5 @@
-# Battle.net Launcher
-해상도를 반자동으로 변경해 주는 배틀넷 런처
+# DiabloLauncher
+해상도를 반자동으로 변경해 주는 디아블로 런처
 
 ### 요구 사항
 <table>
@@ -55,4 +55,4 @@
 ### 타사 라이선스 안내
 - 디아블로(Diablo), WoW(World of Warcraft), 블리자드(Blizzard)는 [Blizzard Entertainment, Inc.](https://www.blizzard.com/en-us/legal/9c9cb70b-d1ed-4e17-998a-16c6df46be7b/copyright-notices) 의 등록 상표입니다.
 - BootCamp, macOS는 [Apple, Inc.](https://www.apple.com/kr/legal/intellectual-property/guidelinesfor3rdparties.html) 의 등록 상표입니다.
-- 위 저작권 고지는 배틀넷 런처 내 `[정보]->[이 배틀넷 런처에 관하여...]` 에서 볼 수 있습니다.
+- 위 저작권 고지는 디아블로 런처 내 `[정보]->[이 디아블로 런처에 관하여...]` 에서도 볼 수 있습니다.
