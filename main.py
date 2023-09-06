@@ -1583,7 +1583,7 @@ def ReloadStatusBar():
     logformat(errorLevel.INFO, f'Previous game time for avg session: {avgTime}')
     logformat(errorLevel.INFO, f'Previous game time for sum session: {sumTime}')
 
-    if count >= 10 or len(f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}") > 57:
+    if count >= 10 or count >= 3 and len(f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}") > 57:
         statusbar['text'] = f"세션: {count}개 | 최고: {maxTime} | 평균: {avgTime} | 합계: {sumTime}"
         statusbar['anchor'] = CENTER
         toolsMenu.entryconfig(7, state='normal')
