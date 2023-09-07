@@ -1552,6 +1552,13 @@ def UpdateStatusValue():
     else:
         status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n"
 
+    if os.path.isfile('C:/Program Files/Boot Camp/Bootcamp.exe'):
+        info['text'] = f'도움말\n{"디아블로" if filteredGame == "Diablo" else "WoW"}를 원할히 플레이하려면 디아블로 런처 설정을 확인해 주세요.\n게임 디렉토리, 해상도를 변경하려면 디아블로 런처 설정을 수정하세요.\nBootCamp 사운드 장치가 작동하지 않을 경우 소리 문제 해결 메뉴를 확인해 보세요.'
+    else:
+        info['text'] = f'도움말\n{"디아블로" if filteredGame == "Diablo" else "WoW"}를 원할히 플레이하려면 디아블로 런처 설정을 확인해 주세요.\n게임 디렉토리, 해상도를 변경하려면 디아블로 런처 설정을 수정하세요.\n{"디아블로" if filteredGame == "Diablo" else "WoW"}를 실행하기 전 사운드 장치가 제대로 설정 되어있는지 확인해 보세요.'
+    notice['text'] = f"Blizzard 정책상 게임 실행은 직접 실행하여야 하며 실행시 알림창 지시를 따르시기 바랍니다.\n해당 프로그램을 사용함으로써 발생하는 모든 불이익은 전적으로 사용자에게 있습니다.\n{'지원되는 디아블로 버전은 Diablo II Resurrected, Diablo III, Diablo IV 입니다.' if filteredGame == 'Diablo' else '지원되는 WoW 버전은 라이브, 클래식, 하드코어 입니다.'}"
+
+
 def ReloadStatusBar():
     loadStart = time.time()
 
