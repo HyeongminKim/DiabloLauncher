@@ -591,21 +591,21 @@ def LaunchGameAgent():
                 diablo4['state'] = "normal"
                 diablo4['text'] = 'Diablo IV'
         else:
-            if wowLive is None or not os.path.isfile(f'{wowLive}/_retail_/World of Warcraft.exe'):
+            if wowLive is None or not os.path.isfile(f'{wowLive}/_retail_/Wow.exe'):
                 logformat(errorLevel.INFO, 'WoW _retail_ launch button disabled, because launcher is not detected.')
                 wow_live['state'] = "disabled"
             else:
                 wow_live['state'] = "normal"
                 wow_live['text'] = "월드 오브 워크래프트"
 
-            if wowClassic is None or not os.path.isfile(f'{wowClassic}/_classic_/WoWClassic.exe'):
+            if wowClassic is None or not os.path.isfile(f'{wowClassic}/_classic_/WowClassic.exe'):
                 logformat(errorLevel.INFO, 'WoW _classic_ launch button disabled, because launcher is not detected.')
                 wow_classic['state'] = "disabled"
             else:
                 wow_classic['state'] = "normal"
                 wow_classic['text'] = "불타는 성전 클래식"
 
-            if wowHardcoreClassic is None or not os.path.isfile(f'{wowHardcoreClassic}/_classic_era_/WoWClassic.exe'):
+            if wowHardcoreClassic is None or not os.path.isfile(f'{wowHardcoreClassic}/_classic_era_/WowClassic.exe'):
                 logformat(errorLevel.INFO, 'WoW _classic_era_ launch button disabled, because launcher is not detected.')
                 wow_hardcore['state'] = "disabled"
             else:
