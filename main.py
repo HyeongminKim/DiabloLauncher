@@ -1742,7 +1742,7 @@ def init():
         cnt_time = now.strftime("%H:%M:%S")
         msg_box = messagebox.askyesno(title='디아블로 런처', message='이슈를 제보할 경우 터미널에 출력된 전체 로그와 경고창, 프로그램 화면 등을 첨부하여 주세요. 만약 가능하다면 어떠한 이유로 문제가 발생하였으며, 문제가 재현 가능한지 등을 첨부하여 주시면 좀 더 빠른 대응이 가능합니다. 지금 이슈 제보 페이지를 방문하시겠습니까?')
         if msg_box:
-            logformat(errorLevel.INFO, f"=== Generated Report at {cnt_time} ===")
+            logformat(errorLevel.WARN, f"=== Generated Report (rev: {check_terminal_output('git rev-parse --short HEAD')} [{check_terminal_output('git branch --show-current')}]) at {cnt_time} ===")
             logformat(errorLevel.INFO, f"Current agent: {platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}")
             if resolutionProgram:
                 logformat(errorLevel.INFO, f"QRes version: {check_terminal_output('QRes /S | findstr QRes')}")
@@ -1759,6 +1759,14 @@ def init():
             else:
                 logformat(errorLevel.INFO, "Installed Diablo version: None")
 
+            if wowLive is not None and wowClassic is not None and wowHardcoreClassic is not None:
+                logformat(errorLevel.INFO, "Installed WoW version: _retail_, _classic_, _classic_era_")
+            elif wowLive is not None or wowClassic is not None or wowHardcoreClassic is not None:
+                logformat(errorLevel.INFO, "Installed WoW version: partially")
+            else:
+                logformat(errorLevel.INFO, "Installed WoW version: None")
+
+            logformat(errorLevel.INFO, f"Game Channel: {filteredGame}")
             logformat(errorLevel.INFO, f"Game Executed: {'True' if gameExecuted else 'False'}")
             logformat(errorLevel.INFO, "===== End Report ======")
             logformat(errorLevel.WARN, 'NOTE: Please attach the terminal output after the code-page log')
