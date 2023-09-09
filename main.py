@@ -285,10 +285,19 @@ def UpdateProgram():
             updatedCommit = os.popen('git rev-parse HEAD').read().strip()
             remoteVersion = os.popen('git rev-parse --short HEAD').read().strip()
             result = check_terminal_output(f'git log --no-merges --pretty=format:"- %s" {updatedCommit}...{localCommit}')
+            resultRow = result.count("\n")
 
-            if localVersion != remoteVersion:
+            if localVersion != remoteVersion and resultRow <= 5:
                 messagebox.showinfo('디아블로 런처', f"디아블로 런처가 성공적으로 업데이트 되었습니다.\n\n\t-- 새로운 기능 ({localVersion} → {remoteVersion}) --\n{result}\n\n업데이트를 반영하시려면 프로그램을 다시 시작해 주세요.")
-                logformat(errorLevel.INFO, f'Successfully updated ({localVersion} → {remoteVersion}). Please restart DiabloLauncher to apply updates...')
+                logformat(errorLevel.INFO, f'Successfully updated ({localVersion} → {remoteVersion}) and user can watchable new features list ({resultRow}/5).')
+                logformat(errorLevel.INFO, 'Please restart DiabloLauncher to apply updates...')
+            elif localVersion != remoteVersion and resultRow > 5:
+                messagebox.showinfo('디아블로 런처', f"디아블로 런처가 성공적으로 업데이트 되었습니다.\n\n\t-- 새로운 기능 ({localVersion} → {remoteVersion}) --\n{resultRow}개의 커밋을 여기에 모두 표시할 수 없습니다. 변경된 사항을 확인하고 싶을 경우 레포를 참고해 주세요.\n\n업데이트를 반영하시려면 프로그램을 다시 시작해 주세요.")
+                logformat(errorLevel.INFO, f'Successfully updated ({localVersion} → {remoteVersion}) and user will not watchable new features list ({resultRow}/5).')
+                logformat(errorLevel.INFO, 'Please see below if you want track changed list:')
+                logformat(errorLevel.INFO, f'\t- from: {localCommit}')
+                logformat(errorLevel.INFO, f'\t-   to: {updatedCommit}')
+                logformat(errorLevel.INFO, 'Please restart DiabloLauncher to apply updates...')
             else:
                 if updateChecked:
                     messagebox.showinfo('디아블로 런처', '디아블로 런처가 최신 버전입니다.')
