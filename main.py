@@ -876,7 +876,15 @@ def FindGameInstalled():
     else:
         gameMenu.entryconfig(3, state='normal')
 
+    if filteredGame == "WoW":
+        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo game was filtered.')
+        modMenu.entryconfig(0, state='disabled')
+        modMenu.entryconfig(1, state='disabled')
+        modMenu.entryconfig(3, state='disabled')
+        modMenu.entryconfig(1, label='WoW 미지원')
+
     if gameExecuted: return
+
     if(filteredGame == "Diablo"):
         if(diablo2Path is None and diablo3Path is None and diablo4Path is None):
             switchButton['state'] = "normal"
@@ -897,12 +905,6 @@ def FindGameInstalled():
             else:
                 fileMenu.entryconfig(0, state='disabled')
     else:
-        logformat(errorLevel.INFO, 'Diablo II Resurrected mod check disabled, because Diablo game was filtered.')
-        modMenu.entryconfig(0, state='disabled')
-        modMenu.entryconfig(1, state='disabled')
-        modMenu.entryconfig(3, state='disabled')
-        modMenu.entryconfig(1, label='WoW 미지원')
-
         if(wowClassic is None and wowHardcoreClassic is None and wowLive is None):
             switchButton['state'] = "normal"
             if(bnetPath is not None):
