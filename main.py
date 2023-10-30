@@ -40,7 +40,6 @@ try:
 
     import multiprocessing
     import sys
-    from winsound import Beep
     import webbrowser
     from urllib import request, error as RequestError
 
@@ -350,13 +349,25 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     currentSoundSettings = loadSettings(parentLocation.UserLocalAppData, ["General", "TestSpeakerSoundPlay"])
     if currentSoundSettings:
         try:
+            from winsound import Beep
             Beep(200, 500)
+
+            import pyaudio
+            p = pyaudio.PyAudio()
+            data = p.get_default_output_device_info()
+            logformat(errorLevel.INFO, f"Current sound output device: {data['name']}.")
+            messagebox.showinfo(title='디아블로 런처', message=f"출력 장치가 예상한 것과 같을 경우 계속 진행할 수 있습니다.\n현재 출력: {data['name']}\n\n※ 실행 중 장치가 변경될 경우 감지하지 못할 수 있음")
+            del Beep
+            del pyaudio
+        except ModuleNotFoundError as error:
+            logformat(errorLevel.WARN, f"No module named '{error}'. Some features are limited.")
         except RuntimeError:
             logformat(errorLevel.ERR, 'No sound output device detected. Check your speaker connection.')
             messagebox.showerror(title='디아블로 런처', message='사운드 장치를 찾을 수 없습니다. 디아블로를 안정적으로 플레이하기 위해 먼저 스피커가 제대로 연결되어 있는지 확인해 주시기 바랍니다.')
             HideWindow()
             UpdateStatusValue()
             ReloadStatusBar()
+            del Beep
             return
     else:
         logformat(errorLevel.INFO, f'Skipping Test sound device function due to Speaker test setting is {currentSoundSettings}.')
