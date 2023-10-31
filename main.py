@@ -30,7 +30,7 @@ try:
         print(f'\033[33m[FATL: 70-01-01 12:00] This {platform.system()} system will not supported native GUI alert.\033[0m')
         raise OSError(f'{platform.system()} system does not support yet.')
 
-    call('chcp 65001 > NUL', shell=True)
+    call('chcp 65001 > NUL & set PYTHONIOENCODING=utf-8', shell=True)
     logformat(errorLevel.INFO, 'Active code page: UTF-8 (0xfde9)')
 
     if platform.release() == '7' or platform.release() == '8' or platform.release() == '10' or platform.release() == '11':
@@ -352,13 +352,19 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             from winsound import Beep
             Beep(200, 500)
 
-            import pyaudio
-            p = pyaudio.PyAudio()
-            data = p.get_default_output_device_info()
-            logformat(errorLevel.INFO, f"Current sound output device: {data['name']}.")
-            messagebox.showinfo(title='디아블로 런처', message=f"출력 장치가 예상한 것과 같을 경우 계속 진행할 수 있습니다.\n현재 출력: {data['name']}\n\n※ 실행 중 장치가 변경될 경우 감지하지 못할 수 있음")
+            from json import loads
+            data = check_terminal_output('chcp 65001 > NUL & set PYTHONIOENCODING=utf-8 & python -c "import pyaudio; p = pyaudio.PyAudio(); print(p.get_default_output_device_info())"')
+            if data is not None:
+                data = data.replace('\'', '\"')
+                logformat(errorLevel.INFO, data)
+                data = loads(data)
+                logformat(errorLevel.INFO, f"Current sound output device: {data['name']}.")
+                if len(data['name']) >= 30:
+                    data['name'] = f"{data['name'][0:27]}..."
+
+                messagebox.showinfo(title='디아블로 런처', message=f"출력 장치가 예상한 것과 같을 경우 계속 진행할 수 있습니다.\n현재 출력: {data['name']}\n\n※ 실행 중 장치가 변경될 경우 감지하지 못할 수 있음")
             del Beep
-            del pyaudio
+            del loads
         except ModuleNotFoundError as error:
             logformat(errorLevel.WARN, f"No module named '{error}'. Some features are limited.")
         except RuntimeError:
