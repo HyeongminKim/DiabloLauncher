@@ -439,6 +439,10 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     elif(gameName == '_classic_era_'):
         os.popen(f'"{bnetPath}" --productcode=wow_classic_era')
 
+    externalCmd = loadSettings(parentLocation.UserLocalAppData, ["General", "GameStartCommand"])
+    if externalCmd is not None and externalCmd != "":
+        os.popen(externalCmd)
+
     toolsMenu.entryconfig(3, state='disabled')
     gameStartTime = time.time()
     UpdateStatusValue()
@@ -478,6 +482,11 @@ def LaunchGameAgent():
                 messagebox.showinfo('디아블로 런처', f'이번 세션에는 {minutes}분 {seconds}초 동안 플레이 했습니다. ')
             else:
                 messagebox.showinfo('디아블로 런처', f'이번 세션에는 {minutes}분 동안 플레이 했습니다. ')
+
+        externalCmd = loadSettings(parentLocation.UserLocalAppData, ["General", "GameStopCommand"])
+        if externalCmd is not None and externalCmd != "":
+            os.popen(externalCmd)
+
         UpdateStatusValue()
         ReloadStatusBar()
     else:

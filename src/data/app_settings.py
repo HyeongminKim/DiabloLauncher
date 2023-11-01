@@ -68,7 +68,9 @@ def makeConfigurationFileStructures(scope: parentLocation):
             "General": {
                 "LoggingInfoLevel": False,
                 "TestSpeakerSoundPlay": False,
-                "GameChannel": "Diablo"
+                "GameChannel": "Diablo",
+                "GameStartCommand": None,
+                "GameStopCommand": None
             },
             "ScreenResolution": {
                 "IgnoreResProgramInstallDialog": False,
