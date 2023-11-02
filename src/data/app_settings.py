@@ -77,12 +77,12 @@ def makeConfigurationFileStructures(scope: parentLocation):
                 "OriginResolutionVector": {
                     "OriginX": None,
                     "OriginY": None,
-                    "OriginFR": None,
+                    "OriginFR": None
                 },
                 "AlteredResolutionVector": {
                     "AlteredX": None,
                     "AlteredY": None,
-                    "AlteredFR": None,
+                    "AlteredFR": None
                 }
             },
             "ModsManager": {
@@ -138,8 +138,18 @@ def checkConfigurationStructure(scope: parentLocation, target_key: list[str]):
         logformat(errorLevel.WARN, f'The current {target_key} settings does not configured yet. Making configuration structures.')
 
         if len(target_key) == 2:
+            if target_key[0] not in data:
+                data[target_key[0]] = {}
+
             data[target_key[0]][target_key[1]] = None
+
         elif len(target_key) == 3:
+            if target_key[0] not in data:
+                data[target_key[0]] = {}
+
+            if target_key[1] not in data[target_key[0]]:
+                data[target_key[0]][target_key[1]] = {}
+
             data[target_key[0]][target_key[1]][target_key[2]] = None
 
         with open(f'{scope.value}/DiabloLauncher/DiabloLauncher.config', 'w', encoding='utf-8') as file:
