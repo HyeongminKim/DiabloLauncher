@@ -440,6 +440,48 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     elif(gameName == '_classic_era_'):
         os.popen(f'"{bnetPath}" --productcode=wow_classic_era')
 
+    launchBlackbox = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"])
+    if launchBlackbox is None:
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], False)
+    elif launchBlackbox is not None and launchBlackbox:
+        OBSInstalledPath = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "OBSInstalledPath"])
+        if OBSInstalledPath is not None and OBSInstalledPath != "":
+            OBSInstalledDir = os.path.dirname(OBSInstalledPath)
+
+            StartProfile = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"])
+            StartScene = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"])
+
+            Streaming = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"])
+            if Streaming is None:
+                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
+                Streaming = False
+
+            Recording = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"])
+            if Recording is None:
+                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"], False)
+                Recording = False
+
+            ReplayBuf = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"])
+            if ReplayBuf is None:
+                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"], False)
+                ReplayBuf = False
+
+            Minimize = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"])
+            if Minimize is None:
+                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"], False)
+                Minimize = False
+
+            command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}"'
+            if StartProfile is not None and StartProfile != "":
+                command = f"{command} --profile {StartProfile}"
+
+            if StartScene is not None and StartScene != "":
+                command = f"{command} --scene {StartScene}"
+
+            command = f"{command}{' --startstreaming' if Streaming else ''}{' --startrecording' if Recording else ''}{' --startreplaybuffer' if ReplayBuf else ''}{' --minimize-to-tray' if Minimize else ''}"
+            logformat(errorLevel.INFO, f"OBS will start with this command: {command}")
+            os.popen(command)
+
     externalCmd = loadSettings(parentLocation.UserLocalAppData, ["General", "GameStartCommand"])
     if externalCmd is not None and externalCmd != "":
         os.popen(externalCmd)

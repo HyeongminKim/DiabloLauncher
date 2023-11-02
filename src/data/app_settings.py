@@ -69,6 +69,16 @@ def makeConfigurationFileStructures(scope: parentLocation):
                 "LoggingInfoLevel": False,
                 "TestSpeakerSoundPlay": False,
                 "GameChannel": "Diablo",
+                "OBSStudioSettings": {
+                    "LaunchOBSAfterGameStart": False,
+                    "OBSInstalledPath": None,
+                    "AutoStreaming": False,
+                    "AutoRecording": False,
+                    "AutoReplayBuffer": False,
+                    "MinimizeToTray": False,
+                    "Profile": None,
+                    "Scene": None
+                },
                 "GameStartCommand": None,
                 "GameStopCommand": None
             },
