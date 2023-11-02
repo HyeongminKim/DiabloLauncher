@@ -40,6 +40,7 @@ try:
 
     import multiprocessing
     import sys
+    from math import floor
     import webbrowser
     from urllib import request, error as RequestError
 
@@ -1131,19 +1132,47 @@ def SetLauncherConfigurationValues(*args):
     def commitResolutionValue():
         if not testResolutionValue(): return
         try:
-            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginX"], envOriginX.get())
-            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginY"], envOriginY.get())
-            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginFR"], envOriginFR.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginX"], int(envOriginX.get()))
+            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginY"], int(envOriginY.get()))
+            dumpSettings(currentTarget, ["ScreenResolution", "OriginResolutionVector", "OriginFR"], int(envOriginFR.get()))
 
-            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"], envAlteredX.get())
-            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"], envAlteredY.get())
-            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"], envAlteredFR.get())
+            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredX"], int(envAlteredX.get()))
+            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"], int(envAlteredY.get()))
+            dumpSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"], int(envAlteredFR.get()))
             UpdateStatusValue()
             ReloadStatusBar()
             envWindow.destroy()
         except AttributeError as error:
             logformat(errorLevel.ERR, f"could not save screen resolution value: {error}")
             UpdateStatusValue()
+
+    def calcResolutionRatio():
+        originVectorSize = None
+        alteredVectorSize = None
+
+        if envOriginX.get() == '' or envOriginY.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '':
+            return None
+
+        for i in range(int(envOriginY.get()) + 1, 1, -1):
+            if int(envOriginX.get()) % i == 0 and int(envOriginY.get()) % i == 0:
+                originVectorSize = i
+                break
+
+        for i in range(int(envAlteredY.get()) + 1, 1, -1):
+            if int(envAlteredX.get()) % i == 0 and int(envAlteredY.get()) % i == 0:
+                alteredVectorSize = i
+                break
+
+        originXRatio = floor(int(envOriginX.get()) / originVectorSize)
+        originYRatio = floor(int(envOriginY.get()) / originVectorSize)
+
+        alteredXRatio = floor(int(envAlteredX.get()) / alteredVectorSize)
+        alteredYRatio = floor(int(envAlteredY.get()) / alteredVectorSize)
+
+        if f"{originXRatio}:{originYRatio}" == f"{alteredXRatio}:{alteredYRatio}":
+            return f"{originXRatio}:{originYRatio}"
+        else:
+            return f"{originXRatio}:{originYRatio}-{alteredXRatio}:{alteredYRatio}"
 
     def screenResolutionSwitcher():
         if not testResolutionValue(): return
@@ -1153,9 +1182,16 @@ def SetLauncherConfigurationValues(*args):
         envAlteredX['state'] = 'disabled'
         envAlteredY['state'] = 'disabled'
         envAlteredFR['state'] = 'disabled'
-        Popen(f'QRes -X {envAlteredX.get()} -Y {envAlteredY.get()} -R {envAlteredFR.get()} > NUL 2>&1', shell=True)
-        time.sleep(5)
-        Popen(f'QRes -X {envOriginX.get()} -Y {envOriginY.get()} -R {envOriginFR.get()} > NUL 2>&1', shell=True)
+
+        resultRatio = calcResolutionRatio()
+        if resultRatio is not None:
+            resTestBtn['text'] = f'{resultRatio} 테스트'
+            Popen(f'QRes -X {envAlteredX.get()} -Y {envAlteredY.get()} -R {envAlteredFR.get()} > NUL 2>&1', shell=True)
+            time.sleep(5)
+            Popen(f'QRes -X {envOriginX.get()} -Y {envOriginY.get()} -R {envOriginFR.get()} > NUL 2>&1', shell=True)
+        else:
+            messagebox.showwarning('디아블로 설정', '해상도 벡터 검증에 실패했습니다.')
+
         envOriginX['state'] = 'normal'
         envOriginY['state'] = 'normal'
         envOriginFR['state'] = 'normal'
