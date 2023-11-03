@@ -1214,7 +1214,7 @@ def SetLauncherConfigurationValues(*args):
         if f"{originXRatio}:{originYRatio}" == f"{alteredXRatio}:{alteredYRatio}":
             return f"{originXRatio}:{originYRatio}"
         else:
-            return f"{originXRatio}:{originYRatio}-{alteredXRatio}:{alteredYRatio}"
+            return f"{originXRatio}:{originYRatio} ↔ {alteredXRatio}:{alteredYRatio}"
 
     def screenResolutionSwitcher():
         if not testResolutionValue(): return
@@ -1227,7 +1227,7 @@ def SetLauncherConfigurationValues(*args):
 
         resultRatio = calcResolutionRatio()
         if resultRatio is not None:
-            resTestBtn['text'] = f'{resultRatio} 테스트'
+            resolutionText['text'] = f'해상도 벡터: {resultRatio}'
             Popen(f'QRes -X {envAlteredX.get()} -Y {envAlteredY.get()} -R {envAlteredFR.get()} > NUL 2>&1', shell=True)
             time.sleep(5)
             Popen(f'QRes -X {envOriginX.get()} -Y {envOriginY.get()} -R {envOriginFR.get()} > NUL 2>&1', shell=True)
