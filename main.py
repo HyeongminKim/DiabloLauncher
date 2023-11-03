@@ -464,10 +464,10 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
 
             command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}"'
             if StartProfile is not None and StartProfile != "":
-                command = f"{command} --profile {StartProfile}"
+                command = f'{command} --profile "{StartProfile}"'
 
             if StartScene is not None and StartScene != "":
-                command = f"{command} --scene {StartScene}"
+                command = f'{command} --scene "{StartScene}"'
 
             command = f"{command}{' --startstreaming' if Streaming else ''}{' --startrecording' if Recording else ''}{' --startreplaybuffer' if ReplayBuf else ''}{' --minimize-to-tray' if Minimize else ''}"
             logformat(errorLevel.INFO, f"OBS will start with this command: {command}")
