@@ -443,6 +443,12 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     launchBlackbox = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"])
     if launchBlackbox is None:
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], False)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "OBSInstalledPath"], None)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"], False)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"], False)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"], False)
+
     elif launchBlackbox is not None and launchBlackbox:
         OBSInstalledPath = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "OBSInstalledPath"])
         if OBSInstalledPath is not None and OBSInstalledPath != "":
@@ -452,24 +458,9 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             StartScene = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"])
 
             Streaming = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"])
-            if Streaming is None:
-                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
-                Streaming = False
-
             Recording = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"])
-            if Recording is None:
-                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"], False)
-                Recording = False
-
             ReplayBuf = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"])
-            if ReplayBuf is None:
-                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"], False)
-                ReplayBuf = False
-
             Minimize = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"])
-            if Minimize is None:
-                dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"], False)
-                Minimize = False
 
             command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}"'
             if StartProfile is not None and StartProfile != "":
