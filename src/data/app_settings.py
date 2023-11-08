@@ -77,7 +77,7 @@ def makeConfigurationFileStructures(scope: parentLocation):
                     "AutoReplayBuffer": False,
                     "MinimizeToTray": False,
                     "Profile": None,
-                    "Scene": None
+                    "Scene": [None, None]
                 },
                 "GameStartCommand": None,
                 "GameStopCommand": None

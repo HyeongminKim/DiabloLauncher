@@ -467,7 +467,10 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
                 command = f'{command} --profile "{StartProfile}"'
 
             if StartScene is not None and StartScene != "":
-                command = f'{command} --scene "{StartScene}"'
+                if filteredGame == "Diablo":
+                    command = f'{command} --scene "{StartScene[0]}"'
+                else:
+                    command = f'{command} --scene "{StartScene[1]}"'
 
             command = f"{command}{' --startstreaming' if Streaming else ''}{' --startrecording' if Recording else ''}{' --startreplaybuffer' if ReplayBuf else ''}{' --minimize-to-tray' if Minimize else ''}"
             logformat(errorLevel.INFO, f"OBS will start with this command: {command}")
