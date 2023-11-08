@@ -463,14 +463,24 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             Minimize = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"])
 
             command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}"'
+
             if StartProfile is not None and StartProfile != "":
-                command = f'{command} --profile "{StartProfile}"'
+                if isinstance(StartProfile, list):
+                    if filteredGame == "Diablo":
+                        command = f'{command} --profile "{StartProfile[0]}"'
+                    else:
+                        command = f'{command} --profile "{StartProfile[1]}"'
+                elif isinstance(StartProfile, str):
+                    command = f'{command} --profile "{StartProfile}"'
 
             if StartScene is not None and StartScene != "":
-                if filteredGame == "Diablo":
-                    command = f'{command} --scene "{StartScene[0]}"'
-                else:
-                    command = f'{command} --scene "{StartScene[1]}"'
+                if isinstance(StartScene, list):
+                    if filteredGame == "Diablo":
+                        command = f'{command} --scene "{StartScene[0]}"'
+                    else:
+                        command = f'{command} --scene "{StartScene[1]}"'
+                elif isinstance(StartScene, str):
+                    command = f'{command} --scene "{StartScene}"'
 
             command = f"{command}{' --startstreaming' if Streaming else ''}{' --startrecording' if Recording else ''}{' --startreplaybuffer' if ReplayBuf else ''}{' --minimize-to-tray' if Minimize else ''}"
             logformat(errorLevel.INFO, f"OBS will start with this command: {command}")
