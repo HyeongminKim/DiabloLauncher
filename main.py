@@ -465,22 +465,26 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}"'
 
             if StartProfile is not None and StartProfile != "":
-                if isinstance(StartProfile, list):
+                if isinstance(StartProfile, list) and len(StartProfile) == 2:
                     if filteredGame == "Diablo":
                         command = f'{command} --profile "{StartProfile[0]}"'
                     else:
                         command = f'{command} --profile "{StartProfile[1]}"'
                 elif isinstance(StartProfile, str):
                     command = f'{command} --profile "{StartProfile}"'
+                else:
+                    logformat(errorLevel.ERR, f"--profile option does not acceptable {len(StartProfile)} parameters. Skipping")
 
             if StartScene is not None and StartScene != "":
-                if isinstance(StartScene, list):
+                if isinstance(StartScene, list) and len(StartScene) == 2:
                     if filteredGame == "Diablo":
                         command = f'{command} --scene "{StartScene[0]}"'
                     else:
                         command = f'{command} --scene "{StartScene[1]}"'
                 elif isinstance(StartScene, str):
                     command = f'{command} --scene "{StartScene}"'
+                else:
+                    logformat(errorLevel.ERR, f"--scene option does not acceptable {len(StartScene)} parameters. Skipping")
 
             command = f"{command}{' --startstreaming' if Streaming else ''}{' --startrecording' if Recording else ''}{' --startreplaybuffer' if ReplayBuf else ''}{' --minimize-to-tray' if Minimize else ''}"
             logformat(errorLevel.INFO, f"OBS will start with this command: {command}")
