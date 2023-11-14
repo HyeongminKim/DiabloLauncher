@@ -444,7 +444,6 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     launchBlackbox = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"])
     if launchBlackbox is None:
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], False)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "OBSInstalledPath"], None)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"], None)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"], None)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
@@ -453,7 +452,11 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"], False)
 
     elif launchBlackbox is not None and launchBlackbox:
-        OBSInstalledPath = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "OBSInstalledPath"])
+        if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio')):
+            OBSInstalledPath = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')
+        else:
+            OBSInstalledPath = None
+
         if OBSInstalledPath is not None and OBSInstalledPath != "":
             OBSInstalledDir = os.path.dirname(OBSInstalledPath)
 
