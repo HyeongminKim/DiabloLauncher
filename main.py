@@ -143,6 +143,7 @@ toolsMenu = None
 aboutMenu = None
 modMenu = None
 gameMenu = None
+menubar = None
 
 def ShowWindow():
     launch.geometry(f"300x125+{int(root.winfo_x() + root.winfo_reqwidth() / 2 - 300 / 2)}+{int(root.winfo_y() + root.winfo_reqheight() / 2 - 125 / 2)}")
@@ -961,6 +962,9 @@ def FindGameInstalled():
         modMenu.entryconfig(1, state='disabled')
         modMenu.entryconfig(3, state='disabled')
         modMenu.entryconfig(1, label='WoW 미지원')
+        menubar.entryconfig(3, label='애드온')
+    else:
+        menubar.entryconfig(3, label='모드')
 
     if gameExecuted: return
 
@@ -1776,6 +1780,7 @@ def init():
     global aboutMenu
     global gameMenu
     global modMenu
+    global menubar
     global root
     global launch
     global filteredGame
