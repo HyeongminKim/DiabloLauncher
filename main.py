@@ -444,6 +444,8 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
     if launchBlackbox is None:
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], False)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "OBSInstalledPath"], None)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"], None)
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"], None)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"], False)
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"], False)
