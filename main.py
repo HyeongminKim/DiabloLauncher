@@ -556,7 +556,7 @@ def LaunchGameAgent():
             diablo4 = Button(launch, text='Diablo IV\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo IV', 1280, 720, 10))
         else:
             wow_live = Button(launch, text='월드 오브 워크래프트\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('_retail_', 1280, 720, 7))
-            wow_classic = Button(launch, text='불타는 성전 클래식\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('_classic_', 1024, 768, 7))
+            wow_classic = Button(launch, text='리치 왕의 분노\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('_classic_', 1024, 768, 7))
             wow_hardcore = Button(launch, text='WoW 클래식\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('_classic_era_', 1024, 768, 7))
 
         note.grid(row=0, column=0, columnspan=2)
@@ -630,6 +630,10 @@ def LaunchGameAgent():
                 wow_hardcore['activeforeground'] = '#000000'
 
         if filteredGame == "Diablo":
+            d2rLadder = "래더 5"
+            d3Season = "시즌 29"
+            d4Season = "시즌 2"
+
             if diablo2Path is None or not os.path.isfile(f'{diablo2Path}/Diablo II Resurrected Launcher.exe'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
                 diablo2['state'] = "disabled"
@@ -643,29 +647,29 @@ def LaunchGameAgent():
                     envMod = loadSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"])
                     if definedMod is not None and isinstance(definedMod, list) and (envModState is None or envModState is False) and envMod is None:
                         logformat(errorLevel.WARN, "Diablo II Resurrected mods are not cached. Because too many mods detected.")
-                        diablo2['text'] = 'Diablo II Resurrected\n모드병합 필요'
+                        diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}\n모드병합 필요'
                     elif definedMod is not None and isinstance(definedMod, list) and envModState is not None and envModState is True:
                         logformat(errorLevel.INFO, "Diablo II Resurrected mods helper was disable due to IgnoreModsMergeDialog settings.")
-                        diablo2['text'] = 'Diablo II Resurrected'
+                        diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}'
                     elif definedMod is not None and isinstance(definedMod, str):
                         if os.path.isdir(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data') or os.path.isfile(f'{diablo2Path}/mods/{definedMod}/{definedMod}.mpq'):
                             external_conf = loadConfigurationFile()
                             if external_conf is not None and external_conf == f' -mod {definedMod} -txt':
-                                diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 적용됨'
+                                diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}\n{definedMod} 적용됨'
                             else:
-                                diablo2['text'] = f'Diablo II Resurrected\n{definedMod} 감지됨'
+                                diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}\n{definedMod} 감지됨'
                         else:
                             messagebox.showwarning(title='디아블로 모드 관리자', message='유효하지 않은 모드 배치가 감지되었습니다. ')
                             logformat(errorLevel.WARN, f"The mod {definedMod} does not followed by path:")
                             logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq")
                             logformat(errorLevel.WARN, f"\t- {diablo2Path}/mods/{definedMod}/{definedMod}.mpq/data")
-                            diablo2['text'] = 'Diablo II Resurrected'
+                            diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}'
                     else:
                         logformat(errorLevel.INFO, "Diablo II Resurrected mods are not cached. Because mods was not installed yet.")
-                        diablo2['text'] = 'Diablo II Resurrected'
+                        diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}'
                 else:
                     logformat(errorLevel.INFO, 'Diablo II Resurrected mods directory not found.')
-                    diablo2['text'] = 'Diablo II Resurrected'
+                    diablo2['text'] = f'Diablo II Resurrected\n{d2rLadder}'
 
             if diablo3Path is None or not os.path.isfile(f'{diablo3Path}/Diablo III Launcher.exe'):
                 logformat(errorLevel.INFO, 'Diablo III launch button disabled, because launcher is not detected.')
@@ -673,7 +677,7 @@ def LaunchGameAgent():
             else:
                 logformat(errorLevel.INFO, 'Diablo III launch button enabled.')
                 diablo3['state'] = "normal"
-                diablo3['text'] = 'Diablo III'
+                diablo3['text'] = f'Diablo III\n{d3Season}'
 
             if diablo4Path is None or not os.path.isfile(f'{diablo4Path}/Diablo IV Launcher.exe'):
                 logformat(errorLevel.INFO, 'Diablo IV launch button disabled, because launcher is not detected.')
@@ -681,28 +685,28 @@ def LaunchGameAgent():
             else:
                 logformat(errorLevel.INFO, 'Diablo IV launch button enabled.')
                 diablo4['state'] = "normal"
-                diablo4['text'] = 'Diablo IV'
+                diablo4['text'] = f'Diablo IV\n{d4Season}'
         else:
             if wowLive is None or not os.path.isfile(f'{wowLive}/_retail_/Wow.exe'):
                 logformat(errorLevel.INFO, 'WoW _retail_ launch button disabled, because launcher is not detected.')
                 wow_live['state'] = "disabled"
             else:
                 wow_live['state'] = "normal"
-                wow_live['text'] = "월드 오브 워크래프트"
+                wow_live['text'] = "월드 오브 워크래프트\n용군단"
 
             if wowClassic is None or not os.path.isfile(f'{wowClassic}/_classic_/WowClassic.exe'):
                 logformat(errorLevel.INFO, 'WoW _classic_ launch button disabled, because launcher is not detected.')
                 wow_classic['state'] = "disabled"
             else:
                 wow_classic['state'] = "normal"
-                wow_classic['text'] = "불타는 성전 클래식"
+                wow_classic['text'] = "리치 왕의 분노\n클래식"
 
             if wowHardcoreClassic is None or not os.path.isfile(f'{wowHardcoreClassic}/_classic_era_/WowClassic.exe'):
                 logformat(errorLevel.INFO, 'WoW _classic_era_ launch button disabled, because launcher is not detected.')
                 wow_hardcore['state'] = "disabled"
             else:
                 wow_hardcore['state'] = "normal"
-                wow_hardcore['text'] = "WoW 클래식"
+                wow_hardcore['text'] = "WoW 클래식\n하드코어 | 디스커버리"
 
         ShowWindow()
         launch.mainloop()
