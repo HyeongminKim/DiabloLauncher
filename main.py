@@ -1153,8 +1153,43 @@ def SetLauncherConfigurationValues(*args):
         testResAlteredY = loadSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredY"])
         testResAlteredFR = loadSettings(currentTarget, ["ScreenResolution", "AlteredResolutionVector", "AlteredFR"])
 
+    def calcResolutionRatio():
+        originVectorSize = None
+        alteredVectorSize = None
+
+        if envOriginX.get() == '' or envOriginY.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '':
+            return None
+
+        for i in range(int(envOriginY.get()) + 1, 1, -1):
+            if int(envOriginX.get()) % i == 0 and int(envOriginY.get()) % i == 0:
+                originVectorSize = i
+                break
+
+        for i in range(int(envAlteredY.get()) + 1, 1, -1):
+            if int(envAlteredX.get()) % i == 0 and int(envAlteredY.get()) % i == 0:
+                alteredVectorSize = i
+                break
+
+        originXRatio = floor(int(envOriginX.get()) / originVectorSize)
+        originYRatio = floor(int(envOriginY.get()) / originVectorSize)
+
+        alteredXRatio = floor(int(envAlteredX.get()) / alteredVectorSize)
+        alteredYRatio = floor(int(envAlteredY.get()) / alteredVectorSize)
+
+        resolutionRatio = floor(int((alteredXRatio / originXRatio) * 100))
+
+        if f"{originXRatio}:{originYRatio}" == f"{alteredXRatio}:{alteredYRatio}":
+            return f"{originXRatio}:{originYRatio} ({resolutionRatio}%)"
+        else:
+            return f"{originXRatio}:{originYRatio} ↔ {alteredXRatio}:{alteredYRatio} (≈{resolutionRatio}%)"
+
     if resolutionProgram:
-        resolutionText['text'] = '해상도 벡터'
+        resultRatio = calcResolutionRatio()
+        if resultRatio is not None:
+            resolutionText['text'] = f'해상도 벡터: {resultRatio}'
+        else:
+            resolutionText['text'] = '해상도 벡터'
+
         updateResSettings()
         if(testResOriginX is None or testResOriginY is None or testResOriginFR is None or testResAlteredX is None or testResAlteredY is None or testResAlteredFR is None):
             currentTarget = parentLocation.ProgramData
@@ -1208,34 +1243,6 @@ def SetLauncherConfigurationValues(*args):
         except AttributeError as error:
             logformat(errorLevel.ERR, f"could not save screen resolution value: {error}")
             UpdateStatusValue()
-
-    def calcResolutionRatio():
-        originVectorSize = None
-        alteredVectorSize = None
-
-        if envOriginX.get() == '' or envOriginY.get() == '' or envAlteredX.get() == '' or envAlteredY.get() == '':
-            return None
-
-        for i in range(int(envOriginY.get()) + 1, 1, -1):
-            if int(envOriginX.get()) % i == 0 and int(envOriginY.get()) % i == 0:
-                originVectorSize = i
-                break
-
-        for i in range(int(envAlteredY.get()) + 1, 1, -1):
-            if int(envAlteredX.get()) % i == 0 and int(envAlteredY.get()) % i == 0:
-                alteredVectorSize = i
-                break
-
-        originXRatio = floor(int(envOriginX.get()) / originVectorSize)
-        originYRatio = floor(int(envOriginY.get()) / originVectorSize)
-
-        alteredXRatio = floor(int(envAlteredX.get()) / alteredVectorSize)
-        alteredYRatio = floor(int(envAlteredY.get()) / alteredVectorSize)
-
-        if f"{originXRatio}:{originYRatio}" == f"{alteredXRatio}:{alteredYRatio}":
-            return f"{originXRatio}:{originYRatio}"
-        else:
-            return f"{originXRatio}:{originYRatio} ↔ {alteredXRatio}:{alteredYRatio}"
 
     def screenResolutionSwitcher():
         if not testResolutionValue(): return
