@@ -1176,7 +1176,7 @@ def SetLauncherConfigurationValues(*args):
         alteredXRatio = floor(int(envAlteredX.get()) / alteredVectorSize)
         alteredYRatio = floor(int(envAlteredY.get()) / alteredVectorSize)
 
-        resolutionRatio = floor(int((alteredXRatio / originXRatio) * 100))
+        resolutionRatio = floor((int(envAlteredX.get()) / int(envOriginX.get())) * 100)
 
         if f"{originXRatio}:{originYRatio}" == f"{alteredXRatio}:{alteredYRatio}":
             return f"{originXRatio}:{originYRatio} ({resolutionRatio}%)"
