@@ -442,16 +442,8 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         os.popen(f'"{bnetPath}" --productcode=wow_classic_era')
 
     launchBlackbox = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"])
-    if launchBlackbox is None:
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], False)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"], None)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"], None)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"], False)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"], False)
-        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"], False)
 
-    elif launchBlackbox is not None and launchBlackbox:
+    if launchBlackbox is not None and launchBlackbox:
         if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio')):
             OBSInstalledPath = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')
         else:
@@ -549,7 +541,23 @@ def LaunchGameAgent():
     else:
         launch.title(f'{"디아블로" if filteredGame == "Diablo" else "WoW"} 버전 선택')
 
-        note = Label(launch, text=f'사용가능한 {"디아블로" if filteredGame == "Diablo" else "WoW"} 버전만 활성화 됩니다', height=2)
+        launchBlackbox = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"])
+        note = Label(launch, text='Initializing...', height=2)
+
+        if launchBlackbox is not None and launchBlackbox:
+            note['text'] = f'사용가능한 {"디아블로" if filteredGame == "Diablo" else "WoW"} 버전만 활성화 됩니다  [●REC]'
+        elif launchBlackbox is None:
+            note['text'] = f'사용가능한 {"디아블로" if filteredGame == "Diablo" else "WoW"} 버전만 활성화 됩니다'
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], False)
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"], None)
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"], None)
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"], False)
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"], False)
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"], False)
+            dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"], False)
+        else:
+            note['text'] = f'사용가능한 {"디아블로" if filteredGame == "Diablo" else "WoW"} 버전만 활성화 됩니다'
+
         if filteredGame == "Diablo":
             diablo2 = Button(launch, text='Diablo II Resurrected\n설치되지 않음', width=20, height=5, command= lambda: GameLauncher('Diablo II Resurrected', 1280, 720, 10))
             diablo3 = Button(launch, text='Diablo III\n설치되지 않음', width=20, height=2, command= lambda: GameLauncher('Diablo III', 1024, 768, 7))
