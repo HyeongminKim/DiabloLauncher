@@ -104,7 +104,7 @@ modsPreferOptionMenu = None
 gameChannelList = ["디아블로", "월드 오브 워크래프트"]
 filteredGame = None
 
-resolutionProgram = 0
+resolutionProgram = -127
 
 originX = None
 originY = None
@@ -124,6 +124,7 @@ modsMuteSettings = False
 soundSettings = False
 verboseSettings = False
 resIgnoreAlert = False
+resDisableSettings = False
 
 root = None
 launch = None
@@ -172,7 +173,7 @@ def CheckResProgram():
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
         if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and call('where QRes > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
-            resolutionProgram = -1
+            resolutionProgram = -127
         else:
             if disableResProgram is True:
                 logformat(errorLevel.WARN, f"QRes installed in {check_terminal_output('where QRes')}. However user turn off manually screen resolution program.")
@@ -1106,6 +1107,7 @@ def SetLauncherConfigurationValues(*args):
     global soundSettings
     global verboseSettings
     global resIgnoreAlert
+    global resDisableSettings
 
     envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
@@ -1139,6 +1141,7 @@ def SetLauncherConfigurationValues(*args):
     soundSettings = IntVar()
     verboseSettings = IntVar()
     resIgnoreAlert = IntVar()
+    resDisableSettings = IntVar()
 
     resolutionText.grid(row=0, column=0, columnspan=5)
     originXtext.grid(row=1, column=0)
@@ -1200,7 +1203,7 @@ def SetLauncherConfigurationValues(*args):
         else:
             return f"{originXRatio}:{originYRatio} ↔ {alteredXRatio}:{alteredYRatio} (≈{resolutionRatio}%)"
 
-    if resolutionProgram == 1:
+    if resolutionProgram == 1 or resolutionProgram == 2:
         resultRatio = calcResolutionRatio()
         if resultRatio is not None:
             resolutionText['text'] = f'해상도 벡터: {resultRatio}'
@@ -1229,12 +1232,20 @@ def SetLauncherConfigurationValues(*args):
             envAlteredY.insert(0, testResAlteredY)
             envAlteredFR.insert(0, testResAlteredFR)
 
-        envOriginX['state'] = 'normal'
-        envOriginY['state'] = 'normal'
-        envOriginFR['state'] = 'normal'
-        envAlteredX['state'] = 'normal'
-        envAlteredY['state'] = 'normal'
-        envAlteredFR['state'] = 'normal'
+        if resolutionProgram == 1:
+            envOriginX['state'] = 'normal'
+            envOriginY['state'] = 'normal'
+            envOriginFR['state'] = 'normal'
+            envAlteredX['state'] = 'normal'
+            envAlteredY['state'] = 'normal'
+            envAlteredFR['state'] = 'normal'
+        else:
+            envOriginX['state'] = 'disabled'
+            envOriginY['state'] = 'disabled'
+            envOriginFR['state'] = 'disabled'
+            envAlteredX['state'] = 'disabled'
+            envAlteredY['state'] = 'disabled'
+            envAlteredFR['state'] = 'disabled'
     else:
         resolutionText['text'] = '해상도 변경 프로그램 미설치'
         envOriginX['state'] = 'disabled'
@@ -1317,15 +1328,49 @@ def SetLauncherConfigurationValues(*args):
         resTestBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='disabled')
         resCommitBtn = Button(envWindow, text='적용', command=commitResolutionValue, state='disabled')
 
+    def changeDisableExecuteResProgram():
+        global resolutionProgram
+        dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "DisableExecuteResProgram"], resDisableSettings.get() == 1)
+        resDisableSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "DisableExecuteResProgram"]) else 0)
+        resolutionProgram = 2 if resDisableSettings.get() else 1
+        if resolutionProgram == 1:
+            envOriginX['state'] = 'normal'
+            envOriginY['state'] = 'normal'
+            envOriginFR['state'] = 'normal'
+            envAlteredX['state'] = 'normal'
+            envAlteredY['state'] = 'normal'
+            envAlteredFR['state'] = 'normal'
+
+            resTestBtn['state'] = 'normal'
+            resCommitBtn['state'] = 'normal'
+        else:
+            envOriginX['state'] = 'disabled'
+            envOriginY['state'] = 'disabled'
+            envOriginFR['state'] = 'disabled'
+            envAlteredX['state'] = 'disabled'
+            envAlteredY['state'] = 'disabled'
+            envAlteredFR['state'] = 'disabled'
+
+            resTestBtn['state'] = 'disabled'
+            resCommitBtn['state'] = 'disabled'
+
     resIgnoreAlert.set(1 if loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) or loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) else 0)
     if loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]):
         resDialogIgnoreCheckbox = Checkbutton(envWindow, text='설치 알림 뮤트', variable=resIgnoreAlert, onvalue=True, offvalue=False, command=changeIgnoreResAlert, state='disabled')
     else:
         resDialogIgnoreCheckbox = Checkbutton(envWindow, text='설치 알림 뮤트', variable=resIgnoreAlert, onvalue=True, offvalue=False, command=changeIgnoreResAlert, state='normal')
 
+    if(resolutionProgram != -127):
+        resDisableSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "DisableExecuteResProgram"]) else 0)
+        resDisableExecuteCheckbox = Checkbutton(envWindow, text='언로드', variable=resDisableSettings, onvalue=True, offvalue=False, command=changeDisableExecuteResProgram, state='normal')
+    else:
+        resDisableSettings.set(0)
+        resDisableExecuteCheckbox = Checkbutton(envWindow, text='언로드', variable=resDisableSettings, onvalue=True, offvalue=False, command=changeDisableExecuteResProgram, state='disable')
+
     resTestBtn.grid(row=3, column=0, pady=10)
     resCommitBtn.grid(row=3, column=1, pady=10)
-    resDialogIgnoreCheckbox.grid(row=3, column=3, columnspan=2, pady=10)
+    resDialogIgnoreCheckbox.grid(row=3, column=2, columnspan=3, pady=5)
+    resDisableExecuteCheckbox.grid(row=3, column=5, pady=5)
 
     def applyPreferMods():
         dumpSettings(parentLocation.UserLocalAppData, ["ModsManager", "PreferMods"], modsCurrentSelectMenu.get())
@@ -1500,10 +1545,10 @@ def SetLauncherConfigurationValues(*args):
         systemConfigFileEdit = Button(envWindow, text='전역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'), state='normal')
     else:
         systemConfigFileEdit = Button(envWindow, text='전역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("ProgramData")}/DiabloLauncher/DiabloLauncher.config'), state='disabled')
-    systemConfigFileEdit.grid(row=7, column=1, columnspan=2, pady=10)
+    systemConfigFileEdit.grid(row=7, column=1, columnspan=3, pady=5)
 
     localConfigFileEdit = Button(envWindow, text='지역 설정 편집', command=lambda: os.startfile(f'{os.environ.get("LocalAppData")}/DiabloLauncher/DiabloLauncher.config'))
-    localConfigFileEdit.grid(row=7, column=3, columnspan=2, pady=10)
+    localConfigFileEdit.grid(row=7, column=4, columnspan=3, pady=5)
 
 
     if(CheckDarkMode()):
@@ -1581,6 +1626,11 @@ def SetLauncherConfigurationValues(*args):
         modsMuteCheckBox['selectcolor'] = '#272727'
         modsMuteCheckBox['foreground'] = '#FFFFFF'
         modsMuteCheckBox['activeforeground'] = '#FFFFFF'
+        resDisableExecuteCheckbox['background'] = '#272727'
+        resDisableExecuteCheckbox['activebackground'] = '#272727'
+        resDisableExecuteCheckbox['selectcolor'] = '#272727'
+        resDisableExecuteCheckbox['foreground'] = '#FFFFFF'
+        resDisableExecuteCheckbox['activeforeground'] = '#FFFFFF'
         soundCheckBox['background'] = '#272727'
         soundCheckBox['activebackground'] = '#272727'
         soundCheckBox['selectcolor'] = '#272727'
@@ -1671,6 +1721,11 @@ def SetLauncherConfigurationValues(*args):
         modsMuteCheckBox['selectcolor'] = '#F0F0F0'
         modsMuteCheckBox['foreground'] = '#000000'
         modsMuteCheckBox['activeforeground'] = '#000000'
+        resDisableExecuteCheckbox['background'] = '#F0F0F0'
+        resDisableExecuteCheckbox['activebackground'] = '#F0F0F0'
+        resDisableExecuteCheckbox['selectcolor'] = '#F0F0F0'
+        resDisableExecuteCheckbox['foreground'] = '#000000'
+        resDisableExecuteCheckbox['activeforeground'] = '#000000'
         soundCheckBox['background'] = '#F0F0F0'
         soundCheckBox['activebackground'] = '#F0F0F0'
         soundCheckBox['selectcolor'] = '#F0F0F0'
