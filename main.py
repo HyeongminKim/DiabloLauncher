@@ -104,7 +104,7 @@ modsPreferOptionMenu = None
 gameChannelList = ["디아블로", "월드 오브 워크래프트"]
 filteredGame = None
 
-resolutionProgram = False
+resolutionProgram = 0
 
 originX = None
 originY = None
@@ -164,16 +164,25 @@ def CheckResProgram():
     global resolutionProgram
     logformat(errorLevel.INFO, 'QRes install check')
     toolsMenu.entryconfig(3, state='normal')
+
+    disableResProgram = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "DisableExecuteResProgram"])
+    if disableResProgram is None:
+        dumpSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "DisableExecuteResProgram"], False)
+
     if os.path.isfile('C:/Windows/System32/Qres.exe') or os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe'):
         if os.path.isfile(f'{userLocalApp}/Programs/Common/QRes.exe') and call('where QRes > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f"QRes installed in {userLocalApp}/Programs/Common/QRes.exe. However that program will not discovered in future operation. Please add environment variable to fix this issue.")
-            resolutionProgram = False
+            resolutionProgram = -1
         else:
-            logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
-            resolutionProgram = True
+            if disableResProgram is True:
+                logformat(errorLevel.WARN, f"QRes installed in {check_terminal_output('where QRes')}. However user turn off manually screen resolution program.")
+                resolutionProgram = 2
+            else:
+                logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
+                resolutionProgram = 1
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
-        resolutionProgram = False
+        resolutionProgram = -127
 
 def CheckDarkMode():
     # dark bg="#272727"
@@ -382,7 +391,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
 
     gameExecuted = True
     logformat(errorLevel.INFO, f'Launching {gameName}...')
-    if resolutionProgram:
+    if resolutionProgram == 1:
         if int(alteredX) < supportedX or int(alteredY) < supportedY:
             logformat(errorLevel.ERR, f'The {gameName} does not supported display resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showerror('디아블로 런처', f'{alteredX}x{alteredY} {alteredFR}Hz 해상도는 {gameName} 가 지원하지 않습니다. 자세한 사항은 공식 홈페이지를 확인하시기 바랍니다. ')
@@ -507,7 +516,7 @@ def LaunchGameAgent():
         gameEndTime = time.time()
         switchButton['text'] = f'{"디아블로" if filteredGame == "Diablo" else "WoW"} 실행...'
         toolsMenu.entryconfig(3, state='normal')
-        if resolutionProgram:
+        if resolutionProgram == 1:
             if call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0:
                 logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
                 messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
@@ -732,7 +741,7 @@ def BootAgent(poweroff: str):
     elif poweroff == 's':
         emergencyButton['text'] = '긴급 종료 준비중...\n(종료 취소)'
         logformat(errorLevel.INFO, 'Starting Emergency reboot agent...')
-    if resolutionProgram:
+    if resolutionProgram == 1:
         if call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0:
             logformat(errorLevel.ERR, f'The current display does not supported choosed resolution {alteredX}x{alteredY} {alteredFR}Hz')
             messagebox.showwarning('디아블로 런처', f'{originX}x{originY} {originFR}Hz 해상도는 이 디스플레이에서 지원하지 않습니다. 시스템 환경 설정에서 지원하는 해상도를 확인하시기 바랍니다.')
@@ -774,7 +783,7 @@ def EmgergencyReboot():
         ReloadStatusBar()
     else:
         launch.title('전원')
-        if resolutionProgram and gameExecuted:
+        if resolutionProgram == 1 and gameExecuted:
             note = Label(launch, text=f'수행할 작업 시작전 {originX}x{originY} 해상도로 복구 후 계속')
         else:
             note = Label(launch, text='수행할 작업 선택')
@@ -1030,7 +1039,7 @@ def FindGameInstalled():
 
 def GetLauncherConfigurationValues():
     CheckResProgram()
-    if resolutionProgram:
+    if resolutionProgram == 1:
         global originX
         global originY
         global originFR
@@ -1039,7 +1048,7 @@ def GetLauncherConfigurationValues():
         global alteredFR
 
     try:
-        if resolutionProgram:
+        if resolutionProgram == 1:
             originX = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginX"])
             originY = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginY"])
             originFR = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "OriginResolutionVector", "OriginFR"])
@@ -1061,7 +1070,7 @@ def GetLauncherConfigurationValues():
         else:
             logformat(errorLevel.INFO, 'QRes not detected. Skipping parameter conversion.')
 
-        if resolutionProgram:
+        if resolutionProgram == 1:
             logformat(errorLevel.INFO, f'Default resolution: {int(originX)} X {int(originY)} {float(originFR)}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {int(alteredX)} X {int(alteredY)} {float(alteredFR)}Hz')
             if (call(f'QRes /L | findstr /r "{originX}x" |findstr /r "{originY}," | findstr /r "\\<{originFR}\\>" > NUL 2>&1', shell=True) != 0) or (call(f'QRes /L | findstr /r "{alteredX}x" |findstr /r "{alteredY}," | findstr /r "\\<{alteredFR}\\>" > NUL 2>&1', shell=True) != 0):
@@ -1078,7 +1087,7 @@ def GetLauncherConfigurationValues():
         alteredY = None
         alteredFR = None
     finally:
-        if resolutionProgram:
+        if resolutionProgram == 1:
             logformat(errorLevel.INFO, f'Default resolution: {originX} X {originY} {originFR}Hz')
             logformat(errorLevel.INFO, f'Convert resolution: {alteredX} X {alteredY} {alteredFR}Hz')
 
@@ -1191,7 +1200,7 @@ def SetLauncherConfigurationValues(*args):
         else:
             return f"{originXRatio}:{originYRatio} ↔ {alteredXRatio}:{alteredYRatio} (≈{resolutionRatio}%)"
 
-    if resolutionProgram:
+    if resolutionProgram == 1:
         resultRatio = calcResolutionRatio()
         if resultRatio is not None:
             resolutionText['text'] = f'해상도 벡터: {resultRatio}'
@@ -1300,7 +1309,7 @@ def SetLauncherConfigurationValues(*args):
         else:
             resDialogIgnoreCheckbox['state'] = 'normal'
 
-    if resolutionProgram:
+    if resolutionProgram == 1:
         resTestBtn = Button(envWindow, text='해상도 테스트', command=screenResolutionSwitcher, state='normal')
         resCommitBtn = Button(envWindow, text='적용', command=commitResolutionValue, state='normal')
 
@@ -1681,7 +1690,7 @@ def SetLauncherConfigurationValues(*args):
     envWindow.mainloop()
 
 def RequirementCheck():
-    if not resolutionProgram:
+    if not resolutionProgram == 1:
         logformat(errorLevel.WARN, f'QRes not installed or not in...\n\t- C:\\Windows\\System32\n\t- {userLocalApp}/Program/Common/QRes.exe')
         res_alert = loadSettings(parentLocation.UserLocalAppData, ["ScreenResolution", "IgnoreResProgramInstallDialog"]) or loadSettings(parentLocation.ProgramData, ["ScreenResolution", "IgnoreResProgramInstallDialog"])
         if res_alert is None or res_alert is False:
@@ -1698,7 +1707,7 @@ def UpdateStatusValue():
     now = datetime.now()
     cnt_time = now.strftime("%H:%M:%S")
 
-    if resolutionProgram:
+    if resolutionProgram == 1:
         status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if gameExecuted else f'{originX}x{originY} {originFR}Hz'}\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n"
     else:
         status['text'] = f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n"
@@ -1896,11 +1905,11 @@ def init():
         if msg_box:
             logformat(errorLevel.WARN, f"=== Generated Report (rev: {check_terminal_output('git rev-parse --short HEAD')} [{check_terminal_output('git branch --show-current')}]) at {cnt_time} ===")
             logformat(errorLevel.INFO, f"Current agent: {platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}")
-            if resolutionProgram:
+            if resolutionProgram == 1:
                 logformat(errorLevel.INFO, f"QRes version: {check_terminal_output('QRes /S | findstr QRes')}")
                 logformat(errorLevel.INFO, f"Resolution vector: {f'{originX}x{originY} - {alteredX}x{alteredY}'}")
             else:
-                logformat(errorLevel.INFO, "QRes version: None")
+                logformat(errorLevel.INFO, f"QRes version: None ({resolutionProgram})")
 
             if diablo2Path is not None and diablo3Path is not None and diablo4Path is not None:
                 logformat(errorLevel.INFO, "Installed Diablo version: II, III, IV")
@@ -1942,20 +1951,20 @@ def init():
             webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher')
 
         if releaseMode:
-            if resolutionProgram:
+            if resolutionProgram == 1:
                 logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
                 text = Label(about, text=f"{platform.system()} {platform.release()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV, World of Warcraft\n(c) 2004-{date.today().year} BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher [Executable]\nCopyright (c) 2022-{date.today().year} Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), WoW는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
-            elif not resolutionProgram:
+            elif not resolutionProgram == 1:
                 logformat(errorLevel.INFO, "Resolution change program does not detected")
                 text = Label(about, text=f"{platform.system()} {platform.release()}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV, World of Warcraft\n(c) 2004-{date.today().year} BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher [Executable]\nCopyright (c) 2022-{date.today().year} Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), WoW는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
         else:
             currentReleaseChannel = os.popen('git branch --show-current').read().strip()
             currentReleaseChannel = '' if currentReleaseChannel == 'master' else f', CH: {currentReleaseChannel}'
 
-            if resolutionProgram:
+            if resolutionProgram == 1:
                 logformat(errorLevel.INFO, "Resolution change program detected. Checking QRes version and license")
                 text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV, World of Warcraft\n(c) 2004-{date.today().year} BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher (rev: {check_terminal_output('git rev-parse --short HEAD')}, RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')}{currentReleaseChannel})\nCopyright (c) 2022-{date.today().year} Hyeongmin Kim\n\n{check_terminal_output('QRes /S | findstr QRes')}\n{check_terminal_output('QRes /S | findstr Copyright')}\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), WoW는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
-            elif not resolutionProgram:
+            elif not resolutionProgram == 1:
                 logformat(errorLevel.INFO, "Resolution change program does not detected")
                 text = Label(about, text=f"{platform.system()} {platform.release()}, Python {platform.python_version()}, {check_terminal_output('git --version')}\n\n--- Copyright ---\nDiablo II Resurrected, Diablo III, Diablo IV, World of Warcraft\n(c) 2004-{date.today().year} BLIZZARD ENTERTAINMENT, INC. ALL RIGHTS RESERVED.\n\nDiablo Launcher (rev: {check_terminal_output('git rev-parse --short HEAD')}, RD: {check_terminal_output('git log -1 --date=format:%Y-%m-%d --format=%ad')}{currentReleaseChannel})\nCopyright (c) 2022-{date.today().year} Hyeongmin Kim\n\nQRes\nCopyright (C) Anders Kjersem.\n\n이 디아블로 런처에서 언급된 특정 상표는 각 소유권자들의 자산입니다.\n디아블로(Diablo), WoW는 Blizzard Entertainment, Inc.의 등록 상표입니다.\nBootCamp, macOS는 Apple, Inc.의 등록 상표입니다.\n\n자세한 사항은 아래 버튼을 클릭해 주세요\n")
 
@@ -2250,7 +2259,7 @@ def init():
     GetLauncherConfigurationValues()
     RequirementCheck()
 
-    if resolutionProgram:
+    if resolutionProgram == 1:
         status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 예\n해상도 벡터: {f'{originX}x{originY} - {alteredX}x{alteredY}'}\n현재 해상도: {f'{alteredX}x{alteredY} {alteredFR}Hz' if gameExecuted else f'{originX}x{originY} {originFR}Hz'}\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n")
     else:
         status = Label(root, text=f"\n정보 - {cnt_time}에 업데이트\n해상도 변경 지원됨: 아니요\n\n\n{'디아블로' if filteredGame == 'Diablo' else 'WoW'} 실행: {'예' if gameExecuted else '아니요'}\n")
