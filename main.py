@@ -470,7 +470,7 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             ReplayBuf = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoReplayBuffer"])
             Minimize = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "MinimizeToTray"])
 
-            command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}"'
+            command = f'cd "{OBSInstalledDir}" & "{OBSInstalledPath}" --disable-shutdown-check'
 
             if StartProfile is not None and StartProfile != "":
                 if isinstance(StartProfile, list) and len(StartProfile) == 2:
