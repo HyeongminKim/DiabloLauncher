@@ -1552,7 +1552,8 @@ def SetLauncherConfigurationValues(*args):
         elif (launchBlackboxSettings.get() == 1 and (TargetProfile is not None and TargetScene is not None)):
             currentPermission = loadSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"])
             if currentPermission is None or not currentPermission:
-                if not messagebox.askyesno('디아블로 런처 설정', f"디아블로 런처가 다른 프로그램을 제어하려고 합니다. 이를 허용하시겠습니까?\n\n이름: OBS Studio\n경로: {ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')}\n설명: 제공한 {TargetProfile} 프로파일을 로드하여 녹화 시작", icon=messagebox.WARNING):
+                installedPath = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')
+                if not messagebox.askyesno('디아블로 런처 설정', f"디아블로 런처가 다른 프로그램을 제어하려고 합니다. 이를 허용하시겠습니까?\n\n이름: OBS Studio\n경로: {installedPath}\n설명: 제공한 {TargetProfile} 프로파일을 로드하여 녹화 시작", icon=messagebox.WARNING):
                     launchBlackboxSettings.set(0)
                     dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], False)
                     return
