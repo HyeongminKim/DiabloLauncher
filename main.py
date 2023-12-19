@@ -125,6 +125,7 @@ soundSettings = False
 verboseSettings = False
 resIgnoreAlert = False
 resDisableSettings = False
+launchBlackboxSettings = False
 
 root = None
 launch = None
@@ -181,6 +182,13 @@ def CheckResProgram():
             else:
                 logformat(errorLevel.INFO, f"QRes installed in {check_terminal_output('where QRes')}")
                 resolutionProgram = 1
+                currentPermission = loadSettings(parentLocation.UserAppData, ["Permission", "ExecutableQRes"])
+                if currentPermission is None or not currentPermission:
+                    if not messagebox.askyesno('디아블로 런처 설정', f"디아블로 런처가 다른 프로그램을 제어하려고 합니다. 이를 허용하시겠습니까?\n\n이름: QRes\n경로: {check_terminal_output('where QRes')}\n설명: 해상도 변경 및 검증시 사용", icon=messagebox.WARNING):
+                        dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableQRes"], False)
+                        resolutionProgram = -127
+                        return
+                    dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableQRes"], True)
     else:
         logformat(errorLevel.INFO, 'QRes did not installed')
         resolutionProgram = -127
@@ -1108,6 +1116,7 @@ def SetLauncherConfigurationValues(*args):
     global verboseSettings
     global resIgnoreAlert
     global resDisableSettings
+    global launchBlackboxSettings
 
     envWindow = Toplevel()
     envWindow.title('디아블로 런처 설정')
@@ -1142,6 +1151,7 @@ def SetLauncherConfigurationValues(*args):
     verboseSettings = IntVar()
     resIgnoreAlert = IntVar()
     resDisableSettings = IntVar()
+    launchBlackboxSettings = IntVar()
 
     resolutionText.grid(row=0, column=0, columnspan=5)
     originXtext.grid(row=1, column=0)
@@ -1527,6 +1537,39 @@ def SetLauncherConfigurationValues(*args):
     soundCheckBox = Checkbutton(envWindow, text="스피커 테스트", variable=soundSettings, onvalue=True, offvalue=False, command=soundSettingsApply)
     soundCheckBox.grid(row=6, column=2, columnspan=2, padx=5)
 
+    def changeBlackboxSettings():
+        TargetProfile = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"])
+        TargetScene = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Scene"])
+        TargetStreaming = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoStreaming"])
+        TargetRecording = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "AutoRecording"])
+
+        if (launchBlackboxSettings.get() == 1 and (TargetStreaming or TargetRecording) and (TargetProfile is None or TargetScene is None)):
+            if messagebox.askyesno('디아블로 런처 설정', '프로파일 또는 씬 이름을 명시하지 않을 경우, 게임 화면이 제대로 기록되지 않을 수 있습니다. 해당 설정 파일을 편집하시겠습니까?\n자세한 사항은 wiki를 참고해 주세요.'):
+                launchBlackboxSettings.set(0)
+                os.startfile(f'{os.environ.get("LocalAppData")}/DiabloLauncher/DiabloLauncher.config')
+                webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/wiki/envHelp#%EA%B2%8C%EC%9E%84-%EC%8B%9C%EC%9E%91%EC%8B%9C-%EB%85%B9%ED%99%94%EB%B0%A9%EC%86%A1-%EC%8B%9C%EC%9E%91')
+                return
+        elif (launchBlackboxSettings.get() == 1 and (TargetProfile is not None and TargetScene is not None)):
+            currentPermission = loadSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"])
+            if currentPermission is None or not currentPermission:
+                if not messagebox.askyesno('디아블로 런처 설정', f"디아블로 런처가 다른 프로그램을 제어하려고 합니다. 이를 허용하시겠습니까?\n\n이름: OBS Studio\n경로: {ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')}\n설명: 제공한 {TargetProfile} 프로파일을 로드하여 녹화 시작", icon=messagebox.WARNING):
+                    launchBlackboxSettings.set(0)
+                    dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], False)
+                    return
+                dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], True)
+
+        dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], launchBlackboxSettings.get() == 1)
+        launchBlackboxSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"]) else 0)
+
+    blackboxCheckBox = Checkbutton(envWindow, text="●REC", variable=launchBlackboxSettings, onvalue=True, offvalue=False, command=changeBlackboxSettings)
+    if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio')):
+        launchBlackboxSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"]) else 0)
+        blackboxCheckBox['state'] = "normal"
+    else:
+        launchBlackboxSettings.set(0)
+        blackboxCheckBox['state'] = "disabled"
+    blackboxCheckBox.grid(row=6, column=4, columnspan=2, padx=5)
+
     def changeVerboseLogSettingsApply():
         dumpSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"], verboseSettings.get() == 1)
         verboseSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "LoggingInfoLevel"]) else 0)
@@ -1631,6 +1674,11 @@ def SetLauncherConfigurationValues(*args):
         resDisableExecuteCheckbox['selectcolor'] = '#272727'
         resDisableExecuteCheckbox['foreground'] = '#FFFFFF'
         resDisableExecuteCheckbox['activeforeground'] = '#FFFFFF'
+        blackboxCheckBox['background'] = '#272727'
+        blackboxCheckBox['activebackground'] = '#272727'
+        blackboxCheckBox['selectcolor'] = '#272727'
+        blackboxCheckBox['foreground'] = '#FFFFFF'
+        blackboxCheckBox['activeforeground'] = '#FFFFFF'
         soundCheckBox['background'] = '#272727'
         soundCheckBox['activebackground'] = '#272727'
         soundCheckBox['selectcolor'] = '#272727'
@@ -1726,6 +1774,11 @@ def SetLauncherConfigurationValues(*args):
         resDisableExecuteCheckbox['selectcolor'] = '#F0F0F0'
         resDisableExecuteCheckbox['foreground'] = '#000000'
         resDisableExecuteCheckbox['activeforeground'] = '#000000'
+        blackboxCheckBox['background'] = '#F0F0F0'
+        blackboxCheckBox['activebackground'] = '#F0F0F0'
+        blackboxCheckBox['selectcolor'] = '#F0F0F0'
+        blackboxCheckBox['foreground'] = '#000000'
+        blackboxCheckBox['activeforeground'] = '#000000'
         soundCheckBox['background'] = '#F0F0F0'
         soundCheckBox['activebackground'] = '#F0F0F0'
         soundCheckBox['selectcolor'] = '#F0F0F0'

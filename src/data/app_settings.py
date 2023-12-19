@@ -61,6 +61,10 @@ def makeConfigurationFileStructures(scope: parentLocation):
             "General": {
                 "AgentLaunched": False,
                 "LastWindowPosition": [100, 100]
+            },
+            "Permission": {
+                "ExecutableQRes": False,
+                "ExecutableOBSStudio": False
             }
         }
     elif scope == parentLocation.UserLocalAppData:
