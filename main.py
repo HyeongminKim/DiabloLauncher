@@ -460,12 +460,21 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
         os.popen(f'"{bnetPath}" --productcode=wow_classic_era')
 
     launchBlackbox = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"])
-
     if launchBlackbox is not None and launchBlackbox:
         if(TestRegistryValueAsFile(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio')):
             OBSInstalledPath = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')
         else:
             OBSInstalledPath = None
+
+        if OBSInstalledPath is not None and OBSInstalledPath != "":
+            currentPermission = loadSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"])
+            if currentPermission is None or not currentPermission:
+                TargetProfile = loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "Profile"])
+                if not messagebox.askyesno('디아블로 런처 설정', f"디아블로 런처가 다른 프로그램을 제어하려고 합니다. 이를 허용하시겠습니까?\n\n이름: OBS Studio\n경로: {OBSInstalledPath}\n설명: 제공한 {TargetProfile} 프로파일을 로드하여 녹화 시작", icon=messagebox.WARNING):
+                    dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], False)
+                    OBSInstalledPath = None
+                else:
+                    dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], True)
 
         if OBSInstalledPath is not None and OBSInstalledPath != "":
             OBSInstalledDir = os.path.dirname(OBSInstalledPath)
@@ -1549,15 +1558,6 @@ def SetLauncherConfigurationValues(*args):
                 os.startfile(f'{os.environ.get("LocalAppData")}/DiabloLauncher/DiabloLauncher.config')
                 webbrowser.open('https://github.com/HyeongminKim/DiabloLauncher/wiki/envHelp#%EA%B2%8C%EC%9E%84-%EC%8B%9C%EC%9E%91%EC%8B%9C-%EB%85%B9%ED%99%94%EB%B0%A9%EC%86%A1-%EC%8B%9C%EC%9E%91')
                 return
-        elif (launchBlackboxSettings.get() == 1 and (TargetProfile is not None and TargetScene is not None)):
-            currentPermission = loadSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"])
-            if currentPermission is None or not currentPermission:
-                installedPath = ReturnRegistryQuery(r'SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio', 'DisplayIcon')
-                if not messagebox.askyesno('디아블로 런처 설정', f"디아블로 런처가 다른 프로그램을 제어하려고 합니다. 이를 허용하시겠습니까?\n\n이름: OBS Studio\n경로: {installedPath}\n설명: 제공한 {TargetProfile} 프로파일을 로드하여 녹화 시작", icon=messagebox.WARNING):
-                    launchBlackboxSettings.set(0)
-                    dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], False)
-                    return
-                dumpSettings(parentLocation.UserAppData, ["Permission", "ExecutableOBSStudio"], True)
 
         dumpSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"], launchBlackboxSettings.get() == 1)
         launchBlackboxSettings.set(1 if loadSettings(parentLocation.UserLocalAppData, ["General", "OBSStudioSettings", "LaunchOBSAfterGameStart"]) else 0)
