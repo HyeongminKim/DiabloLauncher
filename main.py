@@ -666,8 +666,8 @@ def LaunchGameAgent():
 
         if filteredGame == "Diablo":
             d2rLadder = "래더 5"
-            d3Season = "시즌 29 | 적개심의 환영"
-            d4Season = "시즌 2 | 피의 시즌"
+            d3Season = "시즌 30 | 지옥의 군주"
+            d4Season = "시즌 3 | 피조물의 시즌"
 
             if diablo2Path is None or not os.path.isfile(f'{diablo2Path}/Diablo II Resurrected Launcher.exe'):
                 logformat(errorLevel.INFO, 'Diablo II Resurrected launch button disabled, because launcher is not detected.')
