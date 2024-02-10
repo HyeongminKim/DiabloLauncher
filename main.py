@@ -516,8 +516,16 @@ def GameLauncher(gameName: str, supportedX: int, supportedY: int, os_min: int):
             os.popen(command)
 
     externalCmd = loadSettings(parentLocation.UserLocalAppData, ["General", "GameStartCommand"])
-    if externalCmd is not None and externalCmd != "":
-        os.popen(externalCmd)
+    if externalCmd is not None:
+        if isinstance(externalCmd, list) and len(externalCmd) == 2:
+            if filteredGame == "Diablo" and externalCmd[0] is not None and externalCmd[0] != "":
+                os.popen(externalCmd[0])
+            elif filteredGame == "WoW" and externalCmd[1] is not None and externalCmd[1] != "":
+                os.popen(externalCmd[1])
+        elif isinstance(externalCmd, str) and externalCmd != "":
+            os.popen(externalCmd)
+        else:
+            logformat(errorLevel.ERR, f"external command does not acceptable {len(externalCmd)} parameters. Skipping")
 
     toolsMenu.entryconfig(3, state='disabled')
     gameStartTime = time.time()
@@ -560,8 +568,16 @@ def LaunchGameAgent():
                 messagebox.showinfo('디아블로 런처', f'이번 세션에는 {minutes}분 동안 플레이 했습니다. ')
 
         externalCmd = loadSettings(parentLocation.UserLocalAppData, ["General", "GameStopCommand"])
-        if externalCmd is not None and externalCmd != "":
-            os.popen(externalCmd)
+        if externalCmd is not None:
+            if isinstance(externalCmd, list) and len(externalCmd) == 2:
+                if filteredGame == "Diablo" and externalCmd[0] is not None and externalCmd[0] != "":
+                    os.popen(externalCmd[0])
+                elif filteredGame == "WoW" and externalCmd[1] is not None and externalCmd[1] != "":
+                    os.popen(externalCmd[1])
+            elif isinstance(externalCmd, str) and externalCmd != "":
+                os.popen(externalCmd)
+            else:
+                logformat(errorLevel.ERR, f"external command does not acceptable {len(externalCmd)} parameters. Skipping")
 
         UpdateStatusValue()
         ReloadStatusBar()
